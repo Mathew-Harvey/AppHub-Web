@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -30,11 +30,12 @@ export default function DashboardPage() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [editMode, setEditMode] = useState(false);
 
-  // Context menu state
-  const [ctxMenu, setCtxMenu] = useState(null);
+  // Long-press jiggle: which tile index is active (-1 = none)
+  const [jiggleIdx, setJiggleIdx] = useState(-1);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const longPressTimer = useRef(null);
+  const longPressTriggered = useRef(false);
 
   // Drag state
   const dragIdx = useRef(null);
@@ -42,20 +43,26 @@ export default function DashboardPage() {
   const [draggingIdx, setDraggingIdx] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
 
-  // Touch drag state
+  // Touch drag
   const touchState = useRef({ startX: 0, startY: 0, dragging: false, idx: null, el: null, clone: null, scrollInterval: null });
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
-  // Close context menu on any click outside
+  // Click anywhere to exit jiggle mode
   useEffect(() => {
-    if (!ctxMenu) return;
-    const close = () => setCtxMenu(null);
-    document.addEventListener('click', close);
-    return () => document.removeEventListener('click', close);
-  }, [ctxMenu]);
+    if (jiggleIdx === -1) return;
+    function handleClick(e) {
+      if (e.target.closest('.app-tile') || e.target.closest('.tile-confirm-delete')) return;
+      setJiggleIdx(-1);
+      setConfirmDeleteId(null);
+    }
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('touchstart', handleClick);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('touchstart', handleClick);
+    };
+  }, [jiggleIdx]);
 
   async function loadData() {
     try {
@@ -70,28 +77,41 @@ export default function DashboardPage() {
     }
   }
 
+  const isAdmin = user?.role === 'admin';
   function canManageApp(app) {
-    return app.uploadedByEmail === user?.email || user?.role === 'admin';
+    return app.uploadedByEmail === user?.email || isAdmin;
   }
 
-  // ── Context menu ──────────────────────────────────────────────────────────
-  function handleContextMenu(e, app) {
-    if (!canManageApp(app)) return;
-    e.preventDefault();
-    setCtxMenu({ x: e.clientX, y: e.clientY, app });
-    setConfirmDeleteId(null);
+  // ── Long press to jiggle ──────────────────────────────────────────────────
+  function startLongPress(idx) {
+    longPressTriggered.current = false;
+    longPressTimer.current = setTimeout(() => {
+      longPressTriggered.current = true;
+      setJiggleIdx(idx);
+      setConfirmDeleteId(null);
+    }, 500);
+  }
+
+  function cancelLongPress() {
+    clearTimeout(longPressTimer.current);
   }
 
   // ── Delete ────────────────────────────────────────────────────────────────
   async function handleDelete(appToDelete) {
     const prev = [...apps];
     setApps(apps.filter(a => a.id !== appToDelete.id));
-    setCtxMenu(null);
     setConfirmDeleteId(null);
+    setJiggleIdx(-1);
 
     try {
-      await api.deleteApp(appToDelete.id);
-      showToast(`${appToDelete.name} deleted`, 'success');
+      const result = await api.deleteApp(appToDelete.id);
+      if (result.pending) {
+        showToast('Deletion requested — waiting for admin approval', 'info');
+        // Restore tile since it's pending, not actually gone
+        setApps(prev);
+      } else {
+        showToast(`${appToDelete.name} deleted`, 'success');
+      }
     } catch (err) {
       setApps(prev);
       showToast(err.error || 'Delete failed', 'error');
@@ -100,49 +120,39 @@ export default function DashboardPage() {
 
   // ── Drag (desktop) ───────────────────────────────────────────────────────
   function onDragStart(e, idx) {
-    if (!editMode) { e.preventDefault(); return; }
+    if (jiggleIdx === -1) { e.preventDefault(); return; }
     dragIdx.current = idx;
     setDraggingIdx(idx);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', '');
   }
-
-  function onDragOver(e, idx) {
-    e.preventDefault();
-    dragOverIdx.current = idx;
-    setDragOverIndex(idx);
-  }
-
+  function onDragOver(e, idx) { e.preventDefault(); dragOverIdx.current = idx; setDragOverIndex(idx); }
   function onDragEnd() {
     if (dragIdx.current !== null && dragOverIdx.current !== null && dragIdx.current !== dragOverIdx.current) {
       reorderApps(dragIdx.current, dragOverIdx.current);
     }
-    dragIdx.current = null;
-    dragOverIdx.current = null;
-    setDraggingIdx(null);
-    setDragOverIndex(null);
+    dragIdx.current = null; dragOverIdx.current = null;
+    setDraggingIdx(null); setDragOverIndex(null);
   }
 
-  // ── Touch drag (mobile) ───────────────────────────────────────────────────
+  // ── Touch drag ────────────────────────────────────────────────────────────
   function onTouchStart(e, idx) {
-    if (!editMode) return;
+    startLongPress(idx);
+    if (jiggleIdx === -1) return;
     const touch = e.touches[0];
     touchState.current = { startX: touch.clientX, startY: touch.clientY, dragging: false, idx, el: e.currentTarget, clone: null, scrollInterval: null };
   }
-
   function onTouchMove(e) {
+    cancelLongPress();
     const ts = touchState.current;
-    if (ts.idx === null) return;
+    if (ts.idx === null || jiggleIdx === -1) return;
     const touch = e.touches[0];
     const dx = touch.clientX - ts.startX;
     const dy = touch.clientY - ts.startY;
-
     if (!ts.dragging && Math.sqrt(dx * dx + dy * dy) < 10) return;
-
     if (!ts.dragging) {
       ts.dragging = true;
       setDraggingIdx(ts.idx);
-      // Create visual clone
       const clone = ts.el.cloneNode(true);
       clone.className = 'app-tile drag-clone';
       const rect = ts.el.getBoundingClientRect();
@@ -153,23 +163,15 @@ export default function DashboardPage() {
       document.body.appendChild(clone);
       ts.clone = clone;
     }
-
     e.preventDefault();
     if (ts.clone) {
       const rect = ts.el.getBoundingClientRect();
       ts.clone.style.left = (touch.clientX - rect.width / 2) + 'px';
       ts.clone.style.top = (touch.clientY - rect.height / 2) + 'px';
     }
-
-    // Auto-scroll near edges
     clearInterval(ts.scrollInterval);
-    if (touch.clientY < 60) {
-      ts.scrollInterval = setInterval(() => window.scrollBy(0, -8), 16);
-    } else if (touch.clientY > window.innerHeight - 60) {
-      ts.scrollInterval = setInterval(() => window.scrollBy(0, 8), 16);
-    }
-
-    // Determine drop target
+    if (touch.clientY < 60) ts.scrollInterval = setInterval(() => window.scrollBy(0, -8), 16);
+    else if (touch.clientY > window.innerHeight - 60) ts.scrollInterval = setInterval(() => window.scrollBy(0, 8), 16);
     const target = document.elementFromPoint(touch.clientX, touch.clientY);
     if (target) {
       const tile = target.closest('.app-tile');
@@ -179,35 +181,29 @@ export default function DashboardPage() {
       }
     }
   }
-
   function onTouchEnd() {
+    cancelLongPress();
     const ts = touchState.current;
     clearInterval(ts.scrollInterval);
-    if (ts.clone) {
-      ts.clone.remove();
-    }
+    if (ts.clone) ts.clone.remove();
     if (ts.dragging && ts.idx !== null && dragOverIndex !== null && ts.idx !== dragOverIndex) {
       reorderApps(ts.idx, dragOverIndex);
     }
     touchState.current = { startX: 0, startY: 0, dragging: false, idx: null, el: null, clone: null, scrollInterval: null };
-    setDraggingIdx(null);
-    setDragOverIndex(null);
+    setDraggingIdx(null); setDragOverIndex(null);
   }
 
-  // ── Reorder persistence ───────────────────────────────────────────────────
   function reorderApps(fromIdx, toIdx) {
     const updated = [...apps];
     const [moved] = updated.splice(fromIdx, 1);
     updated.splice(toIdx, 0, moved);
     setApps(updated);
-    api.reorderApps(updated.map(a => a.id)).catch(() => {
-      showToast('Failed to save order', 'error');
-    });
+    api.reorderApps(updated.map(a => a.id)).catch(() => showToast('Failed to save order', 'error'));
   }
 
-  // ── Tile click ────────────────────────────────────────────────────────────
-  function handleTileClick(app) {
-    if (editMode) return;
+  function handleTileClick(e, app, idx) {
+    if (longPressTriggered.current) return;
+    if (jiggleIdx !== -1) return;
     navigate(`/app/${app.id}`);
   }
 
@@ -222,7 +218,6 @@ export default function DashboardPage() {
       </div>
     );
   }
-
   if (apps.length === 0) {
     return (
       <div className="empty-state">
@@ -234,94 +229,77 @@ export default function DashboardPage() {
     );
   }
 
+  const inJiggle = jiggleIdx !== -1;
+
   return (
     <div onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
       <div className="page-header">
         <h1>Apps</h1>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {editMode ? (
-            <button className="btn btn-secondary btn-sm" onClick={() => setEditMode(false)}>Done</button>
-          ) : (
-            <button className="btn btn-ghost btn-sm" onClick={() => setEditMode(true)}>Edit</button>
-          )}
-          <button className="btn btn-primary btn-sm" onClick={() => navigate('/upload')}>+ Upload App</button>
-        </div>
+        <button className="btn btn-primary btn-sm" onClick={() => navigate('/upload')}>+ Upload App</button>
       </div>
 
       {stats && (
         <div className="stats-bar">
-          <span className="stats-item">{stats.totalApps} {stats.totalApps === 1 ? 'app' : 'apps'}</span>
-          <span className="stats-dot" aria-hidden="true" />
-          <span className="stats-item">{stats.totalBuilders} {stats.totalBuilders === 1 ? 'builder' : 'builders'}</span>
-          <span className="stats-dot" aria-hidden="true" />
-          <span className="stats-item">{stats.newThisWeek} new this week</span>
+          <span>{stats.totalApps} {stats.totalApps === 1 ? 'app' : 'apps'}</span>
+          <span className="stats-dot" />
+          <span>{stats.totalBuilders} {stats.totalBuilders === 1 ? 'builder' : 'builders'}</span>
+          <span className="stats-dot" />
+          <span>{stats.newThisWeek} new this week</span>
         </div>
       )}
 
       <div className="app-grid">
-        {apps.map((app, idx) => (
-          <div
-            key={app.id}
-            data-idx={idx}
-            className={`app-tile${editMode ? ' wobble' : ''}${draggingIdx === idx ? ' dragging' : ''}${dragOverIndex === idx && draggingIdx !== idx ? ' drag-over' : ''}`}
-            style={editMode ? { animationDelay: `${(idx % 5) * 0.08}s` } : undefined}
-            onClick={() => handleTileClick(app)}
-            onContextMenu={(e) => handleContextMenu(e, app)}
-            draggable={editMode}
-            onDragStart={(e) => onDragStart(e, idx)}
-            onDragOver={(e) => onDragOver(e, idx)}
-            onDragEnd={onDragEnd}
-            onTouchStart={(e) => onTouchStart(e, idx)}
-            title={!editMode ? (app.description || app.name) : undefined}
-          >
-            {editMode && canManageApp(app) && (
-              <button
-                className="app-tile-x"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setConfirmDeleteId(app.id === confirmDeleteId ? null : app.id);
-                }}
-              >
-                ✕
-              </button>
-            )}
-            {confirmDeleteId === app.id && (
-              <div className="tile-confirm-delete" onClick={(e) => e.stopPropagation()}>
-                <p>Delete {app.name}?</p>
-                <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>This can't be undone.</p>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <button className="btn btn-danger btn-sm" onClick={() => handleDelete(app)}>Delete</button>
-                  <button className="btn btn-ghost btn-sm" onClick={() => setConfirmDeleteId(null)}>Cancel</button>
+        {apps.map((app, idx) => {
+          const isJiggling = jiggleIdx === idx;
+          const showX = isJiggling && canManageApp(app);
+          return (
+            <div
+              key={app.id}
+              data-idx={idx}
+              className={`app-tile${isJiggling ? ' wobble' : ''}${draggingIdx === idx ? ' dragging' : ''}${dragOverIndex === idx && draggingIdx !== idx ? ' drag-over' : ''}`}
+              style={isJiggling ? { animationDelay: '0s' } : undefined}
+              onClick={(e) => handleTileClick(e, app, idx)}
+              onMouseDown={() => startLongPress(idx)}
+              onMouseUp={cancelLongPress}
+              onMouseLeave={cancelLongPress}
+              onTouchStart={(e) => onTouchStart(e, idx)}
+              draggable={inJiggle}
+              onDragStart={(e) => onDragStart(e, idx)}
+              onDragOver={(e) => onDragOver(e, idx)}
+              onDragEnd={onDragEnd}
+              title={!inJiggle ? (app.description || app.name) : undefined}
+            >
+              {showX && (
+                <button
+                  className="app-tile-x"
+                  onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(app.id === confirmDeleteId ? null : app.id); }}
+                >
+                  ✕
+                </button>
+              )}
+              {confirmDeleteId === app.id && (
+                <div className="tile-confirm-delete" onClick={(e) => e.stopPropagation()}>
+                  <p>Delete {app.name}?</p>
+                  <p className="tile-confirm-sub">This can't be undone.</p>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(app)}>Delete</button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => setConfirmDeleteId(null)}>Cancel</button>
+                  </div>
                 </div>
-              </div>
-            )}
-            {!editMode && isNewApp(app.createdAt) && <span className="app-tile-new">New</span>}
-            {!editMode && app.visibility !== 'team' && (
-              <span className="app-tile-badge">{app.visibility === 'private' ? '🔒' : '👥'}</span>
-            )}
-            <div className="app-tile-icon">{app.icon}</div>
-            <span className="app-tile-name">{app.name}</span>
-            <span className="app-tile-author">{app.uploadedBy}</span>
-          </div>
-        ))}
+              )}
+              {!inJiggle && isNewApp(app.createdAt) && <span className="app-tile-new">New</span>}
+              {!inJiggle && app.visibility !== 'team' && (
+                <span className="app-tile-badge">{app.visibility === 'private' ? '🔒' : '👥'}</span>
+              )}
+              <div className="app-tile-icon">{app.icon}</div>
+              <span className="app-tile-name">{app.name}</span>
+              <span className="app-tile-author">{app.uploadedBy}</span>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Right-click context menu */}
-      {ctxMenu && (
-        <div className="ctx-menu" style={{ left: ctxMenu.x, top: ctxMenu.y }} onClick={(e) => e.stopPropagation()}>
-          <button className="ctx-menu-item" onClick={() => { navigate(`/app/${ctxMenu.app.id}?update=true`); setCtxMenu(null); }}>
-            Update
-          </button>
-          <button className="ctx-menu-item ctx-menu-danger" onClick={() => {
-            setConfirmDeleteId(ctxMenu.app.id);
-            setCtxMenu(null);
-          }}>
-            Delete
-          </button>
-        </div>
-      )}
-
-      {stats && stats.recentActivity.length > 0 && !editMode && (
+      {stats && stats.recentActivity.length > 0 && !inJiggle && (
         <div className="activity-feed">
           <h3 className="activity-feed-title">Recent activity</h3>
           <div className="activity-list">

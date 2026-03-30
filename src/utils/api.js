@@ -41,6 +41,9 @@ export const api = {
   updateAppFile: (id, formData) => request(`/apps/${id}/file`, { method: 'PUT', body: formData }),
   reorderApps: (appIds) => request('/apps/reorder', { method: 'PUT', body: JSON.stringify({ appIds }) }),
   deleteApp: (id) => request(`/apps/${id}`, { method: 'DELETE' }),
+  getPendingDeletions: () => request('/apps/pending-deletions'),
+  approveDeletion: (id) => request(`/apps/${id}/approve-deletion`, { method: 'POST' }),
+  rejectDeletion: (id) => request(`/apps/${id}/reject-deletion`, { method: 'POST' }),
 
   // Workspace
   getWorkspace: () => request('/workspace'),

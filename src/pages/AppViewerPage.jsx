@@ -14,8 +14,6 @@ export default function AppViewerPage() {
 
   const [app, setApp] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showMenu, setShowMenu] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [showUpdate, setShowUpdate] = useState(false);
   const [updateFile, setUpdateFile] = useState(null);
   const [updateDragOver, setUpdateDragOver] = useState(false);
@@ -23,14 +21,9 @@ export default function AppViewerPage() {
   const [conversionInfo, setConversionInfo] = useState(null);
   const updateFileRef = useRef(null);
 
+  useEffect(() => { loadApp(); }, [id]);
   useEffect(() => {
-    loadApp();
-  }, [id]);
-
-  useEffect(() => {
-    if (searchParams.get('update') === 'true' && app) {
-      setShowUpdate(true);
-    }
+    if (searchParams.get('update') === 'true' && app) setShowUpdate(true);
   }, [searchParams, app]);
 
   async function loadApp() {
@@ -45,29 +38,13 @@ export default function AppViewerPage() {
     }
   }
 
-  async function handleDelete() {
-    try {
-      await api.deleteApp(id);
-      showToast('App deleted', 'success');
-      setTimeout(() => navigate('/'), 500);
-    } catch (err) {
-      showToast(err.error || 'Delete failed', 'error');
-    }
-  }
-
   async function processUpdateFile(file) {
     setConversionInfo(null);
     try {
       const check = await api.checkFile(file.name);
-      if (check.supported) {
-        setUpdateFile(file);
-      } else {
-        setUpdateFile(null);
-        setConversionInfo(check);
-      }
-    } catch {
-      showToast('Error checking file', 'error');
-    }
+      if (check.supported) setUpdateFile(file);
+      else { setUpdateFile(null); setConversionInfo(check); }
+    } catch { showToast('Error checking file', 'error'); }
   }
 
   async function handleUpdate() {
@@ -81,74 +58,29 @@ export default function AppViewerPage() {
       setShowUpdate(false);
       setUpdateFile(null);
       showToast('App updated', 'success');
-      // Reload iframe
-      if (iframeRef.current) {
-        iframeRef.current.src = iframeRef.current.src;
-      }
+      if (iframeRef.current) iframeRef.current.src = iframeRef.current.src;
     } catch (err) {
-      if (err.conversionPrompt) {
-        setConversionInfo(err);
-        setUpdateFile(null);
-      } else {
-        showToast(err.error || 'Update failed', 'error');
-      }
-    } finally {
-      setUpdating(false);
-    }
+      if (err.conversionPrompt) { setConversionInfo(err); setUpdateFile(null); }
+      else showToast(err.error || 'Update failed', 'error');
+    } finally { setUpdating(false); }
   }
 
   if (loading) return <div className="spinner-page"><div className="spinner" /></div>;
   if (!app) return null;
 
-  const isOwner = app.uploadedByEmail === user?.email;
-  const isAdmin = user?.role === 'admin';
-  const canManage = isOwner || isAdmin;
+  const canManage = app.uploadedByEmail === user?.email || user?.role === 'admin';
 
   return (
     <div className="app-viewer">
       <div className="app-viewer-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button className="btn btn-ghost btn-sm" onClick={() => navigate('/')}>
-            ← Back
-          </button>
-          <h3>
-            <span>{app.icon}</span>
-            {app.name}
-          </h3>
-          {app.description && (
-            <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 400 }}>
-              — {app.description}
-            </span>
-          )}
+          <button className="btn btn-ghost btn-sm" onClick={() => navigate('/')}>← Back</button>
+          <h3><span>{app.icon}</span>{app.name}</h3>
         </div>
-
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span className="app-viewer-builder">Built by {app.uploadedBy}</span>
-
           {canManage && (
-            <>
-              <button className="btn btn-ghost btn-sm" onClick={() => setShowUpdate(true)}>Update</button>
-              <div style={{ position: 'relative' }}>
-                <button className="btn btn-ghost btn-sm" onClick={() => setShowMenu(!showMenu)}>⋯</button>
-                {showMenu && (
-                  <div className="dropdown-menu">
-                    {!confirmDelete ? (
-                      <button className="dropdown-item dropdown-danger" onClick={() => setConfirmDelete(true)}>
-                        Delete app
-                      </button>
-                    ) : (
-                      <div style={{ padding: 8, fontSize: 13 }}>
-                        <p style={{ marginBottom: 8 }}>Are you sure?</p>
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          <button className="btn btn-danger btn-sm" onClick={handleDelete}>Yes, delete</button>
-                          <button className="btn btn-ghost btn-sm" onClick={() => { setConfirmDelete(false); setShowMenu(false); }}>Cancel</button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </>
+            <button className="btn btn-ghost btn-sm" onClick={() => setShowUpdate(true)}>Update</button>
           )}
         </div>
       </div>
@@ -161,7 +93,6 @@ export default function AppViewerPage() {
         style={{ flex: 1, width: '100%', border: 'none', background: 'white' }}
       />
 
-      {/* Update modal */}
       {showUpdate && (
         <div className="modal-overlay" onClick={() => { setShowUpdate(false); setUpdateFile(null); setConversionInfo(null); }}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -175,9 +106,7 @@ export default function AppViewerPage() {
                 <h3>&#x26A0;&#xFE0F; {conversionInfo.detected}</h3>
                 <p>AppHub needs a single <strong>.html</strong> file.</p>
                 <pre>{conversionInfo.conversionPrompt}</pre>
-                <button className="btn btn-secondary btn-sm" style={{ marginTop: 8 }} onClick={() => setConversionInfo(null)}>
-                  Try another file
-                </button>
+                <button className="btn btn-secondary btn-sm" style={{ marginTop: 8 }} onClick={() => setConversionInfo(null)}>Try another file</button>
               </div>
             )}
 
@@ -205,9 +134,7 @@ export default function AppViewerPage() {
             )}
 
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-              <button className="btn btn-ghost btn-sm" onClick={() => { setShowUpdate(false); setUpdateFile(null); setConversionInfo(null); }}>
-                Cancel
-              </button>
+              <button className="btn btn-ghost btn-sm" onClick={() => { setShowUpdate(false); setUpdateFile(null); setConversionInfo(null); }}>Cancel</button>
               {updateFile && (
                 <button className="btn btn-primary btn-sm" onClick={handleUpdate} disabled={updating}>
                   {updating ? <span className="spinner" /> : 'Update'}
