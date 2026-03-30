@@ -5,6 +5,13 @@ import { useToast } from '../components/Toast';
 
 const EMOJI_OPTIONS = ['📱', '🧮', '📊', '📝', '🔧', '📋', '💰', '🗓️', '📈', '🔍', '⚙️', '🎯', '📦', '🚀', '💡', '🛠️', '📁', '🏗️', '⏱️', '🌊'];
 
+const INSPIRATION = [
+  { icon: '💰', name: 'Quote calculator', desc: 'Enter line items, get a total with GST.', prompt: 'Build me an HTML quote calculator where I can add line items with description, quantity, and unit price, then see a subtotal plus GST.' },
+  { icon: '📋', name: 'Checklist generator', desc: 'Create printable checklists for any process.', prompt: 'Build me an HTML checklist maker where I type a title and checklist items, then print a clean formatted checklist.' },
+  { icon: '⏱️', name: 'Time tracker', desc: 'Log hours, export weekly summary as CSV.', prompt: 'Build me an HTML time tracker where I log project name, date, and hours. Show a weekly summary table and let me export to CSV.' },
+  { icon: '🔄', name: 'Unit converter', desc: 'Convert between units your team actually uses.', prompt: 'Build me an HTML unit converter for common measurements: mm/inches, kg/lbs, litres/gallons, celsius/fahrenheit. Clean and fast.' },
+];
+
 export default function UploadPage() {
   const navigate = useNavigate();
   const { showToast, ToastElement } = useToast();
@@ -14,6 +21,7 @@ export default function UploadPage() {
   const [file, setFile] = useState(null);
   const [conversionInfo, setConversionInfo] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
 
   // Form state
   const [name, setName] = useState('');
@@ -55,10 +63,9 @@ export default function UploadPage() {
 
     try {
       const check = await api.checkFile(f.name);
-      
+
       if (check.supported) {
         setFile(f);
-        // Auto-populate name from filename
         const baseName = f.name.replace(/\.(html|htm)$/i, '').replace(/[-_]/g, ' ');
         if (!name) setName(baseName.charAt(0).toUpperCase() + baseName.slice(1));
       } else {
@@ -87,8 +94,8 @@ export default function UploadPage() {
       }
 
       await api.uploadApp(formData);
-      showToast('App uploaded!', 'success');
-      setTimeout(() => navigate('/'), 800);
+      setUploadSuccess(true);
+      setTimeout(() => navigate('/'), 2500);
     } catch (err) {
       if (err.conversionPrompt) {
         setConversionInfo(err);
@@ -101,16 +108,26 @@ export default function UploadPage() {
     }
   }
 
-  async function copyPrompt() {
-    if (!conversionInfo?.conversionPrompt) return;
+  async function copyPrompt(text) {
     try {
-      await navigator.clipboard.writeText(conversionInfo.conversionPrompt);
+      await navigator.clipboard.writeText(text);
       setCopied(true);
-      showToast('Prompt copied to clipboard!', 'success');
+      showToast('Copied to clipboard', 'success');
       setTimeout(() => setCopied(false), 3000);
     } catch {
       showToast('Failed to copy — select and copy manually', 'error');
     }
+  }
+
+  // Success state after upload
+  if (uploadSuccess) {
+    return (
+      <div className="upload-success">
+        <div className="upload-success-icon">{icon}</div>
+        <h2>{name}</h2>
+        <p>Your app is live. Your team can use it now.</p>
+      </div>
+    );
   }
 
   return (
@@ -122,13 +139,13 @@ export default function UploadPage() {
       {/* Conversion prompt (shown when wrong file type) */}
       {conversionInfo && (
         <div className="conversion-prompt">
-          <h3>⚠️ {conversionInfo.detected || 'Unsupported file type'}</h3>
+          <h3>&#x26A0;&#xFE0F; {conversionInfo.detected || 'Unsupported file type'}</h3>
           <p>
             AppHub needs a single <strong>.html</strong> file. Copy the prompt below and paste it into your AI tool (Claude, ChatGPT, etc.) along with your code. It will convert your project into a single HTML file you can upload here.
           </p>
           <pre>{conversionInfo.conversionPrompt}</pre>
           <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-            <button className="btn btn-primary btn-sm" onClick={copyPrompt}>
+            <button className="btn btn-primary btn-sm" onClick={() => copyPrompt(conversionInfo.conversionPrompt)}>
               {copied ? '✓ Copied!' : 'Copy prompt'}
             </button>
             <button className="btn btn-secondary btn-sm" onClick={() => setConversionInfo(null)}>
@@ -140,24 +157,48 @@ export default function UploadPage() {
 
       {/* Drop zone */}
       {!file && !conversionInfo && (
-        <div
-          className={`upload-zone ${dragOver ? 'dragover' : ''}`}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <div className="upload-zone-icon">📂</div>
-          <h3>Drag &amp; drop your HTML file here</h3>
-          <p>or click to browse — accepts .html files up to 5MB</p>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".html,.htm,.jsx,.tsx,.vue,.svelte,.js,.ts,.css,.json,.py,.zip,.md"
-            onChange={handleFileSelect}
-            style={{ display: 'none' }}
-          />
-        </div>
+        <>
+          <div
+            className={`upload-zone ${dragOver ? 'dragover' : ''}`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <div className="upload-zone-icon">📂</div>
+            <h3>Drag &amp; drop your HTML file here</h3>
+            <p>or click to browse — accepts .html files up to 5MB</p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".html,.htm,.jsx,.tsx,.vue,.svelte,.js,.ts,.css,.json,.py,.zip,.md"
+              onChange={handleFileSelect}
+              style={{ display: 'none' }}
+            />
+          </div>
+
+          {/* Inspiration section */}
+          <div className="inspiration">
+            <h4 className="inspiration-title">Not sure what to build?</h4>
+            <div className="inspiration-grid">
+              {INSPIRATION.map((item) => (
+                <div key={item.name} className="inspiration-card">
+                  <div className="inspiration-header">
+                    <span className="inspiration-icon">{item.icon}</span>
+                    <span className="inspiration-name">{item.name}</span>
+                  </div>
+                  <p className="inspiration-desc">{item.desc}</p>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={(e) => { e.stopPropagation(); copyPrompt(item.prompt); }}
+                  >
+                    Copy AI prompt
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
       )}
 
       {/* Upload form (shown after valid file selected) */}

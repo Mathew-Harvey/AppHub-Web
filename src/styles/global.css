@@ -625,6 +625,333 @@ input, textarea, select {
   to { transform: rotate(360deg); }
 }
 
+/* Stats bar */
+.stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.stats-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+/* New app badge */
+.app-tile-new {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: white;
+  letter-spacing: 0.3px;
+  opacity: 0.85;
+}
+
+/* Activity feed */
+.activity-feed {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.activity-feed-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.activity-icon {
+  font-size: 16px;
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.activity-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity-text strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.activity-time {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--border);
+}
+
+/* Upload success */
+.upload-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  text-align: center;
+  animation: fadeIn 0.4s ease;
+}
+
+.upload-success-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.upload-success h2 {
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+
+.upload-success p {
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Inspiration section */
+.inspiration {
+  margin-top: 32px;
+}
+
+.inspiration-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.inspiration-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.inspiration-card {
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.inspiration-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.inspiration-icon {
+  font-size: 18px;
+}
+
+.inspiration-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.inspiration-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+/* App viewer builder attribution */
+.app-viewer-builder {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 4px 10px;
+  background: var(--surface-hover);
+  border-radius: var(--radius-sm);
+}
+
+/* Edit mode wobble animation */
+@keyframes wobble {
+  0%, 100% { transform: rotate(-1deg); }
+  50% { transform: rotate(1deg); }
+}
+
+.app-tile.wobble {
+  animation: wobble 0.3s ease-in-out infinite;
+  cursor: grab;
+}
+
+.app-tile.wobble:active { cursor: grabbing; }
+
+.app-tile.dragging {
+  opacity: 0.3;
+}
+
+.app-tile.drag-over .app-tile-icon {
+  box-shadow: 0 0 0 2px var(--accent);
+  transform: scale(1.08);
+}
+
+.drag-clone {
+  opacity: 0.9;
+  transform: scale(1.08);
+}
+
+/* X badge on tiles in edit mode */
+.app-tile-x {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--danger);
+  color: white;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  border: 2px solid var(--bg);
+  padding: 0;
+  line-height: 1;
+}
+
+/* Inline confirm delete on tile */
+.tile-confirm-delete {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  z-index: 20;
+  white-space: nowrap;
+  font-size: 13px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+/* Context menu (right-click / long-press) */
+.ctx-menu {
+  position: fixed;
+  z-index: 200;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  min-width: 140px;
+  box-shadow: var(--shadow);
+}
+
+.ctx-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text);
+  background: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.ctx-menu-item:hover {
+  background: var(--surface-hover);
+}
+
+.ctx-menu-danger {
+  color: var(--danger);
+}
+
+/* Dropdown menu (viewer header) */
+.dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  min-width: 150px;
+  z-index: 10;
+  box-shadow: var(--shadow);
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text);
+  background: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.dropdown-item:hover { background: var(--surface-hover); }
+.dropdown-danger { color: var(--danger); }
+
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .topbar { padding: 10px 16px; }
@@ -636,4 +963,6 @@ input, textarea, select {
   .vis-options { flex-direction: column; }
   .member-row { flex-direction: column; align-items: flex-start; gap: 8px; }
   .invite-form { flex-direction: column; }
+  .inspiration-grid { grid-template-columns: 1fr; }
+  .activity-text { font-size: 12px; }
 }

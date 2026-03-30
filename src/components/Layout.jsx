@@ -1,6 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { resolveApiUrl } from '../utils/api';
 
 export default function Layout() {
   const { user, logout } = useAuth();
@@ -11,7 +10,6 @@ export default function Layout() {
     navigate('/login');
   };
 
-  // Apply workspace theme colors
   const style = {};
   if (user?.workspace?.primaryColor) {
     style['--primary'] = user.workspace.primaryColor;
@@ -20,7 +18,7 @@ export default function Layout() {
     style['--accent'] = user.workspace.accentColor;
   }
 
-  const logoSrc = resolveApiUrl(user?.workspace?.logoPath);
+  const logoSrc = user?.workspace?.logoData || null;
 
   return (
     <div className="layout" style={style}>
