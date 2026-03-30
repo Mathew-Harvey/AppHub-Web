@@ -69,8 +69,8 @@ export default function AppViewerPage() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-            by {app.uploadedBy}
+          <span className="app-viewer-builder">
+            Built by {app.uploadedBy}
           </span>
 
           {canManage && (

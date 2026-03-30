@@ -44,6 +44,7 @@ export const api = {
 
   // Apps
   listApps: () => request('/apps'),
+  getStats: () => request('/apps/stats'),
   getApp: (id) => request(`/apps/${id}`),
   checkFile: (filename) => request('/apps/check', { method: 'POST', body: JSON.stringify({ filename }) }),
   uploadApp: (formData) => request('/apps/upload', { method: 'POST', body: formData }),

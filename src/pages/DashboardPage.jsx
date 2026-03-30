@@ -2,23 +2,47 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
 
+function timeAgo(dateString) {
+  const seconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return 'yesterday';
+  if (days < 30) return `${days} days ago`;
+  const months = Math.floor(days / 30);
+  return `${months}mo ago`;
+}
+
+function isNewApp(createdAt) {
+  const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+  return Date.now() - new Date(createdAt).getTime() < sevenDaysMs;
+}
+
 export default function DashboardPage() {
   const [apps, setApps] = useState([]);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadApps();
+    loadData();
   }, []);
 
-  async function loadApps() {
+  async function loadData() {
     try {
-      const data = await api.listApps();
-      setApps(data.apps);
+      const [appsData, statsData] = await Promise.all([
+        api.listApps(),
+        api.getStats()
+      ]);
+      setApps(appsData.apps);
+      setStats(statsData);
       setError(null);
     } catch (err) {
-      console.error('Failed to load apps:', err);
+      console.error('Failed to load dashboard:', err);
       setError(err.error || 'Failed to load apps. Please try again.');
     } finally {
       setLoading(false);
@@ -32,10 +56,10 @@ export default function DashboardPage() {
   if (error) {
     return (
       <div className="empty-state">
-        <div className="empty-state-icon">⚠️</div>
+        <div className="empty-state-icon">&#x26A0;&#xFE0F;</div>
         <h3>Something went wrong</h3>
         <p>{error}</p>
-        <button className="btn btn-primary" onClick={() => { setLoading(true); setError(null); loadApps(); }}>
+        <button className="btn btn-primary" onClick={() => { setLoading(true); setError(null); loadData(); }}>
           Try again
         </button>
       </div>
@@ -67,6 +91,16 @@ export default function DashboardPage() {
         </button>
       </div>
 
+      {stats && (
+        <div className="stats-bar">
+          <span className="stats-item">{stats.totalApps} {stats.totalApps === 1 ? 'app' : 'apps'}</span>
+          <span className="stats-dot" aria-hidden="true" />
+          <span className="stats-item">{stats.totalBuilders} {stats.totalBuilders === 1 ? 'builder' : 'builders'}</span>
+          <span className="stats-dot" aria-hidden="true" />
+          <span className="stats-item">{stats.newThisWeek} new this week</span>
+        </div>
+      )}
+
       <div className="app-grid">
         {apps.map((app) => (
           <div
@@ -75,6 +109,9 @@ export default function DashboardPage() {
             onClick={() => navigate(`/app/${app.id}`)}
             title={app.description || app.name}
           >
+            {isNewApp(app.createdAt) && (
+              <span className="app-tile-new">New</span>
+            )}
             {app.visibility !== 'team' && (
               <span className="app-tile-badge">
                 {app.visibility === 'private' ? '🔒' : '👥'}
@@ -86,6 +123,23 @@ export default function DashboardPage() {
           </div>
         ))}
       </div>
+
+      {stats && stats.recentActivity.length > 0 && (
+        <div className="activity-feed">
+          <h3 className="activity-feed-title">Recent activity</h3>
+          <div className="activity-list">
+            {stats.recentActivity.map((event, i) => (
+              <div key={i} className="activity-item">
+                <span className="activity-icon">{event.appIcon}</span>
+                <span className="activity-text">
+                  <strong>{event.uploadedBy}</strong> uploaded {event.appName}
+                </span>
+                <span className="activity-time">{timeAgo(event.createdAt)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
