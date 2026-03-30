@@ -802,6 +802,156 @@ input, textarea, select {
   border-radius: var(--radius-sm);
 }
 
+/* Edit mode wobble animation */
+@keyframes wobble {
+  0%, 100% { transform: rotate(-1deg); }
+  50% { transform: rotate(1deg); }
+}
+
+.app-tile.wobble {
+  animation: wobble 0.3s ease-in-out infinite;
+  cursor: grab;
+}
+
+.app-tile.wobble:active { cursor: grabbing; }
+
+.app-tile.dragging {
+  opacity: 0.3;
+}
+
+.app-tile.drag-over .app-tile-icon {
+  box-shadow: 0 0 0 2px var(--accent);
+  transform: scale(1.08);
+}
+
+.drag-clone {
+  opacity: 0.9;
+  transform: scale(1.08);
+}
+
+/* X badge on tiles in edit mode */
+.app-tile-x {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--danger);
+  color: white;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  border: 2px solid var(--bg);
+  padding: 0;
+  line-height: 1;
+}
+
+/* Inline confirm delete on tile */
+.tile-confirm-delete {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  z-index: 20;
+  white-space: nowrap;
+  font-size: 13px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+/* Context menu (right-click / long-press) */
+.ctx-menu {
+  position: fixed;
+  z-index: 200;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  min-width: 140px;
+  box-shadow: var(--shadow);
+}
+
+.ctx-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text);
+  background: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.ctx-menu-item:hover {
+  background: var(--surface-hover);
+}
+
+.ctx-menu-danger {
+  color: var(--danger);
+}
+
+/* Dropdown menu (viewer header) */
+.dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  min-width: 150px;
+  z-index: 10;
+  box-shadow: var(--shadow);
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text);
+  background: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.dropdown-item:hover { background: var(--surface-hover); }
+.dropdown-danger { color: var(--danger); }
+
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .topbar { padding: 10px 16px; }

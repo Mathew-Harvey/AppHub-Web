@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { api, resolveApiUrl } from '../utils/api';
+import { api } from '../utils/api';
 import { useToast } from '../components/Toast';
 
 export default function AdminPage() {
@@ -131,7 +131,7 @@ export default function AdminPage() {
     return <div style={{ textAlign: 'center', padding: 64 }}><div className="spinner" /></div>;
   }
 
-  const logoSrc = resolveApiUrl(workspace?.logoPath);
+  const logoSrc = workspace?.logoData || null;
 
   return (
     <div>

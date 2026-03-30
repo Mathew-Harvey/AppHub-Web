@@ -1,17 +1,7 @@
-// In dev: Vite proxy handles /api → localhost:3001, so no base URL needed.
-// In production: VITE_API_URL points to the API service (e.g. https://apphub-api.onrender.com)
 const API_HOST = import.meta.env.VITE_API_URL || '';
 const API_BASE = `${API_HOST}/api`;
 
-// Sandbox base for iframe src URLs
 export const SANDBOX_BASE = API_HOST;
-
-// Resolve asset URLs from the API (e.g. logo paths stored as /api/workspace/logo/:id)
-export function resolveApiUrl(path) {
-  if (!path) return null;
-  if (path.startsWith('http')) return path;
-  return `${API_HOST}${path}`;
-}
 
 async function request(url, options = {}) {
   const config = {
@@ -20,7 +10,6 @@ async function request(url, options = {}) {
     ...options,
   };
 
-  // Don't set Content-Type for FormData
   if (options.body instanceof FormData) {
     delete config.headers['Content-Type'];
   }
@@ -49,6 +38,8 @@ export const api = {
   checkFile: (filename) => request('/apps/check', { method: 'POST', body: JSON.stringify({ filename }) }),
   uploadApp: (formData) => request('/apps/upload', { method: 'POST', body: formData }),
   updateApp: (id, body) => request(`/apps/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  updateAppFile: (id, formData) => request(`/apps/${id}/file`, { method: 'PUT', body: formData }),
+  reorderApps: (appIds) => request('/apps/reorder', { method: 'PUT', body: JSON.stringify({ appIds }) }),
   deleteApp: (id) => request(`/apps/${id}`, { method: 'DELETE' }),
 
   // Workspace
