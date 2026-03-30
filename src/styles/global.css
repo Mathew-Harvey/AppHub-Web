@@ -866,68 +866,11 @@ input, textarea, select {
   text-align: center;
 }
 
-/* Context menu (right-click / long-press) */
-.ctx-menu {
-  position: fixed;
-  z-index: 200;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 4px;
-  min-width: 140px;
-  box-shadow: var(--shadow);
+.tile-confirm-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
 }
-
-.ctx-menu-item {
-  display: block;
-  width: 100%;
-  text-align: left;
-  padding: 8px 12px;
-  font-size: 13px;
-  color: var(--text);
-  background: none;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.ctx-menu-item:hover {
-  background: var(--surface-hover);
-}
-
-.ctx-menu-danger {
-  color: var(--danger);
-}
-
-/* Dropdown menu (viewer header) */
-.dropdown-menu {
-  position: absolute;
-  right: 0;
-  top: 100%;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 4px;
-  min-width: 150px;
-  z-index: 10;
-  box-shadow: var(--shadow);
-}
-
-.dropdown-item {
-  display: block;
-  width: 100%;
-  text-align: left;
-  padding: 8px 12px;
-  font-size: 13px;
-  color: var(--text);
-  background: none;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.dropdown-item:hover { background: var(--surface-hover); }
-.dropdown-danger { color: var(--danger); }
 
 /* Modal overlay */
 .modal-overlay {

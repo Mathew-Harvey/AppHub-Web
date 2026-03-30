@@ -21,6 +21,8 @@ export default function AdminPage() {
   const [lastInviteLink, setLastInviteLink] = useState('');
   const [loading, setLoading] = useState(true);
 
+  const [pendingDeletions, setPendingDeletions] = useState([]);
+
   const [wsName, setWsName] = useState('');
   const [primaryColor, setPrimaryColor] = useState('#1a1a2e');
   const [accentColor, setAccentColor] = useState('#e94560');
@@ -29,10 +31,11 @@ export default function AdminPage() {
 
   async function loadAll() {
     try {
-      const [wsData, memData, invData] = await Promise.all([
+      const [wsData, memData, invData, pendingData] = await Promise.all([
         api.getWorkspace(),
         api.getMembers(),
-        api.getInvitations()
+        api.getInvitations(),
+        api.getPendingDeletions()
       ]);
       setWorkspace(wsData.workspace);
       setWsName(wsData.workspace.name);
@@ -40,6 +43,7 @@ export default function AdminPage() {
       setAccentColor(wsData.workspace.accentColor || '#e94560');
       setMembers(memData.members);
       setInvitations(invData.invitations);
+      setPendingDeletions(pendingData.apps);
     } catch (err) {
       showToast('Failed to load admin data', 'error');
     } finally {
@@ -138,6 +142,49 @@ export default function AdminPage() {
       <div className="page-header">
         <h1>Workspace Settings</h1>
       </div>
+
+      {/* Pending Deletions */}
+      {pendingDeletions.length > 0 && (
+        <div className="admin-section">
+          <h3>Pending Deletions ({pendingDeletions.length})</h3>
+          {pendingDeletions.map((app) => (
+            <div key={app.id} className="member-row">
+              <div className="member-info">
+                <span className="member-name">{app.icon} {app.name}</span>
+                <span className="member-email">
+                  Uploaded by {app.uploadedBy}{app.requestedBy ? ` · Deletion requested by ${app.requestedBy}` : ''}
+                </span>
+              </div>
+              <div className="member-actions">
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={async () => {
+                    try {
+                      await api.approveDeletion(app.id);
+                      setPendingDeletions(pendingDeletions.filter(a => a.id !== app.id));
+                      showToast(`${app.name} deleted`, 'success');
+                    } catch (err) { showToast(err.error || 'Failed', 'error'); }
+                  }}
+                >
+                  Approve
+                </button>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={async () => {
+                    try {
+                      await api.rejectDeletion(app.id);
+                      setPendingDeletions(pendingDeletions.filter(a => a.id !== app.id));
+                      showToast(`Deletion of ${app.name} rejected`, 'info');
+                    } catch (err) { showToast(err.error || 'Failed', 'error'); }
+                  }}
+                >
+                  Reject
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Branding */}
       <div className="admin-section">
