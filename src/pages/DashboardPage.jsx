@@ -4,6 +4,7 @@ import { api } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/Toast';
 import UpgradeModal, { isPlanLimitError } from '../components/UpgradeModal';
+import InviteModal from '../components/InviteModal';
 
 function timeAgo(dateString) {
   const seconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
@@ -31,6 +32,7 @@ export default function DashboardPage() {
   const [newAppIds, setNewAppIds] = useState(new Set());
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState('');
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const [demoCollapsed, setDemoCollapsed] = useState(false);
   const [demoDismissing, setDemoDismissing] = useState(false);
 
@@ -624,6 +626,7 @@ export default function DashboardPage() {
           <p>We&apos;ve added some demo apps so you can explore. Upload your first app to get started.</p>
           <div className="welcome-banner-actions">
             <button className="btn btn-primary" onClick={() => navigate('/upload')}>Upload Your First App</button>
+            <button className="btn btn-secondary btn-sm" onClick={() => setShowInviteModal(true)}>Invite Your Team</button>
             <button className="btn btn-ghost btn-sm" onClick={handleDismissDemos}>Dismiss demo apps</button>
           </div>
         </div>
@@ -644,6 +647,8 @@ export default function DashboardPage() {
           <span>{stats.totalBuilders} {stats.totalBuilders === 1 ? 'builder' : 'builders'}</span>
           <span className="stats-dot" />
           <span>{stats.newThisWeek} new this week</span>
+          <span className="stats-dot" />
+          <button className="stats-invite-link" onClick={() => setShowInviteModal(true)}>+ Invite</button>
         </div>
       )}
 
@@ -814,13 +819,13 @@ export default function DashboardPage() {
       {/* Activity feed */}
       {stats && stats.recentActivity && stats.recentActivity.length > 0 && !inJiggle && (
         <div className="activity-feed">
-          <h3 className="activity-feed-title">Recent activity</h3>
+          <div className="activity-feed-title">Recent</div>
           <div className="activity-list">
-            {stats.recentActivity.map((event, i) => (
+            {stats.recentActivity.slice(0, 3).map((event, i) => (
               <div key={i} className="activity-item">
                 <span className="activity-icon">{event.appIcon}</span>
                 <span className="activity-text">
-                  <strong>{event.uploadedBy}</strong> uploaded {event.appName}
+                  <strong>{event.uploadedBy}</strong> {event.appName}
                 </span>
                 <span className="activity-time">{timeAgo(event.createdAt)}</span>
               </div>
@@ -901,6 +906,9 @@ export default function DashboardPage() {
           onClose={() => setShowUpgradeModal(false)}
           limitMessage={upgradeMessage}
         />
+      )}
+      {showInviteModal && (
+        <InviteModal onClose={() => setShowInviteModal(false)} />
       )}
       {ToastElement}
     </div>

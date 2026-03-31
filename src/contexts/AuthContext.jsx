@@ -44,6 +44,13 @@ export function AuthProvider({ children }) {
     return data;
   }
 
+  async function acceptInvite(body) {
+    const data = await api.acceptInvite(body);
+    snapshotKnownApps();
+    setUser(data.user);
+    return data;
+  }
+
   async function logout() {
     await api.logout();
     sessionStorage.removeItem('baselineAppIds');
@@ -60,7 +67,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, acceptInvite, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
