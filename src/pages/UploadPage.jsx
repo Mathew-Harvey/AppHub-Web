@@ -4,6 +4,7 @@ import { api } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/Toast';
 import IconPicker from '../components/IconPicker';
+import UpgradeModal, { isPlanLimitError } from '../components/UpgradeModal';
 
 const INSPIRATION = [
   { icon: '💰', name: 'Quote calculator', desc: 'Enter line items, get a total with GST.', prompt: 'Build me an HTML quote calculator where I can add line items with description, quantity, and unit price, then see a subtotal plus GST.' },
@@ -67,6 +68,9 @@ export default function UploadPage() {
   const [members, setMembers] = useState([]);
   const [sharedWith, setSharedWith] = useState([]);
   const [uploading, setUploading] = useState(false);
+
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState('');
 
   const isPro = user?.workspace?.plan === 'pro';
 
@@ -142,8 +146,9 @@ export default function UploadPage() {
       poll();
     } catch (err) {
       setConverting(false);
-      if (err.error === 'upgrade_required') {
-        showToast('Pro subscription required for AI conversion', 'error');
+      if (isPlanLimitError(err)) {
+        setUpgradeMessage(err.message || 'This feature requires a Pro subscription.');
+        setShowUpgradeModal(true);
       } else if (err.used !== undefined) {
         showToast(`Monthly limit reached (${err.used}/${err.limit} conversions)`, 'error');
       } else {
@@ -172,7 +177,10 @@ export default function UploadPage() {
       setUploadSuccess(true);
       setTimeout(() => navigate('/'), 2500);
     } catch (err) {
-      if (err.conversionPrompt) {
+      if (isPlanLimitError(err)) {
+        setUpgradeMessage(err.message);
+        setShowUpgradeModal(true);
+      } else if (err.conversionPrompt) {
         setConversionInfo(err);
         setFile(null);
       } else {
@@ -232,14 +240,15 @@ export default function UploadPage() {
           )}
 
           {!isPro && (
-            <div className="upgrade-prompt">
-              <p className="upgrade-text">
-                Want auto-conversion? <strong>AppHub Pro</strong> converts any file to HTML automatically.
+            <div className="ai-locked-prompt" onClick={() => { setUpgradeMessage('Smart AI uploads require a Pro subscription.'); setShowUpgradeModal(true); }}>
+              <div className="ai-locked-header">
+                <span className="ai-locked-icon">&#x1F512;</span>
+                <span className="plan-badge plan-badge-pro plan-badge-sm">PRO</span>
+              </div>
+              <p className="ai-locked-text">
+                <strong>Smart AI uploads</strong> can auto-convert any file to HTML.
               </p>
-              <p className="upgrade-price">$9/month per workspace</p>
-              <button className="btn btn-primary btn-sm" onClick={() => navigate('/admin')}>
-                Upgrade
-              </button>
+              <span className="btn btn-primary btn-sm">Upgrade to Pro — $5/mo</span>
             </div>
           )}
 
@@ -361,6 +370,12 @@ export default function UploadPage() {
         </form>
       )}
 
+      {showUpgradeModal && (
+        <UpgradeModal
+          onClose={() => setShowUpgradeModal(false)}
+          limitMessage={upgradeMessage}
+        />
+      )}
       {ToastElement}
     </div>
   );

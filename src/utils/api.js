@@ -50,6 +50,16 @@ export const api = {
   getPendingDeletions: () => request('/apps/pending-deletions'),
   approveDeletion: (id) => request(`/apps/${id}/approve-deletion`, { method: 'POST' }),
   rejectDeletion: (id) => request(`/apps/${id}/reject-deletion`, { method: 'POST' }),
+  dismissDemos: () => request('/apps/dismiss-demos', { method: 'POST' }),
+
+  // Folders
+  listFolders: () => request('/folders'),
+  createFolder: (body) => request('/folders', { method: 'POST', body: JSON.stringify(body) }),
+  updateFolder: (id, body) => request(`/folders/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  deleteFolder: (id) => request(`/folders/${id}`, { method: 'DELETE' }),
+  addAppToFolder: (folderId, appId) => request(`/folders/${folderId}/apps`, { method: 'POST', body: JSON.stringify({ appId }) }),
+  removeAppFromFolder: (folderId, appId) => request(`/folders/${folderId}/apps/${appId}`, { method: 'DELETE' }),
+  saveFolderLayout: (folders) => request('/folders/layout', { method: 'PUT', body: JSON.stringify({ folders }) }),
 
   // Workspace
   getWorkspace: () => request('/workspace'),
@@ -61,4 +71,9 @@ export const api = {
   revokeInvite: (id) => request(`/workspace/invite/${id}`, { method: 'DELETE' }),
   changeRole: (id, role) => request(`/workspace/members/${id}/role`, { method: 'PUT', body: JSON.stringify({ role }) }),
   removeMember: (id) => request(`/workspace/members/${id}`, { method: 'DELETE' }),
+
+  // Subscription
+  getSubscriptionStatus: () => request('/subscription/status'),
+  createCheckout: () => request('/subscription/checkout', { method: 'POST' }),
+  createPortal: () => request('/subscription/portal', { method: 'POST' }),
 };

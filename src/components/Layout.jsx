@@ -1,6 +1,7 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import EasterEgg from './EasterEgg';
 
 export default function Layout() {
   const { user, logout } = useAuth();
@@ -30,6 +31,11 @@ export default function Layout() {
         <div className="topbar-brand">
           {logoSrc && <img src={logoSrc} alt="" />}
           <h2>{user?.workspace?.name || 'AppHub'}</h2>
+          {ws && (
+            <span className={`plan-badge ${ws.plan === 'pro' ? 'plan-badge-pro' : 'plan-badge-free'}`}>
+              {ws.plan === 'pro' ? 'PRO' : 'FREE'}
+            </span>
+          )}
         </div>
 
         <nav className="topbar-nav">
@@ -67,6 +73,7 @@ export default function Layout() {
       <main className="main-content">
         <Outlet />
       </main>
+      <EasterEgg />
     </div>
   );
 }

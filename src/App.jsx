@@ -38,6 +38,7 @@ export default function App() {
         <Route path="/" element={<DashboardPage />} />
         <Route path="/upload" element={<UploadPage />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/settings" element={<AdminPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

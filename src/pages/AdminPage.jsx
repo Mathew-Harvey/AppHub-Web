@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../utils/api';
 import { useToast } from '../components/Toast';
+import UpgradeModal, { isPlanLimitError } from '../components/UpgradeModal';
 
 function timeAgo(dateString) {
   if (!dateString) return 'Never';
@@ -21,6 +22,7 @@ function timeAgo(dateString) {
 export default function AdminPage() {
   const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { showToast, ToastElement } = useToast();
   const logoInputRef = useRef(null);
 
@@ -28,14 +30,29 @@ export default function AdminPage() {
     if (user && user.role !== 'admin') navigate('/');
   }, [user]);
 
+  useEffect(() => {
+    if (searchParams.get('upgraded') === 'true') {
+      showToast('Welcome to Pro! Your workspace has been upgraded.', 'success');
+      refreshUser();
+      setSearchParams({}, { replace: true });
+    } else if (searchParams.get('cancelled') === 'true') {
+      setSearchParams({}, { replace: true });
+    }
+  }, []);
+
   const [workspace, setWorkspace] = useState(null);
   const [members, setMembers] = useState([]);
   const [invitations, setInvitations] = useState([]);
   const [pendingDeletions, setPendingDeletions] = useState([]);
+  const [subscription, setSubscription] = useState(null);
   const [inviteEmail, setInviteEmail] = useState('');
   const [lastInviteLink, setLastInviteLink] = useState('');
   const [lastResetLink, setLastResetLink] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState('');
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const [wsName, setWsName] = useState('');
   const [primaryColor, setPrimaryColor] = useState('#1a1a2e');
@@ -47,8 +64,9 @@ export default function AdminPage() {
 
   async function loadAll() {
     try {
-      const [wsData, memData, invData, pendingData] = await Promise.all([
-        api.getWorkspace(), api.getMembers(), api.getInvitations(), api.getPendingDeletions()
+      const [wsData, memData, invData, pendingData, subData] = await Promise.all([
+        api.getWorkspace(), api.getMembers(), api.getInvitations(), api.getPendingDeletions(),
+        api.getSubscriptionStatus().catch(() => null)
       ]);
       setWorkspace(wsData.workspace);
       setWsName(wsData.workspace.name);
@@ -59,6 +77,7 @@ export default function AdminPage() {
       setMembers(memData.members);
       setInvitations(invData.invitations);
       setPendingDeletions(pendingData.apps);
+      if (subData) setSubscription(subData);
     } catch (err) {
       showToast('Failed to load admin data', 'error');
     } finally {
@@ -97,7 +116,14 @@ export default function AdminPage() {
       setInviteEmail('');
       showToast(`Invitation created for ${data.invitation.email}`, 'success');
       loadAll();
-    } catch (err) { showToast(err.error || 'Invite failed', 'error'); }
+    } catch (err) {
+      if (isPlanLimitError(err)) {
+        setUpgradeMessage(err.message);
+        setShowUpgradeModal(true);
+      } else {
+        showToast(err.error || 'Invite failed', 'error');
+      }
+    }
   }
 
   async function handleRevokeInvite(id) {
@@ -129,6 +155,28 @@ export default function AdminPage() {
     catch { showToast('Failed to copy', 'error'); }
   }
 
+  async function handleCheckout() {
+    setCheckoutLoading(true);
+    try {
+      const { url } = await api.createCheckout();
+      window.location.href = url;
+    } catch (err) {
+      showToast(err.error || 'Failed to start checkout', 'error');
+      setCheckoutLoading(false);
+    }
+  }
+
+  async function handleManageSubscription() {
+    setPortalLoading(true);
+    try {
+      const { url } = await api.createPortal();
+      window.location.href = url;
+    } catch (err) {
+      showToast(err.error || 'Failed to open billing portal', 'error');
+      setPortalLoading(false);
+    }
+  }
+
   if (loading) {
     return <div style={{ textAlign: 'center', padding: 64 }}><div className="spinner" /></div>;
   }
@@ -143,6 +191,93 @@ export default function AdminPage() {
       <div className="page-header">
         <h1>Workspace Settings</h1>
       </div>
+
+      {/* Subscription */}
+      {subscription && (
+        <div className="admin-section">
+          <h3>Subscription</h3>
+          <div className="card subscription-card">
+            <div className="subscription-header">
+              <div>
+                <span className={`plan-badge plan-badge-lg ${subscription.plan === 'pro' ? 'plan-badge-pro' : 'plan-badge-free'}`}>
+                  {subscription.planName}
+                </span>
+                {subscription.plan === 'pro' && (
+                  <span className="subscription-price-tag">$5/month</span>
+                )}
+              </div>
+            </div>
+
+            <div className="subscription-usage">
+              <div className="usage-item">
+                <div className="usage-label">
+                  <span>Apps</span>
+                  <span className="usage-count">
+                    {subscription.usage.apps}{subscription.maxApps != null ? ` / ${subscription.maxApps}` : ''}{subscription.maxApps == null && ' — Unlimited'}
+                  </span>
+                </div>
+                {subscription.maxApps != null && (
+                  <div className="usage-bar">
+                    <div
+                      className={`usage-bar-fill${subscription.usage.apps / subscription.maxApps >= 0.8 ? ' usage-bar-warning' : ''}`}
+                      style={{ width: `${Math.min(100, (subscription.usage.apps / subscription.maxApps) * 100)}%` }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="usage-item">
+                <div className="usage-label">
+                  <span>Members</span>
+                  <span className="usage-count">
+                    {subscription.usage.members}{subscription.maxMembers != null ? ` / ${subscription.maxMembers}` : ''}{subscription.maxMembers == null && ' — Unlimited'}
+                  </span>
+                </div>
+                {subscription.maxMembers != null && (
+                  <div className="usage-bar">
+                    <div
+                      className={`usage-bar-fill${subscription.usage.members / subscription.maxMembers >= 0.8 ? ' usage-bar-warning' : ''}`}
+                      style={{ width: `${Math.min(100, (subscription.usage.members / subscription.maxMembers) * 100)}%` }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {subscription.aiConversions && (
+                <div className="usage-item">
+                  <div className="usage-label">
+                    <span>AI Conversions</span>
+                    <span className="usage-count">
+                      {subscription.usage.aiConversions} / {subscription.aiConversionsLimit} this month
+                    </span>
+                  </div>
+                  <div className="usage-bar">
+                    <div
+                      className="usage-bar-fill"
+                      style={{ width: `${Math.min(100, (subscription.usage.aiConversions / subscription.aiConversionsLimit) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {subscription.plan === 'free' ? (
+              <div className="subscription-upgrade">
+                <p className="subscription-upgrade-text">
+                  Unlock unlimited apps, unlimited members, and Smart AI uploads.
+                </p>
+                <button className="btn btn-primary" onClick={handleCheckout} disabled={checkoutLoading}>
+                  {checkoutLoading ? <span className="spinner" /> : 'Upgrade to Pro — $5/mo'}
+                </button>
+              </div>
+            ) : (
+              <button className="btn btn-secondary" onClick={handleManageSubscription} disabled={portalLoading} style={{ marginTop: 16 }}>
+                {portalLoading ? <span className="spinner" /> : 'Manage Subscription'}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Pending Deletions */}
       {pendingDeletions.length > 0 && (
@@ -324,6 +459,12 @@ export default function AdminPage() {
         </div>
       </div>
 
+      {showUpgradeModal && (
+        <UpgradeModal
+          onClose={() => setShowUpgradeModal(false)}
+          limitMessage={upgradeMessage}
+        />
+      )}
       {ToastElement}
     </div>
   );
