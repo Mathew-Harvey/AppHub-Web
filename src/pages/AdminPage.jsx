@@ -4,6 +4,20 @@ import { useAuth } from '../contexts/AuthContext';
 import { api } from '../utils/api';
 import { useToast } from '../components/Toast';
 
+function timeAgo(dateString) {
+  if (!dateString) return 'Never';
+  const seconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return 'yesterday';
+  if (days < 30) return `${days} days ago`;
+  return `${Math.floor(days / 30)}mo ago`;
+}
+
 export default function AdminPage() {
   const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
@@ -17,12 +31,11 @@ export default function AdminPage() {
   const [workspace, setWorkspace] = useState(null);
   const [members, setMembers] = useState([]);
   const [invitations, setInvitations] = useState([]);
+  const [pendingDeletions, setPendingDeletions] = useState([]);
   const [inviteEmail, setInviteEmail] = useState('');
   const [lastInviteLink, setLastInviteLink] = useState('');
   const [lastResetLink, setLastResetLink] = useState('');
   const [loading, setLoading] = useState(true);
-
-  const [pendingDeletions, setPendingDeletions] = useState([]);
 
   const [wsName, setWsName] = useState('');
   const [primaryColor, setPrimaryColor] = useState('#1a1a2e');
@@ -33,10 +46,7 @@ export default function AdminPage() {
   async function loadAll() {
     try {
       const [wsData, memData, invData, pendingData] = await Promise.all([
-        api.getWorkspace(),
-        api.getMembers(),
-        api.getInvitations(),
-        api.getPendingDeletions()
+        api.getWorkspace(), api.getMembers(), api.getInvitations(), api.getPendingDeletions()
       ]);
       setWorkspace(wsData.workspace);
       setWsName(wsData.workspace.name);
@@ -58,9 +68,7 @@ export default function AdminPage() {
       await api.updateWorkspace({ name: wsName, primaryColor, accentColor });
       await refreshUser();
       showToast('Workspace updated', 'success');
-    } catch (err) {
-      showToast(err.error || 'Update failed', 'error');
-    }
+    } catch (err) { showToast(err.error || 'Update failed', 'error'); }
   }
 
   async function uploadLogo(e) {
@@ -73,9 +81,7 @@ export default function AdminPage() {
       await refreshUser();
       showToast('Logo updated', 'success');
       loadAll();
-    } catch (err) {
-      showToast(err.error || 'Logo upload failed', 'error');
-    }
+    } catch (err) { showToast(err.error || 'Logo upload failed', 'error'); }
   }
 
   async function handleInvite(e) {
@@ -87,40 +93,23 @@ export default function AdminPage() {
       setInviteEmail('');
       showToast(`Invitation created for ${data.invitation.email}`, 'success');
       loadAll();
-    } catch (err) {
-      showToast(err.error || 'Invite failed', 'error');
-    }
+    } catch (err) { showToast(err.error || 'Invite failed', 'error'); }
   }
 
   async function handleRevokeInvite(id) {
-    try {
-      await api.revokeInvite(id);
-      showToast('Invitation revoked', 'success');
-      loadAll();
-    } catch (err) {
-      showToast(err.error || 'Failed to revoke', 'error');
-    }
+    try { await api.revokeInvite(id); showToast('Invitation revoked', 'success'); loadAll(); }
+    catch (err) { showToast(err.error || 'Failed to revoke', 'error'); }
   }
 
   async function handleRoleChange(memberId, newRole) {
-    try {
-      await api.changeRole(memberId, newRole);
-      showToast('Role updated', 'success');
-      loadAll();
-    } catch (err) {
-      showToast(err.error || 'Failed to change role', 'error');
-    }
+    try { await api.changeRole(memberId, newRole); showToast('Role updated', 'success'); loadAll(); }
+    catch (err) { showToast(err.error || 'Failed to change role', 'error'); }
   }
 
   async function handleRemoveMember(memberId) {
     if (!confirm('Remove this member? They will lose access to the workspace.')) return;
-    try {
-      await api.removeMember(memberId);
-      showToast('Member removed', 'success');
-      loadAll();
-    } catch (err) {
-      showToast(err.error || 'Failed to remove member', 'error');
-    }
+    try { await api.removeMember(memberId); showToast('Member removed', 'success'); loadAll(); }
+    catch (err) { showToast(err.error || 'Failed to remove member', 'error'); }
   }
 
   async function handleResetPassword(memberId) {
@@ -128,27 +117,12 @@ export default function AdminPage() {
       const data = await api.adminReset(memberId);
       setLastResetLink(data.resetLink);
       showToast(`Reset link generated for ${data.email}`, 'success');
-    } catch (err) {
-      showToast(err.error || 'Failed to generate reset link', 'error');
-    }
+    } catch (err) { showToast(err.error || 'Failed to generate reset link', 'error'); }
   }
 
-  async function copyResetLink() {
-    try {
-      await navigator.clipboard.writeText(lastResetLink);
-      showToast('Reset link copied!', 'success');
-    } catch {
-      showToast('Failed to copy', 'error');
-    }
-  }
-
-  async function copyInviteLink() {
-    try {
-      await navigator.clipboard.writeText(lastInviteLink);
-      showToast('Invite link copied!', 'success');
-    } catch {
-      showToast('Failed to copy', 'error');
-    }
+  async function copyLink(text) {
+    try { await navigator.clipboard.writeText(text); showToast('Copied!', 'success'); }
+    catch { showToast('Failed to copy', 'error'); }
   }
 
   if (loading) {
@@ -156,6 +130,9 @@ export default function AdminPage() {
   }
 
   const logoSrc = workspace?.logoData || null;
+  const activeMembers = members.filter(m => m.isActive);
+  const removedMembers = members.filter(m => !m.isActive);
+  const pendingInvites = invitations.filter(i => !i.accepted);
 
   return (
     <div>
@@ -172,39 +149,116 @@ export default function AdminPage() {
               <div className="member-info">
                 <span className="member-name">{app.icon} {app.name}</span>
                 <span className="member-email">
-                  Uploaded by {app.uploadedBy}{app.requestedBy ? ` · Deletion requested by ${app.requestedBy}` : ''}
+                  Uploaded by {app.uploadedBy}{app.requestedBy ? ` · Requested by ${app.requestedBy}` : ''}
                 </span>
               </div>
               <div className="member-actions">
-                <button
-                  className="btn btn-danger btn-sm"
-                  onClick={async () => {
-                    try {
-                      await api.approveDeletion(app.id);
-                      setPendingDeletions(pendingDeletions.filter(a => a.id !== app.id));
-                      showToast(`${app.name} deleted`, 'success');
-                    } catch (err) { showToast(err.error || 'Failed', 'error'); }
-                  }}
-                >
-                  Approve
-                </button>
-                <button
-                  className="btn btn-ghost btn-sm"
-                  onClick={async () => {
-                    try {
-                      await api.rejectDeletion(app.id);
-                      setPendingDeletions(pendingDeletions.filter(a => a.id !== app.id));
-                      showToast(`Deletion of ${app.name} rejected`, 'info');
-                    } catch (err) { showToast(err.error || 'Failed', 'error'); }
-                  }}
-                >
-                  Reject
-                </button>
+                <button className="btn btn-danger btn-sm" onClick={async () => {
+                  try { await api.approveDeletion(app.id); setPendingDeletions(pendingDeletions.filter(a => a.id !== app.id)); showToast(`${app.name} deleted`, 'success'); }
+                  catch (err) { showToast(err.error || 'Failed', 'error'); }
+                }}>Approve</button>
+                <button className="btn btn-ghost btn-sm" onClick={async () => {
+                  try { await api.rejectDeletion(app.id); setPendingDeletions(pendingDeletions.filter(a => a.id !== app.id)); showToast(`Kept ${app.name}`, 'info'); }
+                  catch (err) { showToast(err.error || 'Failed', 'error'); }
+                }}>Reject</button>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      {/* Whitelist — the complete picture of who has access */}
+      <div className="admin-section">
+        <h3>Whitelist ({activeMembers.length} active{pendingInvites.length > 0 ? `, ${pendingInvites.length} pending` : ''})</h3>
+
+        {/* Invite */}
+        <div className="card" style={{ marginBottom: 16 }}>
+          <form className="invite-form" onSubmit={handleInvite}>
+            <input className="input" type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="colleague@company.com" required />
+            <button type="submit" className="btn btn-primary">Invite</button>
+          </form>
+          {lastInviteLink && (
+            <div className="invite-link">
+              <span style={{ flex: 1, fontSize: 12 }}>{lastInviteLink}</span>
+              <button className="btn btn-secondary btn-sm" onClick={() => copyLink(lastInviteLink)}>Copy</button>
+            </div>
+          )}
+        </div>
+
+        {/* Active members */}
+        {activeMembers.map((member) => (
+          <div key={member.id} className="member-row">
+            <div className="member-info">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span className="member-name">{member.displayName}</span>
+                <span className={`role-badge ${member.role}`}>{member.role}</span>
+              </div>
+              <span className="member-email">{member.email}</span>
+              <span className="member-meta">
+                Last login: {timeAgo(member.lastLoginAt)} · Joined {timeAgo(member.createdAt)}
+              </span>
+            </div>
+            <div className="member-actions">
+              {member.id !== user.id && (
+                <>
+                  <button className="btn btn-ghost btn-sm" onClick={() => handleResetPassword(member.id)}>
+                    Reset password
+                  </button>
+                  <button className="btn btn-ghost btn-sm" onClick={() => handleRoleChange(member.id, member.role === 'admin' ? 'member' : 'admin')}>
+                    {member.role === 'admin' ? 'Remove admin' : 'Make admin'}
+                  </button>
+                  <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleRemoveMember(member.id)}>
+                    Remove
+                  </button>
+                </>
+              )}
+              {member.id === user.id && (
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>You</span>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {/* Reset link display */}
+        {lastResetLink && (
+          <div className="invite-link" style={{ marginTop: 8 }}>
+            <span style={{ flex: 1, fontSize: 12 }}>{lastResetLink}</span>
+            <button className="btn btn-secondary btn-sm" onClick={() => copyLink(lastResetLink)}>Copy</button>
+          </div>
+        )}
+
+        {/* Pending invitations */}
+        {pendingInvites.length > 0 && (
+          <div style={{ marginTop: 20 }}>
+            <label className="label">Pending invitations</label>
+            {pendingInvites.map((inv) => (
+              <div key={inv.id} className="member-row" style={{ opacity: 0.7 }}>
+                <div className="member-info">
+                  <span className="member-email">{inv.email}</span>
+                  <span className="member-meta">Invited {timeAgo(inv.createdAt)}</span>
+                </div>
+                <button className="btn btn-ghost btn-sm" onClick={() => handleRevokeInvite(inv.id)}>Revoke</button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Removed members */}
+        {removedMembers.length > 0 && (
+          <div style={{ marginTop: 20 }}>
+            <label className="label">Removed</label>
+            {removedMembers.map((member) => (
+              <div key={member.id} className="member-row" style={{ opacity: 0.5 }}>
+                <div className="member-info">
+                  <span className="member-name" style={{ textDecoration: 'line-through' }}>{member.displayName}</span>
+                  <span className="member-email">{member.email}</span>
+                </div>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Deactivated</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Branding */}
       <div className="admin-section">
@@ -219,9 +273,7 @@ export default function AdminPage() {
             <div className="form-group">
               <label className="label">Logo</label>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                {logoSrc && (
-                  <img src={logoSrc} alt="Logo" style={{ height: 40, borderRadius: 4 }} />
-                )}
+                {logoSrc && <img src={logoSrc} alt="Logo" style={{ height: 40, borderRadius: 4 }} />}
                 <button type="button" className="btn btn-secondary btn-sm" onClick={() => logoInputRef.current?.click()}>
                   {logoSrc ? 'Change logo' : 'Upload logo'}
                 </button>
@@ -248,93 +300,6 @@ export default function AdminPage() {
             <button type="submit" className="btn btn-primary">Save branding</button>
           </form>
         </div>
-      </div>
-
-      {/* Invite Members */}
-      <div className="admin-section">
-        <h3>Invite Members</h3>
-        <div className="card">
-          <form className="invite-form" onSubmit={handleInvite}>
-            <input
-              className="input"
-              type="email"
-              value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
-              placeholder="colleague@company.com"
-              required
-            />
-            <button type="submit" className="btn btn-primary">Invite</button>
-          </form>
-
-          {lastInviteLink && (
-            <div className="invite-link">
-              <span style={{ flex: 1, fontSize: 12 }}>{lastInviteLink}</span>
-              <button className="btn btn-secondary btn-sm" onClick={copyInviteLink}>Copy</button>
-            </div>
-          )}
-
-          <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 12 }}>
-            Share the invite link with your team member. They'll use it to register and join your workspace.
-          </p>
-
-          {invitations.filter(i => !i.accepted).length > 0 && (
-            <div style={{ marginTop: 16 }}>
-              <label className="label">Pending Invitations</label>
-              {invitations.filter(i => !i.accepted).map((inv) => (
-                <div key={inv.id} className="member-row">
-                  <div className="member-info">
-                    <span className="member-email">{inv.email}</span>
-                  </div>
-                  <button className="btn btn-ghost btn-sm" onClick={() => handleRevokeInvite(inv.id)}>
-                    Revoke
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Members */}
-      <div className="admin-section">
-        <h3>Members ({members.filter(m => m.isActive).length})</h3>
-        {members.filter(m => m.isActive).map((member) => (
-          <div key={member.id} className="member-row">
-            <div className="member-info">
-              <span className="member-name">{member.displayName}</span>
-              <span className="member-email">{member.email}</span>
-            </div>
-            <div className="member-actions">
-              <span className={`role-badge ${member.role}`}>{member.role}</span>
-              {member.id !== user.id && (
-                <>
-                  <button className="btn btn-ghost btn-sm" onClick={() => handleResetPassword(member.id)}>
-                    Reset password
-                  </button>
-                  <button
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => handleRoleChange(member.id, member.role === 'admin' ? 'member' : 'admin')}
-                  >
-                    {member.role === 'admin' ? 'Demote' : 'Make admin'}
-                  </button>
-                  <button
-                    className="btn btn-ghost btn-sm"
-                    style={{ color: 'var(--danger)' }}
-                    onClick={() => handleRemoveMember(member.id)}
-                  >
-                    Remove
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        ))}
-        {lastResetLink && (
-          <div className="invite-link" style={{ marginTop: 12 }}>
-            <span style={{ flex: 1, fontSize: 12 }}>{lastResetLink}</span>
-            <button className="btn btn-secondary btn-sm" onClick={copyResetLink}>Copy</button>
-          </div>
-        )}
       </div>
 
       {ToastElement}
