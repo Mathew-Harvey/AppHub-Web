@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { api } from '../utils/api';
 
-export default function LoginPage() {
-  const { login } = useAuth();
+export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -14,19 +13,36 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
+      await api.requestReset(email);
+      setSubmitted(true);
     } catch (err) {
-      setError(err.error || 'Login failed');
+      setError(err.error || 'Something went wrong');
     } finally {
       setLoading(false);
     }
   };
 
+  if (submitted) {
+    return (
+      <div className="auth-page">
+        <div className="auth-card card">
+          <h1>Check with your admin</h1>
+          <p className="subtitle">
+            If an account exists for {email}, your workspace admin can generate a reset link for you from the Admin panel. Contact them to get back in.
+          </p>
+          <div className="form-footer">
+            <Link to="/login">Back to sign in</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="auth-page">
       <div className="auth-card card">
-        <h1>Welcome back</h1>
-        <p className="subtitle">Sign in to your AppHub workspace</p>
+        <h1>Reset password</h1>
+        <p className="subtitle">Enter your email and we'll help you get back in.</p>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -42,29 +58,15 @@ export default function LoginPage() {
             />
           </div>
 
-          <div className="form-group">
-            <label className="label">Password</label>
-            <input
-              className="input"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-            />
-          </div>
-
           {error && <p className="error-text">{error}</p>}
 
           <button className="btn btn-primary btn-full" type="submit" disabled={loading} style={{ marginTop: 8 }}>
-            {loading ? <span className="spinner" /> : 'Sign in'}
+            {loading ? <span className="spinner" /> : 'Continue'}
           </button>
         </form>
 
         <div className="form-footer">
-          <Link to="/forgot-password">Forgot password?</Link>
-          <span style={{ margin: '0 8px', color: 'var(--border)' }}>|</span>
-          <Link to="/register">Create workspace</Link>
+          <Link to="/login">Back to sign in</Link>
         </div>
       </div>
     </div>

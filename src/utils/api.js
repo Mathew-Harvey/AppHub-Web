@@ -30,6 +30,10 @@ export const api = {
   login: (body) => request('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
   logout: () => request('/auth/logout', { method: 'POST' }),
   me: () => request('/auth/me'),
+  changePassword: (body) => request('/auth/change-password', { method: 'POST', body: JSON.stringify(body) }),
+  requestReset: (email) => request('/auth/request-reset', { method: 'POST', body: JSON.stringify({ email }) }),
+  resetPassword: (token, newPassword) => request('/auth/reset-password', { method: 'POST', body: JSON.stringify({ token, newPassword }) }),
+  adminReset: (userId) => request('/auth/admin-reset', { method: 'POST', body: JSON.stringify({ userId }) }),
 
   // Apps
   listApps: () => request('/apps'),

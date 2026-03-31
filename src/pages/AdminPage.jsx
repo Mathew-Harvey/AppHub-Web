@@ -19,6 +19,7 @@ export default function AdminPage() {
   const [invitations, setInvitations] = useState([]);
   const [inviteEmail, setInviteEmail] = useState('');
   const [lastInviteLink, setLastInviteLink] = useState('');
+  const [lastResetLink, setLastResetLink] = useState('');
   const [loading, setLoading] = useState(true);
 
   const [pendingDeletions, setPendingDeletions] = useState([]);
@@ -119,6 +120,25 @@ export default function AdminPage() {
       loadAll();
     } catch (err) {
       showToast(err.error || 'Failed to remove member', 'error');
+    }
+  }
+
+  async function handleResetPassword(memberId) {
+    try {
+      const data = await api.adminReset(memberId);
+      setLastResetLink(data.resetLink);
+      showToast(`Reset link generated for ${data.email}`, 'success');
+    } catch (err) {
+      showToast(err.error || 'Failed to generate reset link', 'error');
+    }
+  }
+
+  async function copyResetLink() {
+    try {
+      await navigator.clipboard.writeText(lastResetLink);
+      showToast('Reset link copied!', 'success');
+    } catch {
+      showToast('Failed to copy', 'error');
     }
   }
 
@@ -288,6 +308,9 @@ export default function AdminPage() {
               <span className={`role-badge ${member.role}`}>{member.role}</span>
               {member.id !== user.id && (
                 <>
+                  <button className="btn btn-ghost btn-sm" onClick={() => handleResetPassword(member.id)}>
+                    Reset password
+                  </button>
                   <button
                     className="btn btn-ghost btn-sm"
                     onClick={() => handleRoleChange(member.id, member.role === 'admin' ? 'member' : 'admin')}
@@ -306,6 +329,12 @@ export default function AdminPage() {
             </div>
           </div>
         ))}
+        {lastResetLink && (
+          <div className="invite-link" style={{ marginTop: 12 }}>
+            <span style={{ flex: 1, fontSize: 12 }}>{lastResetLink}</span>
+            <button className="btn btn-secondary btn-sm" onClick={copyResetLink}>Copy</button>
+          </div>
+        )}
       </div>
 
       {ToastElement}
