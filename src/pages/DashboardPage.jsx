@@ -17,10 +17,6 @@ function timeAgo(dateString) {
   return `${Math.floor(days / 30)}mo ago`;
 }
 
-function isNewApp(createdAt) {
-  return Date.now() - new Date(createdAt).getTime() < 48 * 60 * 60 * 1000;
-}
-
 export default function DashboardPage() {
   const { user } = useAuth();
   const { showToast, ToastElement } = useToast();
@@ -30,6 +26,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [newAppIds, setNewAppIds] = useState(new Set());
 
   // Long-press jiggle: tracks the APP ID, not the index
   const [jiggleId, setJiggleId] = useState(null);
@@ -71,6 +68,13 @@ export default function DashboardPage() {
       setApps(appsData.apps);
       setStats(statsData);
       setError(null);
+
+      const currentIds = appsData.apps.map(a => a.id);
+      const baseline = new Set(JSON.parse(sessionStorage.getItem('baselineAppIds') || '[]'));
+      if (baseline.size > 0) {
+        setNewAppIds(new Set(currentIds.filter(id => !baseline.has(id))));
+      }
+      localStorage.setItem('knownAppIds', JSON.stringify(currentIds));
     } catch (err) {
       setError(err.error || 'Failed to load apps. Please try again.');
     } finally {
@@ -287,7 +291,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
               )}
-              {!inJiggle && isNewApp(app.createdAt) && <span className="app-tile-new">New</span>}
+              {!inJiggle && newAppIds.has(app.id) && <span className="app-tile-new">New</span>}
               {!inJiggle && app.visibility !== 'team' && (
                 <span className="app-tile-badge">{app.visibility === 'private' ? '🔒' : '👥'}</span>
               )}

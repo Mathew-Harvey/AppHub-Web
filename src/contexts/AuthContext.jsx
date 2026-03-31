@@ -14,6 +14,9 @@ export function AuthProvider({ children }) {
   async function checkAuth() {
     try {
       const data = await api.me();
+      if (!sessionStorage.getItem('baselineAppIds')) {
+        snapshotKnownApps();
+      }
       setUser(data.user);
     } catch {
       setUser(null);
@@ -22,20 +25,28 @@ export function AuthProvider({ children }) {
     }
   }
 
+  function snapshotKnownApps() {
+    const known = localStorage.getItem('knownAppIds');
+    sessionStorage.setItem('baselineAppIds', known || '[]');
+  }
+
   async function login(email, password) {
     const data = await api.login({ email, password });
+    snapshotKnownApps();
     setUser(data.user);
     return data;
   }
 
   async function register(body) {
     const data = await api.register(body);
+    snapshotKnownApps();
     setUser(data.user);
     return data;
   }
 
   async function logout() {
     await api.logout();
+    sessionStorage.removeItem('baselineAppIds');
     setUser(null);
   }
 
