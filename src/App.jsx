@@ -9,6 +9,7 @@ import DashboardPage from './pages/DashboardPage';
 import UploadPage from './pages/UploadPage';
 import AppViewerPage from './pages/AppViewerPage';
 import AdminPage from './pages/AdminPage';
+import AboutPage from './pages/AboutPage';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -32,6 +33,7 @@ export default function App() {
       <Route path="/forgot-password" element={<GuestRoute><ForgotPasswordPage /></GuestRoute>} />
       <Route path="/reset-password" element={<GuestRoute><ResetPasswordPage /></GuestRoute>} />
       <Route path="/app/:id" element={<ProtectedRoute><AppViewerPage /></ProtectedRoute>} />
+      <Route path="/about" element={<ProtectedRoute><AboutPage /></ProtectedRoute>} />
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/upload" element={<UploadPage />} />

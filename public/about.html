@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About AppHub — Your team's tools, all in one place</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Custom Properties ──────────────────────────────────────────── */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root,[data-theme="light"]{
+  --bg:#faf9f6;--surface:#ffffff;--surface-alt:#f2f0eb;
+  --text:#111827;--text-secondary:#4b5563;--muted:#6b7280;
+  --accent:#e94560;--accent-hover:#d63b56;
+  --accent-subtle:rgba(233,69,96,.06);--accent-glow:rgba(233,69,96,.12);
+  --border:#e5e2dc;--border-strong:#d0cdc6;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,.06);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.1);
+  --nav-bg:rgba(250,249,246,.92);
+  --radius:14px;--radius-sm:10px;
+  --code-bg:#1e1e2e;--code-text:#cdd6f4;--code-border:#313244;
+  --sidebar-w:260px;
+  color-scheme:light;
+}
+[data-theme="dark"]{
+  --bg:#0c0c18;--surface:#151527;--surface-alt:#1c1c34;
+  --text:#eaeaf0;--text-secondary:#a0a0b8;--muted:#6b6b82;
+  --accent:#f06480;--accent-hover:#ff7a96;
+  --accent-subtle:rgba(240,100,128,.07);--accent-glow:rgba(240,100,128,.2);
+  --border:#28284a;--border-strong:#38385a;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.2);
+  --shadow-md:0 4px 16px rgba(0,0,0,.3);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.45);
+  --nav-bg:rgba(12,12,24,.92);
+  --code-bg:#11111b;--code-text:#cdd6f4;--code-border:#28284a;
+  color-scheme:dark;
+}
+.themed *{transition:background-color .3s ease,color .3s ease,border-color .3s ease,box-shadow .3s ease}
+
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{
+  font-family:'DM Sans',system-ui,sans-serif;
+  background:var(--bg);color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  line-height:1.6;letter-spacing:-.005em;
+}
+h1,h2,h3,h4,h5,h6{font-family:'Space Grotesk',sans-serif;font-weight:700;letter-spacing:-.02em;line-height:1.2}
+a{color:var(--accent);text-decoration:none}
+a:hover{color:var(--accent-hover)}
+img{max-width:100%;display:block}
+button{font-family:inherit;cursor:pointer;border:none;outline:none}
+
+/* ── Top Nav ────────────────────────────────────────────────────────────── */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;height:64px;
+  background:var(--nav-bg);
+  backdrop-filter:saturate(180%) blur(16px);-webkit-backdrop-filter:saturate(180%) blur(16px);
+  border-bottom:1px solid var(--border);
+}
+.nav-left{display:flex;align-items:center;gap:12px}
+.nav-logo{
+  width:34px;height:34px;border-radius:9px;
+  background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;
+  flex-shrink:0;
+}
+.nav-wordmark{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;letter-spacing:-.02em;color:var(--text)}
+.nav-right{display:flex;align-items:center;gap:12px}
+.btn-theme{
+  width:38px;height:38px;border-radius:10px;
+  background:transparent;display:flex;align-items:center;justify-content:center;
+  color:var(--muted);transition:all .2s;
+}
+.btn-theme:hover{background:var(--accent-subtle);color:var(--text)}
+.btn-theme svg{width:20px;height:20px}
+.btn-cta{
+  padding:10px 24px;border-radius:var(--radius-sm);
+  background:var(--accent);color:#fff;font-size:14px;font-weight:600;
+  transition:all .2s;letter-spacing:-.01em;
+}
+.btn-cta:hover{background:var(--accent-hover);box-shadow:0 0 20px var(--accent-glow)}
+.btn-hamburger{
+  display:none;width:38px;height:38px;border-radius:10px;
+  background:transparent;align-items:center;justify-content:center;
+  color:var(--muted);transition:all .2s;
+}
+.btn-hamburger:hover{background:var(--accent-subtle);color:var(--text)}
+.btn-hamburger svg{width:22px;height:22px}
+
+/* ── Sidebar ────────────────────────────────────────────────────────────── */
+.sidebar{
+  position:fixed;top:64px;left:0;bottom:0;
+  width:var(--sidebar-w);padding:32px 24px;
+  overflow-y:auto;z-index:100;
+  border-right:1px solid var(--border);
+  background:var(--bg);
+}
+.sidebar-label{
+  font-size:11px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.12em;color:var(--muted);margin-bottom:16px;
+}
+.sidebar-links{list-style:none;display:flex;flex-direction:column;gap:2px}
+.sidebar-link{
+  display:block;padding:8px 14px;border-radius:var(--radius-sm);
+  font-size:14px;font-weight:500;color:var(--muted);
+  text-decoration:none;transition:all .15s;
+  border-left:2px solid transparent;
+}
+.sidebar-link:hover{color:var(--text-secondary);background:var(--accent-subtle)}
+.sidebar-link.active{color:var(--text);background:var(--accent-subtle);border-left-color:var(--accent)}
+.sidebar-overlay{
+  display:none;position:fixed;inset:0;z-index:99;
+  background:rgba(0,0,0,.4);backdrop-filter:blur(4px);
+}
+
+/* ── Main Content ───────────────────────────────────────────────────────── */
+.main{margin-top:64px;margin-left:var(--sidebar-w);min-height:calc(100vh - 64px)}
+.content{max-width:780px;margin:0 auto;padding:0 40px}
+
+/* ── Section Styles ─────────────────────────────────────────────────────── */
+.section{padding:80px 0 40px}
+.section + .section{border-top:1px solid var(--border)}
+.section-label{
+  font-size:12px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.12em;color:var(--accent);margin-bottom:16px;
+}
+.section-heading{
+  font-size:clamp(26px,4vw,36px);margin-bottom:20px;
+  padding-left:16px;border-left:3px solid var(--accent);
+}
+.section-subheading{font-size:clamp(18px,2.5vw,22px);margin:40px 0 14px;color:var(--text)}
+.section p{color:var(--text-secondary);margin-bottom:16px;font-size:15.5px;line-height:1.7}
+.section p strong{color:var(--text);font-weight:600}
+
+/* ── Hero ───────────────────────────────────────────────────────────────── */
+.hero{padding:100px 0 60px;text-align:center}
+.hero .section-label{margin-bottom:20px}
+.hero-title{font-size:clamp(32px,5vw,48px);margin-bottom:16px;border:none;padding:0}
+.hero-subtitle{
+  font-size:clamp(16px,2vw,19px);color:var(--text-secondary);
+  max-width:580px;margin:0 auto 32px;line-height:1.6;
+}
+.hero-divider{
+  width:48px;height:3px;border-radius:2px;
+  background:var(--accent);margin:0 auto;
+}
+
+/* ── Story Section ──────────────────────────────────────────────────────── */
+.story-attribution{
+  display:flex;align-items:center;gap:14px;
+  padding:20px 0;margin-bottom:24px;
+}
+.story-avatar{
+  width:48px;height:48px;border-radius:50%;
+  background:var(--accent-subtle);border:2px solid var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;
+  color:var(--accent);flex-shrink:0;
+}
+.story-byline{font-size:14px;color:var(--muted)}
+.story-byline strong{color:var(--text);display:block;font-size:15px}
+
+/* ── What is AppHub ─────────────────────────────────────────────────────── */
+.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:32px 0}
+.feature-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px;
+  transition:all .25s;
+}
+.feature-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.feature-card-icon{
+  width:44px;height:44px;border-radius:12px;
+  background:var(--accent-subtle);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:14px;color:var(--accent);
+}
+.feature-card-icon svg{width:22px;height:22px}
+.feature-card h4{font-size:15px;margin-bottom:6px}
+.feature-card p{font-size:13.5px;color:var(--muted);margin:0;line-height:1.55}
+
+/* ── Step List ──────────────────────────────────────────────────────────── */
+.step-list{counter-reset:steps;margin:24px 0}
+.step{
+  counter-increment:steps;
+  position:relative;padding:24px 24px 24px 72px;
+  margin-bottom:12px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);transition:all .25s;
+}
+.step:hover{border-color:var(--accent);box-shadow:var(--shadow-sm)}
+.step::before{
+  content:counter(steps);position:absolute;left:22px;top:24px;
+  width:32px;height:32px;border-radius:9px;
+  background:var(--accent);color:#fff;
+  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;
+  display:flex;align-items:center;justify-content:center;
+}
+.step h4{font-size:16px;margin-bottom:8px}
+.step p{font-size:14px;color:var(--text-secondary);margin-bottom:8px}
+.step ul{margin:8px 0 0 16px;font-size:14px;color:var(--text-secondary)}
+.step li{margin-bottom:4px;line-height:1.55}
+.step li code{
+  font-size:13px;padding:2px 6px;border-radius:4px;
+  background:var(--accent-subtle);color:var(--accent);
+}
+
+/* ── Code Block ─────────────────────────────────────────────────────────── */
+.code-block{
+  position:relative;
+  background:var(--code-bg);border:1px solid var(--code-border);
+  border-radius:var(--radius-sm);
+  margin:20px 0;overflow:hidden;
+}
+.code-block pre{
+  padding:24px;padding-right:80px;
+  font-family:'SF Mono','Fira Code',monospace;font-size:13.5px;
+  line-height:1.65;color:var(--code-text);
+  white-space:pre-wrap;word-break:break-word;
+  overflow-x:auto;max-height:400px;overflow-y:auto;
+  margin:0;
+}
+.btn-copy{
+  position:absolute;top:12px;right:12px;
+  padding:6px 14px;border-radius:8px;
+  background:rgba(255,255,255,.08);color:var(--code-text);
+  font-size:12px;font-weight:600;
+  display:flex;align-items:center;gap:5px;
+  transition:all .2s;z-index:2;
+}
+.btn-copy:hover{background:rgba(255,255,255,.15)}
+.btn-copy svg{width:14px;height:14px}
+.btn-copy.copied{background:rgba(52,199,89,.2);color:#34c759}
+
+/* ── Prompt Cards ───────────────────────────────────────────────────────── */
+.prompt-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin:32px 0}
+.prompt-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;
+  transition:all .25s;
+}
+.prompt-card:hover{border-color:var(--border-strong);box-shadow:var(--shadow-sm)}
+.prompt-card-header{
+  display:flex;align-items:center;gap:12px;
+  padding:20px 22px;cursor:pointer;
+  transition:background .15s;user-select:none;
+}
+.prompt-card-header:hover{background:var(--accent-subtle)}
+.prompt-card-emoji{font-size:28px;flex-shrink:0;line-height:1}
+.prompt-card-info{flex:1;min-width:0}
+.prompt-card-info h4{font-size:15px;margin-bottom:2px}
+.prompt-card-info p{font-size:13px;color:var(--muted);margin:0;line-height:1.4}
+.prompt-card-chevron{
+  width:24px;height:24px;color:var(--muted);
+  transition:transform .25s;flex-shrink:0;
+}
+.prompt-card.open .prompt-card-chevron{transform:rotate(180deg)}
+.prompt-card-body{
+  max-height:0;overflow:hidden;
+  transition:max-height .35s ease;
+}
+.prompt-card.open .prompt-card-body{max-height:2000px}
+.prompt-card-inner{padding:0 22px 22px}
+.prompt-card-inner .output-note{
+  font-size:13px;color:var(--muted);margin-top:12px;
+  padding:10px 14px;background:var(--surface-alt);
+  border-radius:var(--radius-sm);
+}
+.prompt-card-inner .output-note strong{color:var(--text-secondary)}
+
+/* ── Tips List ──────────────────────────────────────────────────────────── */
+.tips-list{list-style:none;margin:24px 0}
+.tips-list li{
+  position:relative;padding:14px 14px 14px 44px;
+  margin-bottom:8px;border-radius:var(--radius-sm);
+  font-size:15px;color:var(--text-secondary);line-height:1.6;
+  background:var(--surface);border:1px solid var(--border);
+  transition:all .2s;
+}
+.tips-list li:hover{border-color:var(--accent);background:var(--accent-subtle)}
+.tips-list li::before{
+  content:'';position:absolute;left:18px;top:20px;
+  width:8px;height:8px;border-radius:50%;background:var(--accent);
+}
+
+/* ── Getting Started Steps ──────────────────────────────────────────────── */
+.gs-steps{display:flex;flex-direction:column;gap:16px;margin:24px 0}
+.gs-step{
+  display:flex;align-items:flex-start;gap:18px;
+  padding:24px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius);
+  transition:all .25s;
+}
+.gs-step:hover{border-color:var(--accent);box-shadow:var(--shadow-sm)}
+.gs-step-num{
+  width:40px;height:40px;border-radius:12px;flex-shrink:0;
+  background:var(--accent);color:#fff;
+  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;
+  display:flex;align-items:center;justify-content:center;
+}
+.gs-step-content h4{font-size:16px;margin-bottom:4px}
+.gs-step-content p{font-size:14px;color:var(--text-secondary);margin:0;line-height:1.55}
+
+/* ── FAQ ────────────────────────────────────────────────────────────────── */
+.faq-list{margin:24px 0}
+.faq-item{
+  border:1px solid var(--border);border-radius:var(--radius);
+  margin-bottom:10px;overflow:hidden;
+  background:var(--surface);transition:all .25s;
+}
+.faq-item:hover{border-color:var(--border-strong)}
+.faq-q{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 22px;cursor:pointer;gap:12px;
+  font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15px;
+  user-select:none;transition:background .15s;
+}
+.faq-q:hover{background:var(--accent-subtle)}
+.faq-q svg{width:20px;height:20px;color:var(--muted);transition:transform .25s;flex-shrink:0}
+.faq-item.open .faq-q svg{transform:rotate(180deg)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .35s ease}
+.faq-item.open .faq-a{max-height:600px}
+.faq-a-inner{padding:0 22px 20px;font-size:14.5px;color:var(--text-secondary);line-height:1.65}
+
+/* ── Closing ────────────────────────────────────────────────────────────── */
+.closing{text-align:center;padding:80px 0 40px}
+.closing p{max-width:560px;margin:0 auto 16px;font-size:16px}
+
+/* ── CTA ────────────────────────────────────────────────────────────────── */
+.cta-section{
+  text-align:center;padding:60px 0 80px;
+}
+.cta-card{
+  max-width:480px;margin:0 auto;padding:48px 40px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);box-shadow:var(--shadow-md);
+}
+.cta-card h3{font-size:22px;margin-bottom:8px}
+.cta-card p{font-size:14px;color:var(--muted);margin-bottom:24px}
+.cta-form{display:flex;gap:10px}
+.cta-input{
+  flex:1;padding:12px 16px;border-radius:var(--radius-sm);
+  background:var(--surface-alt);border:1px solid var(--border);
+  color:var(--text);font-size:14px;transition:all .2s;
+}
+.cta-input:focus{border-color:var(--accent);outline:none}
+.cta-input::placeholder{color:var(--muted)}
+.cta-success{display:none;color:var(--accent);font-size:14px;font-weight:500;margin-top:16px}
+
+/* ── Footer ─────────────────────────────────────────────────────────────── */
+.footer{
+  padding:40px 0;border-top:1px solid var(--border);
+  text-align:center;font-size:13px;color:var(--muted);
+}
+.footer a{color:var(--accent)}
+.footer-row{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+
+/* ── Back to Top ────────────────────────────────────────────────────────── */
+.btn-top{
+  position:fixed;bottom:32px;right:32px;z-index:150;
+  width:44px;height:44px;border-radius:50%;
+  background:var(--accent);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--shadow-md);
+  opacity:0;pointer-events:none;
+  transition:all .3s;
+}
+.btn-top.visible{opacity:1;pointer-events:auto}
+.btn-top:hover{background:var(--accent-hover);transform:translateY(-2px)}
+.btn-top svg{width:20px;height:20px}
+
+/* ── Reveal Animation ───────────────────────────────────────────────────── */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ── Common Mistakes ────────────────────────────────────────────────────── */
+.mistake-list{margin:24px 0;display:flex;flex-direction:column;gap:10px}
+.mistake{
+  padding:18px 22px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius);
+  font-size:14.5px;line-height:1.6;color:var(--text-secondary);
+}
+.mistake strong{color:var(--text);display:block;margin-bottom:4px;font-size:14px}
+.mistake code{
+  font-size:13px;padding:2px 6px;border-radius:4px;
+  background:var(--accent-subtle);color:var(--accent);
+}
+
+/* ── AI Tool Options ────────────────────────────────────────────────────── */
+.tool-options{display:flex;gap:12px;margin:16px 0 24px;flex-wrap:wrap}
+.tool-option{
+  padding:12px 18px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius-sm);
+  font-size:14px;color:var(--text-secondary);
+  transition:all .2s;
+}
+.tool-option:hover{border-color:var(--accent)}
+.tool-option strong{color:var(--text);display:block;font-size:14px;margin-bottom:2px}
+.tool-option span{font-size:12px;color:var(--muted)}
+
+/* ── Responsive: 900px ──────────────────────────────────────────────────── */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);transition:transform .3s ease;z-index:110;width:280px}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-overlay.open{display:block}
+  .main{margin-left:0}
+  .content{padding:0 24px}
+  .btn-hamburger{display:flex}
+  .feature-grid{grid-template-columns:1fr 1fr}
+  .prompt-grid{grid-template-columns:1fr 1fr}
+  .hero{padding:80px 0 48px}
+  .section{padding:60px 0 32px}
+}
+
+/* ── Responsive: 600px ──────────────────────────────────────────────────── */
+@media(max-width:600px){
+  .nav{padding:0 18px;height:56px}
+  html{scroll-padding-top:60px}
+  .sidebar{top:56px;width:260px}
+  .main{margin-top:56px}
+  .content{padding:0 18px}
+  .btn-cta{display:none}
+  .nav-wordmark{font-size:15px}
+  .hero{padding:56px 0 36px}
+  .hero-title{font-size:clamp(26px,7vw,36px)}
+  .section{padding:48px 0 24px}
+  .section-heading{font-size:clamp(22px,5vw,28px)}
+  .feature-grid{grid-template-columns:1fr}
+  .prompt-grid{grid-template-columns:1fr}
+  .step{padding:20px 18px 20px 64px}
+  .step::before{left:16px;top:20px}
+  .cta-form{flex-direction:column}
+  .cta-card{padding:32px 24px}
+  .gs-step{flex-direction:column;gap:12px}
+  .tool-options{flex-direction:column}
+  .btn-top{bottom:20px;right:20px;width:40px;height:40px}
+}
+
+/* ── Embedded (iframe inside AppHub) ─────────────────────────────────────── */
+body.embedded .nav{display:none}
+body.embedded .sidebar{top:0;height:100vh}
+body.embedded .main{margin-top:0}
+@media(max-width:900px){
+  body.embedded .sidebar{top:0;height:100vh}
+  body.embedded .main{margin-top:0}
+}
+
+/* ── Print ──────────────────────────────────────────────────────────────── */
+@media print{
+  *{color:#111!important;background:#fff!important;box-shadow:none!important;border-color:#ddd!important}
+  .nav,.sidebar,.sidebar-overlay,.btn-top,.btn-copy,.btn-theme,.btn-hamburger,.btn-cta,.cta-section{display:none!important}
+  .main{margin-left:0!important;margin-top:0!important}
+  .content{max-width:100%;padding:0 20px}
+  .section{padding:32px 0 16px;page-break-inside:avoid}
+  .code-block{border:1px solid #ccc}
+  .code-block pre{color:#222!important;background:#f5f5f5!important;font-size:11px}
+  .prompt-card-body{max-height:none!important}
+  .faq-a{max-height:none!important}
+  .reveal{opacity:1!important;transform:none!important}
+  a{text-decoration:underline}
+  a::after{content:" (" attr(href) ")";font-size:10px;color:#666}
+  .footer a::after{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ── Navigation ───────────────────────────────────────────────────────── -->
+<nav class="nav">
+  <div class="nav-left">
+    <button class="btn-hamburger" id="menuBtn" aria-label="Toggle navigation">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="nav-logo">A</div>
+    <span class="nav-wordmark">AppHub</span>
+  </div>
+  <div class="nav-right">
+    <button class="btn-theme" id="themeBtn" aria-label="Toggle theme">
+      <svg id="sunIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg id="moonIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <a href="https://apphub.fus.wiki" class="btn-cta">Get Early Access</a>
+  </div>
+</nav>
+
+<!-- ── Sidebar ──────────────────────────────────────────────────────────── -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-label">On this page</div>
+  <ul class="sidebar-links">
+    <li><a href="#story" class="sidebar-link" data-section="story">The Story</a></li>
+    <li><a href="#what" class="sidebar-link" data-section="what">What is AppHub</a></li>
+    <li><a href="#build" class="sidebar-link" data-section="build">Build Your Own</a></li>
+    <li><a href="#prompts" class="sidebar-link" data-section="prompts">Example Prompts</a></li>
+    <li><a href="#tips" class="sidebar-link" data-section="tips">Tips</a></li>
+    <li><a href="#getstarted" class="sidebar-link" data-section="getstarted">Get Started</a></li>
+    <li><a href="#faq" class="sidebar-link" data-section="faq">FAQ</a></li>
+    <li><a href="#next" class="sidebar-link" data-section="next">What's Next</a></li>
+  </ul>
+</aside>
+
+<!-- ── Main Content ─────────────────────────────────────────────────────── -->
+<div class="main">
+<div class="content">
+
+<!-- Hero -->
+<section class="hero reveal">
+  <div class="section-label">About AppHub</div>
+  <h1 class="hero-title">Your team's tools, all in one place</h1>
+  <p class="hero-subtitle">AppHub is a place where small teams upload single-file HTML tools they build with AI — and share them with everyone in 30 seconds. No developers needed. No deployment pipeline. Just drag, name, and go.</p>
+  <div class="hero-divider"></div>
+</section>
+
+<!-- ── Section 1: The Story ─────────────────────────────────────────────── -->
+<section class="section reveal" id="story">
+  <div class="section-label">Why this exists</div>
+  <h2 class="section-heading">The Story</h2>
+
+  <div class="story-attribution">
+    <div class="story-avatar">MH</div>
+    <div class="story-byline">
+      <strong>Mat Harvey</strong>
+      Biofouling Manager &amp; CTO of MarineStream, Franmarine Underwater Services — Henderson, Western Australia
+    </div>
+  </div>
+
+  <p>I kept building small tools with AI. A quote calculator for the sales team. A unit converter for our divers. A report template generator that saved someone an hour every Friday afternoon. Each one took me 10 to 20 minutes to make with Claude. Each one replaced a manual process that was costing someone real time, every week.</p>
+
+  <p>But they lived on my laptop. The sales team couldn't use the quote calculator unless I was at my desk. The dive supervisors couldn't use the unit converter unless I emailed them the file and they knew to open it in a browser. Most of the time they'd just go back to the spreadsheet.</p>
+
+  <p>I realised the bottleneck wasn't building — AI had already solved that. The bottleneck was <strong>sharing</strong>. The gap between "I have a useful tool" and "my team can actually use it" was still too wide for anyone who isn't a developer. You needed hosting, or a server, or someone in IT. For a tool that was basically one HTML file.</p>
+
+  <p>So I built AppHub. Not because the world needed another platform. Because my team needed a place to put their tools where everyone could find them and use them without asking me first.</p>
+
+  <p>Then something happened I didn't expect. Once the tools were visible — sitting in a grid on a dashboard with everyone's name next to what they'd built — other people started building too. Someone in admin made a leave calculator. Someone on the boats made a pre-dive checklist generator. Nobody asked them to. They saw what was possible and thought "I could do that for my thing."</p>
+
+  <p>That's the real point. It's not about the portal. It's about making building visible so it becomes normal. When someone sees a colleague's name under a tool they built last Tuesday, it stops feeling like something only developers do. The portal is just the surface. The culture change is the thing underneath.</p>
+
+  <p>AppHub isn't a VC-funded startup. It's a real tool built by a real team at a marine services company in Western Australia, because we needed it. We decided to share it because we figured other small teams probably have the same problem.</p>
+</section>
+
+<!-- ── Section 2: What is AppHub ────────────────────────────────────────── -->
+<section class="section reveal" id="what">
+  <div class="section-label">The product</div>
+  <h2 class="section-heading">What AppHub Actually Is</h2>
+
+  <p>AppHub is a branded, private portal for your team. You upload single-file HTML tools — the kind you can build in 15 minutes with Claude or ChatGPT — and they show up in a phone-style icon grid that everyone on your team can access.</p>
+
+  <p>The whole process takes about 30 seconds. Drag an HTML file onto the upload page. Give it a name. Pick an icon. Set who can see it. It's live. Your team opens their browser, taps the icon, and uses the tool. No installation. No training. No IT ticket.</p>
+
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      </div>
+      <h4>Drag and drop</h4>
+      <p>Upload any self-contained HTML file. All the CSS and JavaScript is inside the file — nothing else needed.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      </div>
+      <h4>Team grid</h4>
+      <p>Tools show up in a clean icon grid with names, so everyone knows what's available and who built it.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <h4>Sandboxed</h4>
+      <p>Every tool runs in its own sandbox. Tools can't access each other or your AppHub account data.</p>
+    </div>
+  </div>
+
+  <p>The file format matters. Single-file HTML means there are no dependencies to manage, no servers to run, no deployment steps to remember. Anyone who can describe a problem to an AI can build one. Anyone who can drag a file can deploy one.</p>
+</section>
+
+<!-- ── Section 3: Build Your Own Tools ──────────────────────────────────── -->
+<section class="section reveal" id="build">
+  <div class="section-label">The guide</div>
+  <h2 class="section-heading">You Can Build Tools Too</h2>
+  <p style="font-size:17px;color:var(--text)">Even if you've never written a line of code.</p>
+
+  <h3 class="section-subheading">The Only Skill You Need</h3>
+  <p>You need to be able to describe a problem clearly. That's it.</p>
+  <p>If you can explain to a colleague what you need — "I need a thing where I type in the vessel name, the hull area, and the cleaning rate, and it tells me how many hours the job will take" — you can build that tool yourself. The AI does the coding. You do the thinking.</p>
+
+  <h3 class="section-subheading">The Process</h3>
+
+  <div class="step-list">
+    <div class="step">
+      <h4>Pick a pain point</h4>
+      <p>Something you do manually, repeatedly, that involves inputs and outputs. Look for things like:</p>
+      <ul>
+        <li>"I keep calculating quotes by hand in a spreadsheet"</li>
+        <li>"I fill in the same form fields every time I write a report"</li>
+        <li>"I convert between units using Google ten times a day"</li>
+        <li>"I manually check if dates fall within a compliance window"</li>
+        <li>"I copy data from one format into another format every week"</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <h4>Describe it in plain English</h4>
+      <p>Write down three things:</p>
+      <ul>
+        <li><strong>What goes IN</strong> — what data do you start with?</li>
+        <li><strong>What comes OUT</strong> — what do you need at the end?</li>
+        <li><strong>Who uses it</strong> — just you? Your team? A client?</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <h4>Open an AI tool</h4>
+      <p>Any of these will work. Use whichever you're comfortable with.</p>
+      <div class="tool-options">
+        <div class="tool-option">
+          <strong>Claude</strong>
+          <span>claude.ai — what AppHub was built with</span>
+        </div>
+        <div class="tool-option">
+          <strong>ChatGPT</strong>
+          <span>chatgpt.com</span>
+        </div>
+        <div class="tool-option">
+          <strong>Google Gemini</strong>
+          <span>gemini.google.com</span>
+        </div>
+      </div>
+      <p>If you haven't used any of them, start with Claude. Sign up is free.</p>
+    </div>
+
+    <div class="step">
+      <h4>Use this prompt template</h4>
+      <p>Copy this template, fill in the blanks in square brackets, and paste it into your AI tool.</p>
+      <div class="code-block">
+        <button class="btn-copy" onclick="copyCode(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy
+        </button>
+        <pre>Build me a single self-contained HTML file with all CSS and JavaScript
+inline — no external files, no build step, everything in one file.
+
+I need a tool that [DESCRIBE WHAT IT DOES].
+
+The user will enter:
+- [INPUT 1]
+- [INPUT 2]
+- [INPUT 3]
+
+The tool should [DESCRIBE THE CALCULATION / PROCESSING / LOGIC].
+
+The output should be:
+- [WHAT THE USER SEES — a number, a table, a chart, a downloadable file, etc.]
+
+Design: dark professional theme, mobile-friendly, clear labels, large
+buttons, results displayed clearly below the form.
+
+[IF YOU NEED FILE EXPORT, ADD ONE OF THESE LINES:]
+- For PDF export: use jsPDF loaded from CDN
+- For Excel/CSV export: use SheetJS loaded from CDN
+- For charts: use Chart.js loaded from CDN</pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <h4>Test it</h4>
+      <p>Open the HTML file in your browser — just double-click it. Try it with real data. Then try edge cases: leave a field blank, enter a huge number, enter text where a number should go. You're looking for anything that breaks or looks wrong.</p>
+    </div>
+
+    <div class="step">
+      <h4>Fix it</h4>
+      <p>Tell the AI what's wrong. Be specific:</p>
+      <ul>
+        <li>"The total doesn't include GST"</li>
+        <li>"Add a field for the vessel name at the top"</li>
+        <li>"The PDF should be landscape, not portrait"</li>
+        <li>"When I leave the hours field blank, it shows NaN — it should default to 0"</li>
+      </ul>
+      <p>Each fix takes about 30 seconds. Keep going until it works the way you need.</p>
+    </div>
+
+    <div class="step">
+      <h4>Upload to AppHub</h4>
+      <p>Drag the HTML file onto the AppHub upload page. Name it something your team will understand. Pick an icon. Set visibility to "Everyone." Done. Your team can use it right now.</p>
+    </div>
+  </div>
+
+  <h3 class="section-subheading">Common Mistakes (and How to Fix Them)</h3>
+
+  <div class="mistake-list">
+    <div class="mistake">
+      <strong>"The AI gave me multiple files"</strong>
+      Tell it: <code>Combine everything into a single HTML file with inline CSS and JavaScript</code>
+    </div>
+    <div class="mistake">
+      <strong>"It uses React / Vue / some framework"</strong>
+      Tell it: <code>Don't use any frameworks. Use plain HTML, CSS, and vanilla JavaScript only</code>
+    </div>
+    <div class="mistake">
+      <strong>"It looks ugly on my phone"</strong>
+      Add <code>Make it fully responsive and mobile-friendly</code> to your prompt.
+    </div>
+    <div class="mistake">
+      <strong>"It wants me to install Node or run a server"</strong>
+      Tell it: <code>This must work by opening the HTML file directly in a browser. No server, no terminal, no npm</code>
+    </div>
+    <div class="mistake">
+      <strong>"I uploaded it but AppHub rejected it"</strong>
+      AppHub told you why and gave you a prompt to fix it. Copy that prompt, paste it into your AI tool along with your code, and it'll sort it out.
+    </div>
+  </div>
+</section>
+
+<!-- ── Section 4: Example Prompts ───────────────────────────────────────── -->
+<section class="section reveal" id="prompts">
+  <div class="section-label">Ready to use</div>
+  <h2 class="section-heading">Example Prompts</h2>
+  <p>Each of these prompts is ready to copy and paste straight into Claude, ChatGPT, or Gemini. Click a card to expand it and see the full prompt.</p>
+
+  <div class="prompt-grid">
+
+    <!-- Prompt 1: Quote Calculator -->
+    <div class="prompt-card">
+      <div class="prompt-card-header" onclick="toggleCard(this)">
+        <span class="prompt-card-emoji">&#x1F4B0;</span>
+        <div class="prompt-card-info">
+          <h4>Quote / Estimate Calculator</h4>
+          <p>Create professional quotes with line items, GST, and PDF export.</p>
+        </div>
+        <svg class="prompt-card-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="prompt-card-body">
+        <div class="prompt-card-inner">
+          <div class="code-block">
+            <button class="btn-copy" onclick="copyCode(this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+            <pre>Build me a single self-contained HTML file with all CSS and JavaScript inline — no external files, no build step, everything in one file.
+
+I need a tool that creates professional quotes and estimates for clients.
+
+The user will enter:
+- Client name and contact details
+- Line item descriptions (ability to add and remove multiple line items)
+- Quantity for each line item
+- Unit rate (dollar amount) for each line item
+- A toggle to include or exclude 10% GST
+
+The tool should calculate each line item total (quantity times unit rate), sum all line items into a subtotal, apply 10% GST if the toggle is on, and produce a final total. The user should be able to add as many line items as they need, and remove any line item.
+
+The output should be:
+- A formatted quote table showing each line item with description, quantity, unit rate, and line total
+- Subtotal, GST amount (if applicable), and grand total displayed clearly
+- A "Download PDF" button that generates a clean, professional PDF of the quote
+
+Design: dark professional theme, mobile-friendly, clear labels, large buttons, results displayed clearly below the form.
+
+For PDF export: use jsPDF loaded from CDN.</pre>
+          </div>
+          <div class="output-note"><strong>Output:</strong> A formatted quote table with subtotal, GST, and total — plus a one-click PDF download.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prompt 2: Timesheet -->
+    <div class="prompt-card">
+      <div class="prompt-card-header" onclick="toggleCard(this)">
+        <span class="prompt-card-emoji">&#x23F1;&#xFE0F;</span>
+        <div class="prompt-card-info">
+          <h4>Timesheet / Hours Tracker</h4>
+          <p>Log daily hours by project, view weekly summaries, export CSV for payroll.</p>
+        </div>
+        <svg class="prompt-card-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="prompt-card-body">
+        <div class="prompt-card-inner">
+          <div class="code-block">
+            <button class="btn-copy" onclick="copyCode(this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+            <pre>Build me a single self-contained HTML file with all CSS and JavaScript inline — no external files, no build step, everything in one file.
+
+I need a tool that tracks daily work hours across different projects.
+
+The user will enter:
+- Date (date picker, defaulting to today)
+- Project name (text input that remembers previously entered projects in a dropdown)
+- Hours worked (number)
+- Notes (optional text field)
+
+The tool should store all entries in the browser's localStorage so data persists between sessions. It should display a running log of all entries sorted by date (newest first), allow the user to delete individual entries, and provide a weekly summary view that groups entries by project and shows total hours per project and overall total.
+
+The output should be:
+- A sortable table of all logged time entries
+- A weekly summary tab showing hours per project
+- A "Download CSV" button that exports all entries as a CSV file suitable for payroll
+
+Design: dark professional theme, mobile-friendly, clear labels, large buttons, results displayed clearly below the form.</pre>
+          </div>
+          <div class="output-note"><strong>Output:</strong> A running timesheet log with weekly project summaries and CSV export.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prompt 3: Checklist -->
+    <div class="prompt-card">
+      <div class="prompt-card-header" onclick="toggleCard(this)">
+        <span class="prompt-card-emoji">&#x1F4CB;</span>
+        <div class="prompt-card-info">
+          <h4>Checklist Generator</h4>
+          <p>Turn a list of items into a printable checklist with date and signature fields.</p>
+        </div>
+        <svg class="prompt-card-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="prompt-card-body">
+        <div class="prompt-card-inner">
+          <div class="code-block">
+            <button class="btn-copy" onclick="copyCode(this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+            <pre>Build me a single self-contained HTML file with all CSS and JavaScript inline — no external files, no build step, everything in one file.
+
+I need a tool that generates printable checklists.
+
+The user will enter:
+- Checklist title
+- A list of checklist items (one per line in a textarea)
+
+The tool should parse the items and generate a formatted, printable checklist with a checkbox next to each item, a date field at the top, and a signature line at the bottom.
+
+The output should be:
+- A live preview of the formatted checklist on screen
+- A "Print" button that opens the browser print dialog with print-optimised CSS (clean layout, black and white, checkbox outlines clearly visible, no dark backgrounds)
+
+Design: dark professional theme, mobile-friendly, clear labels, large buttons, results displayed clearly below the form.</pre>
+          </div>
+          <div class="output-note"><strong>Output:</strong> A formatted, print-ready checklist with tick boxes, date, and signature line.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prompt 4: Unit Converter -->
+    <div class="prompt-card">
+      <div class="prompt-card-header" onclick="toggleCard(this)">
+        <span class="prompt-card-emoji">&#x1F504;</span>
+        <div class="prompt-card-info">
+          <h4>Unit Converter</h4>
+          <p>Convert between length, weight, volume, pressure, temperature, and area units.</p>
+        </div>
+        <svg class="prompt-card-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="prompt-card-body">
+        <div class="prompt-card-inner">
+          <div class="code-block">
+            <button class="btn-copy" onclick="copyCode(this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+            <pre>Build me a single self-contained HTML file with all CSS and JavaScript inline — no external files, no build step, everything in one file.
+
+I need a tool that converts between common units used in trades and field work.
+
+The user will enter:
+- A numeric value
+- The "from" unit (selected from a categorised dropdown)
+- The "to" unit (selected from a categorised dropdown)
+
+The tool should include these unit categories: length (mm, cm, m, km, inches, feet, yards, miles, nautical miles), weight (g, kg, tonnes, oz, lbs), volume (mL, L, gallons US, gallons imperial, cubic metres), pressure (psi, bar, kPa, atm), temperature (Celsius, Fahrenheit, Kelvin), and area (sq metres, sq feet, hectares, acres). Include a swap button to reverse the from and to units. Let the user add custom conversion factors that persist in localStorage.
+
+The output should be:
+- The converted value displayed large and clear
+- Instant conversion as the user types (no submit button needed)
+
+Design: dark professional theme, mobile-friendly, clear labels, large buttons, results displayed clearly below the form.</pre>
+          </div>
+          <div class="output-note"><strong>Output:</strong> Instant unit conversion with a swap button and support for custom conversion factors.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prompt 5: CSV Dashboard -->
+    <div class="prompt-card">
+      <div class="prompt-card-header" onclick="toggleCard(this)">
+        <span class="prompt-card-emoji">&#x1F4CA;</span>
+        <div class="prompt-card-info">
+          <h4>Data Dashboard from CSV</h4>
+          <p>Paste or upload CSV data and get instant summary stats and charts.</p>
+        </div>
+        <svg class="prompt-card-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="prompt-card-body">
+        <div class="prompt-card-inner">
+          <div class="code-block">
+            <button class="btn-copy" onclick="copyCode(this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+            <pre>Build me a single self-contained HTML file with all CSS and JavaScript inline — no external files, no build step, everything in one file.
+
+I need a tool that turns CSV data into a quick visual dashboard.
+
+The user will enter:
+- CSV data (either pasted into a textarea or uploaded via a file picker that accepts .csv files)
+
+The tool should parse the CSV, detect column headers automatically, identify which columns contain numeric data, and generate summary statistics for each numeric column: count, sum, average, minimum, and maximum. It should also generate a bar chart comparing the totals or averages of each numeric column.
+
+The output should be:
+- A summary statistics table for each numeric column showing count, sum, average, min, and max
+- A bar chart visualising the numeric columns
+- The raw data displayed in a clean, sortable table
+
+Design: dark professional theme, mobile-friendly, clear labels, large buttons, results displayed clearly below the form.
+
+For charts: use Chart.js loaded from CDN.</pre>
+          </div>
+          <div class="output-note"><strong>Output:</strong> Auto-generated summary table with stats per column, a bar chart, and a sortable data table.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prompt 6: Meeting Notes -->
+    <div class="prompt-card">
+      <div class="prompt-card-header" onclick="toggleCard(this)">
+        <span class="prompt-card-emoji">&#x1F4DD;</span>
+        <div class="prompt-card-info">
+          <h4>Meeting Notes Template</h4>
+          <p>Structure meeting minutes with agenda, action items, and PDF/clipboard export.</p>
+        </div>
+        <svg class="prompt-card-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="prompt-card-body">
+        <div class="prompt-card-inner">
+          <div class="code-block">
+            <button class="btn-copy" onclick="copyCode(this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+            <pre>Build me a single self-contained HTML file with all CSS and JavaScript inline — no external files, no build step, everything in one file.
+
+I need a tool that creates structured meeting notes.
+
+The user will enter:
+- Meeting title
+- Date (date picker, defaulting to today)
+- Attendees (comma-separated names)
+- Agenda items (ability to add multiple items, each with a title field and a notes textarea)
+- Action items (ability to add multiple items, each with a description, an assignee dropdown populated from the attendees list, and a due date picker)
+
+The tool should format everything into clean, structured meeting minutes with clear sections for attendees, agenda with notes, and action items with owners and deadlines.
+
+The output should be:
+- A formatted meeting summary displayed on screen below the form
+- A "Copy to Clipboard" button that copies the summary as formatted plain text
+- A "Download PDF" button that generates a professional PDF of the meeting notes
+
+Design: dark professional theme, mobile-friendly, clear labels, large buttons, results displayed clearly below the form.
+
+For PDF export: use jsPDF loaded from CDN.</pre>
+          </div>
+          <div class="output-note"><strong>Output:</strong> Formatted meeting minutes with copy-to-clipboard and PDF download.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prompt 7: Date Calculator -->
+    <div class="prompt-card">
+      <div class="prompt-card-header" onclick="toggleCard(this)">
+        <span class="prompt-card-emoji">&#x1F4C5;</span>
+        <div class="prompt-card-info">
+          <h4>Date / Deadline Calculator</h4>
+          <p>Calculate deadline dates by business days, skipping weekends and holidays.</p>
+        </div>
+        <svg class="prompt-card-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="prompt-card-body">
+        <div class="prompt-card-inner">
+          <div class="code-block">
+            <button class="btn-copy" onclick="copyCode(this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+            <pre>Build me a single self-contained HTML file with all CSS and JavaScript inline — no external files, no build step, everything in one file.
+
+I need a tool that calculates deadline dates based on business days.
+
+The user will enter:
+- A start date (date picker, defaulting to today)
+- Number of business days to add
+- A list of public holidays (dates that should be skipped, stored in localStorage so they persist between sessions — the user should be able to add and remove individual holiday dates)
+
+The tool should count forward from the start date by the specified number of business days, skipping weekends (Saturday and Sunday) and any dates in the public holidays list.
+
+The output should be:
+- The calculated target deadline date displayed prominently
+- A mini calendar view highlighting the start date, end date, weekends (greyed out), holidays (marked), and working days in between
+
+Design: dark professional theme, mobile-friendly, clear labels, large buttons, results displayed clearly below the form.</pre>
+          </div>
+          <div class="output-note"><strong>Output:</strong> The target deadline date with a mini calendar showing the working-day range.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prompt 8: Expense Logger -->
+    <div class="prompt-card">
+      <div class="prompt-card-header" onclick="toggleCard(this)">
+        <span class="prompt-card-emoji">&#x1F9FE;</span>
+        <div class="prompt-card-info">
+          <h4>Expense / Receipt Logger</h4>
+          <p>Log expenses by category, filter by date range, and export CSV for bookkeeping.</p>
+        </div>
+        <svg class="prompt-card-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="prompt-card-body">
+        <div class="prompt-card-inner">
+          <div class="code-block">
+            <button class="btn-copy" onclick="copyCode(this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+            <pre>Build me a single self-contained HTML file with all CSS and JavaScript inline — no external files, no build step, everything in one file.
+
+I need a tool that logs expenses and receipts for bookkeeping.
+
+The user will enter:
+- Date (date picker, defaulting to today)
+- Description (text)
+- Amount (number with two decimal places)
+- Category (dropdown: Travel, Meals, Supplies, Equipment, Fuel, Accommodation, Other)
+- Payment method (dropdown: Cash, Credit Card, Debit Card, Bank Transfer, Company Card)
+
+The tool should store all entries in localStorage so they persist between sessions. It should display a filterable log of all expenses, allow filtering by category and date range, show monthly totals grouped by category, and allow the user to delete individual entries.
+
+The output should be:
+- A table of all expense entries with filters for category and date range
+- A monthly totals summary section
+- A "Download CSV" button that exports all entries for bookkeeping
+
+Design: dark professional theme, mobile-friendly, clear labels, large buttons, results displayed clearly below the form.</pre>
+          </div>
+          <div class="output-note"><strong>Output:</strong> A filterable expense log with monthly category totals and CSV export.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── Section 5: Tips ──────────────────────────────────────────────────── -->
+<section class="section reveal" id="tips">
+  <div class="section-label">From experience</div>
+  <h2 class="section-heading">Tips That Actually Help</h2>
+
+  <ul class="tips-list">
+    <li>Start small. Your first app should solve one problem, not ten.</li>
+    <li>Name it for what it does, not what it is. "Quote Calculator" beats "Sales Tool v2 Final."</li>
+    <li>If the AI gives you something that's 80% right, fix the 20%. Don't start over.</li>
+    <li>Ask the AI to add <code>localStorage</code> if you want the tool to remember data between sessions.</li>
+    <li>Ask for "a print button that opens the browser print dialog" if people need to print the output.</li>
+    <li>If you need your company logo in the output, convert it to base64 first (search "image to base64 converter" online) and paste the base64 string into your prompt.</li>
+    <li>Build the tool you need. If it helps you, it probably helps someone else on the team.</li>
+    <li>Upload it even if it's rough. A working tool that's ugly beats a beautiful spreadsheet that takes twice as long.</li>
+  </ul>
+</section>
+
+<!-- ── Section 6: Get Started ───────────────────────────────────────────── -->
+<section class="section reveal" id="getstarted">
+  <div class="section-label">Five minutes</div>
+  <h2 class="section-heading">Get Started with AppHub</h2>
+  <p>Here's the full path from zero to "my team is using this."</p>
+
+  <div class="gs-steps">
+    <div class="gs-step">
+      <div class="gs-step-num">1</div>
+      <div class="gs-step-content">
+        <h4>Sign up for early access</h4>
+        <p>Enter your email at the bottom of this page or on the AppHub home page. You'll get an invite link within a day.</p>
+      </div>
+    </div>
+    <div class="gs-step">
+      <div class="gs-step-num">2</div>
+      <div class="gs-step-content">
+        <h4>Get your workspace link</h4>
+        <p>When your workspace is ready, you'll receive a link. This is your team's private AppHub. Bookmark it.</p>
+      </div>
+    </div>
+    <div class="gs-step">
+      <div class="gs-step-num">3</div>
+      <div class="gs-step-content">
+        <h4>Log in and look around</h4>
+        <p>You'll land on the dashboard — a grid where all your team's tools will live. It's empty for now. That's about to change.</p>
+      </div>
+    </div>
+    <div class="gs-step">
+      <div class="gs-step-num">4</div>
+      <div class="gs-step-content">
+        <h4>Upload your first tool</h4>
+        <p>Go to the Upload page. Drag an HTML file in (use one of the prompts above to make one). Give it a name, pick an icon, set visibility. It's live.</p>
+      </div>
+    </div>
+    <div class="gs-step">
+      <div class="gs-step-num">5</div>
+      <div class="gs-step-content">
+        <h4>Share with your team</h4>
+        <p>Invite your team from the Admin page. They log in and see the tool you just uploaded, ready to use. That's it. The whole process takes less than five minutes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Section 7: FAQ ───────────────────────────────────────────────────── -->
+<section class="section reveal" id="faq">
+  <div class="section-label">Questions</div>
+  <h2 class="section-heading">Frequently Asked</h2>
+
+  <div class="faq-list">
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Is it really free?
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a"><div class="faq-a-inner">
+        During early access, yes. We're giving teams free access while we figure out what the right paid plans look like. There will always be a free tier. The paid plans will cover things like more storage, more team members, and custom branding.
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        What kind of files can I upload?
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a"><div class="faq-a-inner">
+        Single HTML files. All the CSS and JavaScript needs to be inside the one file — no separate stylesheets, no separate script files. This is the format that AI tools like Claude and ChatGPT produce when you ask for a self-contained tool. If your file references external files, AppHub will tell you what's wrong and give you a prompt to fix it.
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Is it secure?
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a"><div class="faq-a-inner">
+        Every tool runs in a sandboxed iframe on a separate domain. Tools can't access your AppHub account, your cookies, or other tools' data. Your workspace is private — only people you invite can see it. We don't read your files or sell your data.
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Do I need to know how to code?
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a"><div class="faq-a-inner">
+        No. The AI writes the code. You describe what you need in plain English. The guide on this page walks through the full process. If you can describe a problem to a colleague, you can build a tool.
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Can I use it for my team of 5? 50? 500?
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a"><div class="faq-a-inner">
+        Right now, AppHub works best for teams of 5 to 50 people — the kind of team where everyone knows each other and tools spread by word of mouth. We're building it for small-to-medium businesses first. If you're bigger than that, get in touch and we'll figure it out.
+      </div></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Who built this?
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a"><div class="faq-a-inner">
+        Mat Harvey, at Franmarine Underwater Services in Henderson, Western Australia. He's the Biofouling Manager and CTO of MarineStream — a marine scientist who taught himself to build software because the tools he needed didn't exist. AppHub started as an internal project for Franmarine's team and grew from there.
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Section 8: What's Next ───────────────────────────────────────────── -->
+<section class="section closing reveal" id="next">
+  <div class="section-label">Keep going</div>
+  <h2 class="section-heading" style="text-align:center;border:none;padding:0">What Happens Next</h2>
+
+  <p>Every tool your team uploads makes the next one easier to imagine. Not because the technology gets better — it's already good enough. Because seeing what's possible changes what people think is worth trying.</p>
+
+  <p>The goal isn't to turn everyone into a developer. The goal is to make it normal for anyone to solve their own problems. AppHub is just the shelf where the tools go so everyone can reach them.</p>
+
+  <p style="color:var(--text)">If you've read this far, you're ready. Pick one thing you do manually that annoys you, open Claude or ChatGPT, paste one of the prompts above, and see what happens. Then upload it here.</p>
+</section>
+
+<!-- ── CTA ───────────────────────────────────────────────────────────────── -->
+<section class="cta-section reveal">
+  <div class="cta-card">
+    <h3>Get Early Access</h3>
+    <p>Enter your email and we'll send you an invite when your workspace is ready.</p>
+    <div class="cta-form" id="ctaForm">
+      <input type="email" class="cta-input" placeholder="you@company.com" id="ctaEmail" autocomplete="email">
+      <button class="btn-cta" onclick="handleCta()">Request Access</button>
+    </div>
+    <div class="cta-success" id="ctaSuccess">Thanks — we'll be in touch soon.</div>
+  </div>
+</section>
+
+<!-- ── Footer ───────────────────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="footer-row">
+    <span>Built at <a href="https://franmarine.com.au" target="_blank" rel="noopener">Franmarine Underwater Services</a></span>
+    <span>&middot;</span>
+    <span>Henderson, Western Australia</span>
+    <span>&middot;</span>
+    <span><a href="https://apphub.fus.wiki" target="_blank" rel="noopener">apphub.fus.wiki</a></span>
+  </div>
+</footer>
+
+</div>
+</div>
+
+<!-- ── Back to Top ──────────────────────────────────────────────────────── -->
+<button class="btn-top" id="btnTop" aria-label="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg>
+</button>
+
+<script>
+(function(){
+  // ── Embedded detection ─────────────────────────────────────────────────
+  var isEmbedded = window.parent !== window;
+  if (isEmbedded) {
+    document.body.classList.add('embedded');
+    document.documentElement.style.scrollPaddingTop = '16px';
+  }
+
+  // ── Theme ──────────────────────────────────────────────────────────────
+  const html = document.documentElement;
+  const saved = localStorage.getItem('apphub-theme');
+  const preferred = window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light';
+  const theme = (saved === 'light' || saved === 'dark') ? saved : preferred;
+  html.setAttribute('data-theme', theme);
+  updateThemeIcon(theme);
+
+  requestAnimationFrame(function(){ html.classList.add('themed') });
+
+  document.getElementById('themeBtn').addEventListener('click', function(){
+    const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('apphub-theme', next);
+    updateThemeIcon(next);
+  });
+
+  function updateThemeIcon(t){
+    document.getElementById('sunIcon').style.display = t === 'light' ? 'block' : 'none';
+    document.getElementById('moonIcon').style.display = t === 'dark' ? 'block' : 'none';
+  }
+
+  // ── Listen for theme sync from parent (AppHub viewer) ─────────────────
+  window.addEventListener('message', function(e){
+    if (e.data && e.data.type === 'apphub-theme-sync') {
+      var t = localStorage.getItem('apphub-theme') || 'light';
+      html.setAttribute('data-theme', t);
+      updateThemeIcon(t);
+    }
+  });
+
+  // ── Sidebar toggle ────────────────────────────────────────────────────
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const menuBtn = document.getElementById('menuBtn');
+
+  function closeSidebar(){ sidebar.classList.remove('open'); overlay.classList.remove('open') }
+  menuBtn.addEventListener('click', function(){
+    const open = sidebar.classList.toggle('open');
+    overlay.classList.toggle('open', open);
+  });
+  overlay.addEventListener('click', closeSidebar);
+
+  sidebar.querySelectorAll('.sidebar-link').forEach(function(link){
+    link.addEventListener('click', function(){
+      if(window.innerWidth <= 900) closeSidebar();
+    });
+  });
+
+  // ── Active sidebar link on scroll ─────────────────────────────────────
+  const sections = document.querySelectorAll('.section[id], .closing[id]');
+  const sidebarLinks = document.querySelectorAll('.sidebar-link');
+
+  function updateActive(){
+    let current = '';
+    sections.forEach(function(s){
+      if(s.getBoundingClientRect().top <= 120) current = s.id;
+    });
+    sidebarLinks.forEach(function(l){
+      l.classList.toggle('active', l.getAttribute('data-section') === current);
+    });
+  }
+  window.addEventListener('scroll', updateActive, {passive:true});
+  updateActive();
+
+  // ── Back to top ───────────────────────────────────────────────────────
+  var btnTop = document.getElementById('btnTop');
+  window.addEventListener('scroll', function(){
+    btnTop.classList.toggle('visible', window.scrollY > 600);
+  }, {passive:true});
+
+  // ── Scroll reveal ─────────────────────────────────────────────────────
+  var reveals = document.querySelectorAll('.reveal');
+  var observer = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){ e.target.classList.add('visible'); observer.unobserve(e.target) }
+    });
+  }, {threshold:0.08, rootMargin:'0px 0px -40px 0px'});
+  reveals.forEach(function(el){ observer.observe(el) });
+})();
+
+// ── Copy to clipboard ─────────────────────────────────────────────────
+function copyCode(btn){
+  var pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.textContent).then(function(){
+    btn.classList.add('copied');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Copied ✓';
+    setTimeout(function(){
+      btn.classList.remove('copied');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy';
+    }, 2000);
+  });
+}
+
+// ── Prompt card expand/collapse ───────────────────────────────────────
+function toggleCard(header){
+  header.closest('.prompt-card').classList.toggle('open');
+}
+
+// ── FAQ expand/collapse ───────────────────────────────────────────────
+function toggleFaq(q){
+  q.closest('.faq-item').classList.toggle('open');
+}
+
+// ── CTA form ──────────────────────────────────────────────────────────
+function handleCta(){
+  var email = document.getElementById('ctaEmail').value.trim();
+  if(email && email.includes('@')){
+    document.getElementById('ctaForm').style.display = 'none';
+    document.getElementById('ctaSuccess').style.display = 'block';
+  }
+}
+</script>
+
+</body>
+</html>

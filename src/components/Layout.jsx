@@ -39,6 +39,9 @@ export default function Layout() {
           <NavLink to="/upload" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             Upload
           </NavLink>
+          <NavLink to="/about" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            About
+          </NavLink>
           {user?.role === 'admin' && (
             <NavLink to="/admin" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
               Admin
