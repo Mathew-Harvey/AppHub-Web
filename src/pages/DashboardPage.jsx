@@ -31,13 +31,13 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Long-press jiggle: which tile index is active (-1 = none)
-  const [jiggleIdx, setJiggleIdx] = useState(-1);
+  // Long-press jiggle: tracks the APP ID, not the index
+  const [jiggleId, setJiggleId] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const longPressTimer = useRef(null);
   const longPressTriggered = useRef(false);
 
-  // Drag state
+  // Drag state (indexes, since drag is positional)
   const dragIdx = useRef(null);
   const dragOverIdx = useRef(null);
   const [draggingIdx, setDraggingIdx] = useState(null);
@@ -47,16 +47,14 @@ export default function DashboardPage() {
   const touchState = useRef({ startX: 0, startY: 0, dragging: false, idx: null, el: null, clone: null, scrollInterval: null });
 
   useEffect(() => { loadData(); }, []);
-
-  // Cleanup long-press timer on unmount
   useEffect(() => () => clearTimeout(longPressTimer.current), []);
 
   // Click anywhere to exit jiggle mode
   useEffect(() => {
-    if (jiggleIdx === -1) return;
+    if (!jiggleId) return;
     function handleClick(e) {
       if (e.target.closest('.app-tile') || e.target.closest('.tile-confirm-delete')) return;
-      setJiggleIdx(-1);
+      setJiggleId(null);
       setConfirmDeleteId(null);
     }
     document.addEventListener('mousedown', handleClick);
@@ -65,7 +63,7 @@ export default function DashboardPage() {
       document.removeEventListener('mousedown', handleClick);
       document.removeEventListener('touchstart', handleClick);
     };
-  }, [jiggleIdx]);
+  }, [jiggleId]);
 
   async function loadData() {
     try {
@@ -85,12 +83,12 @@ export default function DashboardPage() {
     return app.uploadedByEmail === user?.email || isAdmin;
   }
 
-  // ── Long press to jiggle ──────────────────────────────────────────────────
-  function startLongPress(idx) {
+  // ── Long press to jiggle (stores app ID, not index) ──────────────────────
+  function startLongPress(appId) {
     longPressTriggered.current = false;
     longPressTimer.current = setTimeout(() => {
       longPressTriggered.current = true;
-      setJiggleIdx(idx);
+      setJiggleId(appId);
       setConfirmDeleteId(null);
     }, 500);
   }
@@ -104,13 +102,12 @@ export default function DashboardPage() {
     const prev = [...apps];
     setApps(apps.filter(a => a.id !== appToDelete.id));
     setConfirmDeleteId(null);
-    setJiggleIdx(-1);
+    setJiggleId(null);
 
     try {
       const result = await api.deleteApp(appToDelete.id);
       if (result.pending) {
         showToast('Deletion requested — waiting for admin approval', 'info');
-        // Restore tile since it's pending, not actually gone
         setApps(prev);
       } else {
         showToast(`${appToDelete.name} deleted`, 'success');
@@ -123,7 +120,7 @@ export default function DashboardPage() {
 
   // ── Drag (desktop) ───────────────────────────────────────────────────────
   function onDragStart(e, idx) {
-    if (jiggleIdx === -1) { e.preventDefault(); return; }
+    if (!jiggleId) { e.preventDefault(); return; }
     dragIdx.current = idx;
     setDraggingIdx(idx);
     e.dataTransfer.effectAllowed = 'move';
@@ -139,16 +136,16 @@ export default function DashboardPage() {
   }
 
   // ── Touch drag ────────────────────────────────────────────────────────────
-  function onTouchStart(e, idx) {
-    startLongPress(idx);
-    if (jiggleIdx === -1) return;
+  function onTouchStart(e, idx, appId) {
+    startLongPress(appId);
+    if (!jiggleId) return;
     const touch = e.touches[0];
     touchState.current = { startX: touch.clientX, startY: touch.clientY, dragging: false, idx, el: e.currentTarget, clone: null, scrollInterval: null };
   }
   function onTouchMove(e) {
     cancelLongPress();
     const ts = touchState.current;
-    if (ts.idx === null || jiggleIdx === -1) return;
+    if (ts.idx === null || !jiggleId) return;
     const touch = e.touches[0];
     const dx = touch.clientX - ts.startX;
     const dy = touch.clientY - ts.startY;
@@ -204,9 +201,9 @@ export default function DashboardPage() {
     api.reorderApps(updated.map(a => a.id)).catch(() => showToast('Failed to save order', 'error'));
   }
 
-  function handleTileClick(e, app, idx) {
+  function handleTileClick(e, app) {
     if (longPressTriggered.current) return;
-    if (jiggleIdx !== -1) return;
+    if (jiggleId) return;
     navigate(`/app/${app.id}`);
   }
 
@@ -232,7 +229,7 @@ export default function DashboardPage() {
     );
   }
 
-  const inJiggle = jiggleIdx !== -1;
+  const inJiggle = !!jiggleId;
 
   return (
     <div onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
@@ -253,7 +250,7 @@ export default function DashboardPage() {
 
       <div className="app-grid">
         {apps.map((app, idx) => {
-          const isJiggling = jiggleIdx === idx;
+          const isJiggling = jiggleId === app.id;
           const showX = isJiggling && canManageApp(app);
           return (
             <div
@@ -261,11 +258,11 @@ export default function DashboardPage() {
               data-idx={idx}
               className={`app-tile${isJiggling ? ' wobble' : ''}${draggingIdx === idx && !isJiggling ? ' dragging' : ''}${dragOverIndex === idx && draggingIdx !== idx ? ' drag-over' : ''}`}
               style={isJiggling ? { animationDelay: '0s' } : undefined}
-              onClick={(e) => handleTileClick(e, app, idx)}
-              onMouseDown={() => startLongPress(idx)}
+              onClick={(e) => handleTileClick(e, app)}
+              onMouseDown={() => startLongPress(app.id)}
               onMouseUp={cancelLongPress}
               onMouseLeave={cancelLongPress}
-              onTouchStart={(e) => onTouchStart(e, idx)}
+              onTouchStart={(e) => onTouchStart(e, idx, app.id)}
               draggable={inJiggle}
               onDragStart={(e) => onDragStart(e, idx)}
               onDragOver={(e) => onDragOver(e, idx)}
