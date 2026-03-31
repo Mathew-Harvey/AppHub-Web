@@ -44,6 +44,7 @@ export const api = {
   updateApp: (id, body) => request(`/apps/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   updateAppFile: (id, formData) => request(`/apps/${id}/file`, { method: 'PUT', body: formData }),
   reorderApps: (appIds) => request('/apps/reorder', { method: 'PUT', body: JSON.stringify({ appIds }) }),
+  convertApp: (formData) => request('/apps/convert', { method: 'POST', body: formData }),
   deleteApp: (id) => request(`/apps/${id}`, { method: 'DELETE' }),
   getPendingDeletions: () => request('/apps/pending-deletions'),
   approveDeletion: (id) => request(`/apps/${id}/approve-deletion`, { method: 'POST' }),

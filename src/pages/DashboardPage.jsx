@@ -18,7 +18,7 @@ function timeAgo(dateString) {
 }
 
 function isNewApp(createdAt) {
-  return Date.now() - new Date(createdAt).getTime() < 7 * 24 * 60 * 60 * 1000;
+  return Date.now() - new Date(createdAt).getTime() < 48 * 60 * 60 * 1000;
 }
 
 export default function DashboardPage() {
@@ -47,6 +47,9 @@ export default function DashboardPage() {
   const touchState = useRef({ startX: 0, startY: 0, dragging: false, idx: null, el: null, clone: null, scrollInterval: null });
 
   useEffect(() => { loadData(); }, []);
+
+  // Cleanup long-press timer on unmount
+  useEffect(() => () => clearTimeout(longPressTimer.current), []);
 
   // Click anywhere to exit jiggle mode
   useEffect(() => {
@@ -256,7 +259,7 @@ export default function DashboardPage() {
             <div
               key={app.id}
               data-idx={idx}
-              className={`app-tile${isJiggling ? ' wobble' : ''}${draggingIdx === idx ? ' dragging' : ''}${dragOverIndex === idx && draggingIdx !== idx ? ' drag-over' : ''}`}
+              className={`app-tile${isJiggling ? ' wobble' : ''}${draggingIdx === idx && !isJiggling ? ' dragging' : ''}${dragOverIndex === idx && draggingIdx !== idx ? ' drag-over' : ''}`}
               style={isJiggling ? { animationDelay: '0s' } : undefined}
               onClick={(e) => handleTileClick(e, app, idx)}
               onMouseDown={() => startLongPress(idx)}

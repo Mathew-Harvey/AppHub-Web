@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/Toast';
 
 const EMOJI_OPTIONS = ['📱', '🧮', '📊', '📝', '🔧', '📋', '💰', '🗓️', '📈', '🔍', '⚙️', '🎯', '📦', '🚀', '💡', '🛠️', '📁', '🏗️', '⏱️', '🌊'];
@@ -12,18 +13,54 @@ const INSPIRATION = [
   { icon: '🔄', name: 'Unit converter', desc: 'Convert between units your team actually uses.', prompt: 'Build me an HTML unit converter for common measurements: mm/inches, kg/lbs, litres/gallons, celsius/fahrenheit. Clean and fast.' },
 ];
 
+const AI_SPINNER_LINES = [
+  'Hiring an AI developer...',
+  'Onboarding the new hire...',
+  'AI dev asking where the tests are...',
+  'Training the AI on your codebase...',
+  'AI dev requesting a standing desk...',
+  'Reviewing the AI\'s first draft...',
+  'AI dev refactoring for the 3rd time...',
+  'Filing a performance review...',
+  'AI dev asking for a raise...',
+  'Denied. Back to work.',
+  'Almost there. Probably.',
+  'AI dev submitting final version...',
+  'Good work done. Deploying.',
+];
+
+function AiSpinner() {
+  const [lineIdx, setLineIdx] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLineIdx(i => (i + 1) % AI_SPINNER_LINES.length);
+    }, 2800);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="ai-spinner">
+      <div className="spinner" style={{ width: 28, height: 28, borderWidth: 3 }} />
+      <p className="ai-spinner-line" key={lineIdx}>{AI_SPINNER_LINES[lineIdx]}</p>
+    </div>
+  );
+}
+
 export default function UploadPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { showToast, ToastElement } = useToast();
   const fileInputRef = useRef(null);
 
   const [dragOver, setDragOver] = useState(false);
   const [file, setFile] = useState(null);
+  const [rawFile, setRawFile] = useState(null); // original non-HTML file for AI conversion
   const [conversionInfo, setConversionInfo] = useState(null);
   const [copied, setCopied] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [converting, setConverting] = useState(false);
 
-  // Form state
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [icon, setIcon] = useState('📱');
@@ -32,34 +69,27 @@ export default function UploadPage() {
   const [sharedWith, setSharedWith] = useState([]);
   const [uploading, setUploading] = useState(false);
 
+  const isPro = user?.workspace?.plan === 'pro';
+
   useEffect(() => {
     api.getMembers().then(d => setMembers(d.members)).catch(() => {});
   }, []);
 
-  function handleDragOver(e) {
-    e.preventDefault();
-    setDragOver(true);
-  }
-
-  function handleDragLeave() {
-    setDragOver(false);
-  }
-
+  function handleDragOver(e) { e.preventDefault(); setDragOver(true); }
+  function handleDragLeave() { setDragOver(false); }
   async function handleDrop(e) {
     e.preventDefault();
     setDragOver(false);
-    const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile) await processFile(droppedFile);
+    if (e.dataTransfer.files[0]) await processFile(e.dataTransfer.files[0]);
   }
-
   function handleFileSelect(e) {
-    const selected = e.target.files[0];
-    if (selected) processFile(selected);
+    if (e.target.files[0]) processFile(e.target.files[0]);
   }
 
   async function processFile(f) {
     setConversionInfo(null);
     setCopied(false);
+    setRawFile(null);
 
     try {
       const check = await api.checkFile(f.name);
@@ -70,10 +100,40 @@ export default function UploadPage() {
         if (!name) setName(baseName.charAt(0).toUpperCase() + baseName.slice(1));
       } else {
         setFile(null);
+        setRawFile(f);
         setConversionInfo(check);
+        // Auto-populate name from filename
+        const baseName = f.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+        if (!name) setName(baseName.charAt(0).toUpperCase() + baseName.slice(1));
       }
     } catch (err) {
       showToast('Error checking file', 'error');
+    }
+  }
+
+  async function handleAiConvert() {
+    if (!rawFile) return;
+    setConverting(true);
+    try {
+      const formData = new FormData();
+      formData.append('appFile', rawFile);
+      const result = await api.convertApp(formData);
+
+      // Create a File object from the converted HTML
+      const htmlBlob = new Blob([result.html], { type: 'text/html' });
+      const htmlFile = new File([htmlBlob], name.replace(/\s+/g, '-').toLowerCase() + '.html', { type: 'text/html' });
+      setFile(htmlFile);
+      setConversionInfo(null);
+      setRawFile(null);
+      showToast('Converted successfully', 'success');
+    } catch (err) {
+      if (err.error === 'upgrade_required') {
+        showToast('Pro subscription required for AI conversion', 'error');
+      } else {
+        showToast(err.error || 'Conversion failed. Try the manual prompt instead.', 'error');
+      }
+    } finally {
+      setConverting(false);
     }
   }
 
@@ -119,7 +179,6 @@ export default function UploadPage() {
     }
   }
 
-  // Success state after upload
   if (uploadSuccess) {
     return (
       <div className="upload-success">
@@ -128,6 +187,10 @@ export default function UploadPage() {
         <p>Your app is live. Your team can use it now.</p>
       </div>
     );
+  }
+
+  if (converting) {
+    return <AiSpinner />;
   }
 
   return (
@@ -139,16 +202,38 @@ export default function UploadPage() {
       {/* Conversion prompt (shown when wrong file type) */}
       {conversionInfo && (
         <div className="conversion-prompt">
-          <h3>&#x26A0;&#xFE0F; {conversionInfo.detected || 'Unsupported file type'}</h3>
+          <h3>{conversionInfo.detected || 'Unsupported file type'}</h3>
           <p>
-            AppHub needs a single <strong>.html</strong> file. Copy the prompt below and paste it into your AI tool (Claude, ChatGPT, etc.) along with your code. It will convert your project into a single HTML file you can upload here.
+            AppHub needs a single <strong>.html</strong> file.
+            {isPro
+              ? ' We can auto-convert this for you, or copy the prompt below to do it yourself.'
+              : ' Copy the prompt below and paste it into your AI tool to convert it.'}
           </p>
+
+          {isPro && (
+            <button className="btn btn-primary" style={{ marginBottom: 16 }} onClick={handleAiConvert}>
+              Auto-convert with AI
+            </button>
+          )}
+
+          {!isPro && (
+            <div className="upgrade-prompt">
+              <p className="upgrade-text">
+                Want auto-conversion? <strong>AppHub Pro</strong> converts any file to HTML automatically.
+              </p>
+              <p className="upgrade-price">$9/month per workspace</p>
+              <button className="btn btn-primary btn-sm" onClick={() => navigate('/admin')}>
+                Upgrade
+              </button>
+            </div>
+          )}
+
           <pre>{conversionInfo.conversionPrompt}</pre>
           <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-            <button className="btn btn-primary btn-sm" onClick={() => copyPrompt(conversionInfo.conversionPrompt)}>
-              {copied ? '✓ Copied!' : 'Copy prompt'}
+            <button className="btn btn-secondary btn-sm" onClick={() => copyPrompt(conversionInfo.conversionPrompt)}>
+              {copied ? 'Copied' : 'Copy prompt'}
             </button>
-            <button className="btn btn-secondary btn-sm" onClick={() => setConversionInfo(null)}>
+            <button className="btn btn-ghost btn-sm" onClick={() => { setConversionInfo(null); setRawFile(null); }}>
               Try another file
             </button>
           </div>
@@ -177,7 +262,6 @@ export default function UploadPage() {
             />
           </div>
 
-          {/* Inspiration section */}
           <div className="inspiration">
             <h4 className="inspiration-title">Not sure what to build?</h4>
             <div className="inspiration-grid">
@@ -188,10 +272,7 @@ export default function UploadPage() {
                     <span className="inspiration-name">{item.name}</span>
                   </div>
                   <p className="inspiration-desc">{item.desc}</p>
-                  <button
-                    className="btn btn-ghost btn-sm"
-                    onClick={(e) => { e.stopPropagation(); copyPrompt(item.prompt); }}
-                  >
+                  <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); copyPrompt(item.prompt); }}>
                     Copy AI prompt
                   </button>
                 </div>
@@ -201,10 +282,10 @@ export default function UploadPage() {
         </>
       )}
 
-      {/* Upload form (shown after valid file selected) */}
+      {/* Upload form */}
       {file && (
         <form className="upload-form" onSubmit={handleUpload}>
-          <div style={{ marginBottom: 20, padding: '12px 16px', background: 'var(--surface)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+          <div style={{ marginBottom: 20, padding: '12px 16px', background: 'var(--surface-solid)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: 14 }}>📄 {file.name}</span>
               <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setFile(null); setName(''); }}>
@@ -218,38 +299,19 @@ export default function UploadPage() {
 
           <div className="form-group">
             <label className="label">App Name *</label>
-            <input
-              className="input"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Quote Calculator"
-              required
-              autoFocus
-            />
+            <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Quote Calculator" required autoFocus />
           </div>
 
           <div className="form-group">
             <label className="label">Description</label>
-            <textarea
-              className="input"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="What does this app do?"
-              rows={2}
-              style={{ resize: 'vertical' }}
-            />
+            <textarea className="input" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What does this app do?" rows={2} style={{ resize: 'vertical' }} />
           </div>
 
           <div className="form-group">
             <label className="label">Icon</label>
             <div className="emoji-picker">
               {EMOJI_OPTIONS.map((emoji) => (
-                <button
-                  key={emoji}
-                  type="button"
-                  className={`emoji-option ${icon === emoji ? 'selected' : ''}`}
-                  onClick={() => setIcon(emoji)}
-                >
+                <button key={emoji} type="button" className={`emoji-option ${icon === emoji ? 'selected' : ''}`} onClick={() => setIcon(emoji)}>
                   {emoji}
                 </button>
               ))}
@@ -259,27 +321,9 @@ export default function UploadPage() {
           <div className="form-group">
             <label className="label">Who can see this?</label>
             <div className="vis-options">
-              <button
-                type="button"
-                className={`vis-option ${visibility === 'team' ? 'selected' : ''}`}
-                onClick={() => setVisibility('team')}
-              >
-                👥 Everyone
-              </button>
-              <button
-                type="button"
-                className={`vis-option ${visibility === 'private' ? 'selected' : ''}`}
-                onClick={() => setVisibility('private')}
-              >
-                🔒 Just me
-              </button>
-              <button
-                type="button"
-                className={`vis-option ${visibility === 'specific' ? 'selected' : ''}`}
-                onClick={() => setVisibility('specific')}
-              >
-                🎯 Specific people
-              </button>
+              <button type="button" className={`vis-option ${visibility === 'team' ? 'selected' : ''}`} onClick={() => setVisibility('team')}>Everyone</button>
+              <button type="button" className={`vis-option ${visibility === 'private' ? 'selected' : ''}`} onClick={() => setVisibility('private')}>Just me</button>
+              <button type="button" className={`vis-option ${visibility === 'specific' ? 'selected' : ''}`} onClick={() => setVisibility('specific')}>Specific</button>
             </div>
           </div>
 
@@ -292,11 +336,8 @@ export default function UploadPage() {
                     type="checkbox"
                     checked={sharedWith.includes(m.id)}
                     onChange={(e) => {
-                      if (e.target.checked) {
-                        setSharedWith([...sharedWith, m.id]);
-                      } else {
-                        setSharedWith(sharedWith.filter((id) => id !== m.id));
-                      }
+                      if (e.target.checked) setSharedWith([...sharedWith, m.id]);
+                      else setSharedWith(sharedWith.filter((id) => id !== m.id));
                     }}
                   />
                   {m.displayName} <span style={{ color: 'var(--text-muted)' }}>({m.email})</span>
