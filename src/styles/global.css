@@ -489,6 +489,12 @@ input, textarea, select {
   color: var(--text-muted);
 }
 
+.member-meta {
+  font-size: 11px;
+  color: var(--border);
+  margin-top: 2px;
+}
+
 .member-actions {
   display: flex;
   gap: 8px;
