@@ -40,6 +40,8 @@ export default function AdminPage() {
   const [wsName, setWsName] = useState('');
   const [primaryColor, setPrimaryColor] = useState('#1a1a2e');
   const [accentColor, setAccentColor] = useState('#e94560');
+  const [primaryColorLight, setPrimaryColorLight] = useState('#ffffff');
+  const [accentColorLight, setAccentColorLight] = useState('#d63851');
 
   useEffect(() => { loadAll(); }, []);
 
@@ -52,6 +54,8 @@ export default function AdminPage() {
       setWsName(wsData.workspace.name);
       setPrimaryColor(wsData.workspace.primaryColor || '#1a1a2e');
       setAccentColor(wsData.workspace.accentColor || '#e94560');
+      setPrimaryColorLight(wsData.workspace.primaryColorLight || '#ffffff');
+      setAccentColorLight(wsData.workspace.accentColorLight || '#d63851');
       setMembers(memData.members);
       setInvitations(invData.invitations);
       setPendingDeletions(pendingData.apps);
@@ -65,7 +69,7 @@ export default function AdminPage() {
   async function saveBranding(e) {
     e.preventDefault();
     try {
-      await api.updateWorkspace({ name: wsName, primaryColor, accentColor });
+      await api.updateWorkspace({ name: wsName, primaryColor, accentColor, primaryColorLight, accentColorLight });
       await refreshUser();
       showToast('Workspace updated', 'success');
     } catch (err) { showToast(err.error || 'Update failed', 'error'); }
@@ -294,6 +298,24 @@ export default function AdminPage() {
               <div className="color-row">
                 <input type="color" className="color-swatch" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} />
                 <input className="input" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} style={{ maxWidth: 120 }} />
+              </div>
+            </div>
+
+            <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+              <label className="label" style={{ marginBottom: 12 }}>Light mode colors</label>
+              <div className="form-group">
+                <label className="label">Primary Color (light)</label>
+                <div className="color-row">
+                  <input type="color" className="color-swatch" value={primaryColorLight} onChange={(e) => setPrimaryColorLight(e.target.value)} />
+                  <input className="input" value={primaryColorLight} onChange={(e) => setPrimaryColorLight(e.target.value)} style={{ maxWidth: 120 }} />
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="label">Accent Color (light)</label>
+                <div className="color-row">
+                  <input type="color" className="color-swatch" value={accentColorLight} onChange={(e) => setAccentColorLight(e.target.value)} />
+                  <input className="input" value={accentColorLight} onChange={(e) => setAccentColorLight(e.target.value)} style={{ maxWidth: 120 }} />
+                </div>
               </div>
             </div>
 

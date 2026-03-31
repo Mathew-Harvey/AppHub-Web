@@ -117,23 +117,39 @@ export default function UploadPage() {
     try {
       const formData = new FormData();
       formData.append('appFile', rawFile);
-      const result = await api.convertApp(formData);
+      const { jobId } = await api.startConvert(formData);
 
-      // Create a File object from the converted HTML
-      const htmlBlob = new Blob([result.html], { type: 'text/html' });
-      const htmlFile = new File([htmlBlob], name.replace(/\s+/g, '-').toLowerCase() + '.html', { type: 'text/html' });
-      setFile(htmlFile);
-      setConversionInfo(null);
-      setRawFile(null);
-      showToast('Converted successfully', 'success');
+      // Poll for result
+      const poll = async () => {
+        const result = await api.pollConvert(jobId);
+        if (result.status === 'processing') {
+          setTimeout(poll, 2000);
+          return;
+        }
+        if (result.status === 'failed') {
+          setConverting(false);
+          showToast(result.error || 'Conversion failed', 'error');
+          return;
+        }
+        // Done
+        const htmlBlob = new Blob([result.html], { type: 'text/html' });
+        const htmlFile = new File([htmlBlob], name.replace(/\s+/g, '-').toLowerCase() + '.html', { type: 'text/html' });
+        setFile(htmlFile);
+        setConversionInfo(null);
+        setRawFile(null);
+        setConverting(false);
+        showToast('Converted successfully', 'success');
+      };
+      poll();
     } catch (err) {
+      setConverting(false);
       if (err.error === 'upgrade_required') {
         showToast('Pro subscription required for AI conversion', 'error');
+      } else if (err.used !== undefined) {
+        showToast(`Monthly limit reached (${err.used}/${err.limit} conversions)`, 'error');
       } else {
-        showToast(err.error || 'Conversion failed. Try the manual prompt instead.', 'error');
+        showToast(err.error || 'Conversion failed', 'error');
       }
-    } finally {
-      setConverting(false);
     }
   }
 

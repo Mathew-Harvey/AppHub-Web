@@ -13,11 +13,13 @@ export default function Layout() {
   };
 
   const style = {};
-  if (user?.workspace?.primaryColor) {
-    style['--primary'] = user.workspace.primaryColor;
-  }
-  if (user?.workspace?.accentColor) {
-    style['--accent'] = user.workspace.accentColor;
+  const ws = user?.workspace;
+  if (theme === 'light') {
+    if (ws?.primaryColorLight) style['--primary'] = ws.primaryColorLight;
+    if (ws?.accentColorLight) style['--accent'] = ws.accentColorLight;
+  } else {
+    if (ws?.primaryColor) style['--primary'] = ws.primaryColor;
+    if (ws?.accentColor) style['--accent'] = ws.accentColor;
   }
 
   const logoSrc = user?.workspace?.logoData || null;
