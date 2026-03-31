@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FY26 Quote Builder — Franmarine</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#0a0f1a;--surface:#111827;--surface2:#1a2332;--border:#2a3a50;
+--copper:#d4893f;--copper-dim:#a66a2e;--teal:#2dd4bf;--red:#f87171;
+--amber:#fbbf24;--green:#4ade80;--blue:#60a5fa;
+--text:#e5e7eb;--text-dim:#9ca3af;--text-bright:#f9fafb;
+--mono:'JetBrains Mono',monospace;--sans:'Plus Jakarta Sans',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh}
+header{padding:24px 32px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface)}
+header h1{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--copper);letter-spacing:1px}
+header .badge{font-size:11px;padding:4px 10px;border-radius:4px;background:rgba(212,137,63,.15);color:var(--copper);font-family:var(--mono);font-weight:600}
+
+.main{max-width:1200px;margin:0 auto;padding:24px 32px}
+
+.card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:16px}
+.card-title{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--copper);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:11px;color:var(--text-dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px}
+.field input,.field select{background:var(--bg);border:1px solid var(--border);color:var(--text-bright);padding:8px 12px;border-radius:6px;font-family:var(--mono);font-size:13px}
+.field input:focus,.field select:focus{outline:none;border-color:var(--copper)}
+
+.line-items{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:13px;margin-top:12px}
+.line-items th{background:var(--surface);color:var(--copper);padding:8px 10px;text-align:left;font-weight:600;border:1px solid var(--border);font-size:11px;text-transform:uppercase}
+.line-items td{padding:6px 10px;border:1px solid var(--border)}
+.line-items input,.line-items select{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:4px;font-family:var(--mono);font-size:12px;width:100%}
+.line-items .num{text-align:right;color:var(--teal);font-weight:600}
+
+.btn{padding:8px 20px;border:none;border-radius:6px;font-family:var(--mono);font-weight:700;font-size:13px;cursor:pointer;transition:all .15s}
+.btn-copper{background:var(--copper);color:var(--bg)}
+.btn-copper:hover{background:var(--copper-dim)}
+.btn-teal{background:var(--teal);color:var(--bg)}
+.btn-teal:hover{background:#14b8a6}
+.btn-red{background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.3)}
+.btn-red:hover{background:rgba(248,113,113,.25)}
+.btn-sm{padding:4px 12px;font-size:11px}
+
+.actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+
+.totals{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:16px}
+.total-card{padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;text-align:center}
+.total-card .tl{font-size:10px;color:var(--text-dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px}
+.total-card .tv{font-size:22px;font-weight:700;font-family:var(--mono);margin-top:4px}
+.total-card .tv.copper{color:var(--copper)}
+.total-card .tv.teal{color:var(--teal)}
+.total-card .tv.green{color:var(--green)}
+.total-card .tv.amber{color:var(--amber)}
+
+.note{font-size:11px;color:var(--text-dim);margin-top:12px;padding:10px;background:rgba(45,212,191,.05);border:1px solid rgba(45,212,191,.1);border-radius:6px;font-family:var(--mono);line-height:1.6}
+
+@media(max-width:768px){
+  .main{padding:16px}
+  .form-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>▼ FY26 QUOTE BUILDER</h1>
+  <span class="badge">WA RATE CARD</span>
+</header>
+
+<div class="main">
+  <!-- JOB DETAILS -->
+  <div class="card">
+    <div class="card-title">Job Details</div>
+    <div class="form-grid">
+      <div class="field"><label>Client</label><input type="text" id="client" placeholder="e.g. Babcock"></div>
+      <div class="field"><label>Vessel</label><input type="text" id="vessel" placeholder="e.g. HMAS Brisbane"></div>
+      <div class="field"><label>Location</label><input type="text" id="location" placeholder="e.g. HMAS Stirling"></div>
+      <div class="field"><label>Job Type</label>
+        <select id="jobtype">
+          <option>IWHC — Reactive</option>
+          <option>IWHC — Proactive</option>
+          <option>Hull Inspection</option>
+          <option>UWILD</option>
+          <option>Propeller Polish</option>
+          <option>Marine Growth Removal</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="field"><label>Quote No.</label><input type="text" id="quoteno" placeholder="QI2026XXX"></div>
+      <div class="field"><label>Valid Until</label><input type="date" id="validuntil"></div>
+    </div>
+  </div>
+
+  <!-- PERSONNEL -->
+  <div class="card">
+    <div class="card-title">Personnel <button class="btn btn-copper btn-sm" onclick="addPersonnel()">+ ADD</button></div>
+    <table class="line-items" id="personnel-table">
+      <thead><tr>
+        <th>Role</th><th>Qty</th><th>Days</th><th>Travel Days</th><th>Rate/Day</th><th>LAHA</th><th>Subtotal</th><th></th>
+      </tr></thead>
+      <tbody id="personnel-body"></tbody>
+    </table>
+  </div>
+
+  <!-- EQUIPMENT -->
+  <div class="card">
+    <div class="card-title">Equipment <button class="btn btn-copper btn-sm" onclick="addEquipment()">+ ADD</button></div>
+    <table class="line-items" id="equip-table">
+      <thead><tr>
+        <th>Item</th><th>Qty</th><th>Days</th><th>Rate/Day</th><th>Subtotal</th><th></th>
+      </tr></thead>
+      <tbody id="equip-body"></tbody>
+    </table>
+  </div>
+
+  <!-- LOGISTICS -->
+  <div class="card">
+    <div class="card-title">Logistics & Travel <button class="btn btn-copper btn-sm" onclick="addLogistics()">+ ADD</button></div>
+    <table class="line-items" id="logistics-table">
+      <thead><tr>
+        <th>Description</th><th>Qty</th><th>Unit Cost</th><th>Markup (15%)</th><th>Subtotal</th><th></th>
+      </tr></thead>
+      <tbody id="logistics-body"></tbody>
+    </table>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+    <button class="btn btn-teal" onclick="calculate()">CALCULATE TOTALS</button>
+    <button class="btn btn-copper" onclick="exportSummary()">COPY SUMMARY</button>
+    <button class="btn btn-red" onclick="clearAll()">CLEAR ALL</button>
+  </div>
+
+  <!-- TOTALS -->
+  <div class="totals" id="totals-grid" style="display:none">
+    <div class="total-card"><div class="tl">Personnel</div><div class="tv copper" id="tot-personnel">$0</div></div>
+    <div class="total-card"><div class="tl">Equipment</div><div class="tv teal" id="tot-equip">$0</div></div>
+    <div class="total-card"><div class="tl">Logistics</div><div class="tv amber" id="tot-logistics">$0</div></div>
+    <div class="total-card"><div class="tl">Subtotal (ex GST)</div><div class="tv" style="color:var(--text-bright)" id="tot-subtotal">$0</div></div>
+    <div class="total-card"><div class="tl">GST (10%)</div><div class="tv" style="color:var(--text-dim)" id="tot-gst">$0</div></div>
+    <div class="total-card" style="border-color:var(--green)"><div class="tl">Total (inc GST)</div><div class="tv green" id="tot-total">$0</div></div>
+  </div>
+
+  <div class="note">
+    <strong>FY26 WA Rate Card (from 1 Jul 2025)</strong><br>
+    PM: $231.18/hr ($346.19 client-facing) | Admin: $171.76/hr | IWHC System Tech: $1,269.63/day<br>
+    Biofouling Manager: $1,849.44/day | LAHA: $107.12/day | Operator loaded: ~$650/day<br>
+    Logistics: cost + 15% | Equipment: half-rate on travel days
+  </div>
+</div>
+
+<script>
+const RATES = {
+  'Project Manager':        {daily: 1849.44, laha: 107.12},
+  'Biofouling Manager':     {daily: 1849.44, laha: 107.12},
+  'IWHC System Tech':       {daily: 1269.63, laha: 107.12},
+  'Dive Supervisor':        {daily: 1269.63, laha: 107.12},
+  'Diver / Operator':       {daily: 650.00,  laha: 107.12},
+  'Admin Support':          {daily: 1374.08, laha: 107.12},
+  'Marine Technician':      {daily: 850.00,  laha: 107.12},
+};
+
+let personnelRows = 0, equipRows = 0, logisticsRows = 0;
+
+function addPersonnel(){
+  personnelRows++;
+  const id = 'p'+personnelRows;
+  const options = Object.keys(RATES).map(r=>`<option value="${r}">${r}</option>`).join('');
+  document.getElementById('personnel-body').insertAdjacentHTML('beforeend',`
+    <tr id="row-${id}">
+      <td><select onchange="updateRate('${id}',this.value)">${options}</select></td>
+      <td><input type="number" value="1" min="1" style="width:50px" id="${id}-qty"></td>
+      <td><input type="number" value="1" min="0" style="width:60px" id="${id}-days"></td>
+      <td><input type="number" value="0" min="0" style="width:60px" id="${id}-travel"></td>
+      <td class="num" id="${id}-rate">$${RATES['Project Manager'].daily.toFixed(2)}</td>
+      <td class="num" id="${id}-laha">$${RATES['Project Manager'].laha.toFixed(2)}</td>
+      <td class="num" id="${id}-sub">-</td>
+      <td><button class="btn btn-red btn-sm" onclick="removeRow('${id}')">✕</button></td>
+    </tr>
+  `);
+}
+
+function updateRate(id, role){
+  const r = RATES[role];
+  document.getElementById(id+'-rate').textContent = '$'+r.daily.toFixed(2);
+  document.getElementById(id+'-laha').textContent = '$'+r.laha.toFixed(2);
+}
+
+function addEquipment(){
+  equipRows++;
+  const id = 'e'+equipRows;
+  document.getElementById('equip-body').insertAdjacentHTML('beforeend',`
+    <tr id="row-${id}">
+      <td><input type="text" placeholder="e.g. IWHC System" id="${id}-name"></td>
+      <td><input type="number" value="1" min="1" style="width:50px" id="${id}-qty"></td>
+      <td><input type="number" value="1" min="0" style="width:60px" id="${id}-days"></td>
+      <td><input type="number" value="0" min="0" style="width:90px" id="${id}-rate" placeholder="0.00"></td>
+      <td class="num" id="${id}-sub">-</td>
+      <td><button class="btn btn-red btn-sm" onclick="removeRow('${id}')">✕</button></td>
+    </tr>
+  `);
+}
+
+function addLogistics(){
+  logisticsRows++;
+  const id = 'l'+logisticsRows;
+  document.getElementById('logistics-body').insertAdjacentHTML('beforeend',`
+    <tr id="row-${id}">
+      <td><input type="text" placeholder="e.g. Flights" id="${id}-name"></td>
+      <td><input type="number" value="1" min="1" style="width:50px" id="${id}-qty"></td>
+      <td><input type="number" value="0" min="0" style="width:100px" id="${id}-cost" placeholder="0.00"></td>
+      <td class="num" id="${id}-markup">-</td>
+      <td class="num" id="${id}-sub">-</td>
+      <td><button class="btn btn-red btn-sm" onclick="removeRow('${id}')">✕</button></td>
+    </tr>
+  `);
+}
+
+function removeRow(id){ document.getElementById('row-'+id)?.remove(); }
+
+function fmt(n){ return '$'+n.toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+function calculate(){
+  let totalPersonnel=0, totalEquip=0, totalLogistics=0;
+
+  // Personnel
+  document.querySelectorAll('#personnel-body tr').forEach(tr=>{
+    const id = tr.id.replace('row-','');
+    const role = tr.querySelector('select').value;
+    const qty = parseFloat(document.getElementById(id+'-qty')?.value)||0;
+    const days = parseFloat(document.getElementById(id+'-days')?.value)||0;
+    const travel = parseFloat(document.getElementById(id+'-travel')?.value)||0;
+    const r = RATES[role];
+    const sub = qty * ((days * r.daily) + (travel * r.daily * 0.5) + ((days+travel) * r.laha));
+    document.getElementById(id+'-sub').textContent = fmt(sub);
+    totalPersonnel += sub;
+  });
+
+  // Equipment
+  document.querySelectorAll('#equip-body tr').forEach(tr=>{
+    const id = tr.id.replace('row-','');
+    const qty = parseFloat(document.getElementById(id+'-qty')?.value)||0;
+    const days = parseFloat(document.getElementById(id+'-days')?.value)||0;
+    const rate = parseFloat(document.getElementById(id+'-rate')?.value)||0;
+    const sub = qty * days * rate;
+    document.getElementById(id+'-sub').textContent = fmt(sub);
+    totalEquip += sub;
+  });
+
+  // Logistics
+  document.querySelectorAll('#logistics-body tr').forEach(tr=>{
+    const id = tr.id.replace('row-','');
+    const qty = parseFloat(document.getElementById(id+'-qty')?.value)||0;
+    const cost = parseFloat(document.getElementById(id+'-cost')?.value)||0;
+    const base = qty * cost;
+    const markup = base * 0.15;
+    const sub = base + markup;
+    document.getElementById(id+'-markup').textContent = fmt(markup);
+    document.getElementById(id+'-sub').textContent = fmt(sub);
+    totalLogistics += sub;
+  });
+
+  const subtotal = totalPersonnel + totalEquip + totalLogistics;
+  const gst = subtotal * 0.10;
+  const total = subtotal + gst;
+
+  document.getElementById('tot-personnel').textContent = fmt(totalPersonnel);
+  document.getElementById('tot-equip').textContent = fmt(totalEquip);
+  document.getElementById('tot-logistics').textContent = fmt(totalLogistics);
+  document.getElementById('tot-subtotal').textContent = fmt(subtotal);
+  document.getElementById('tot-gst').textContent = fmt(gst);
+  document.getElementById('tot-total').textContent = fmt(total);
+  document.getElementById('totals-grid').style.display = 'grid';
+}
+
+function exportSummary(){
+  const client = document.getElementById('client').value || '-';
+  const vessel = document.getElementById('vessel').value || '-';
+  const loc = document.getElementById('location').value || '-';
+  const jt = document.getElementById('jobtype').value;
+  const qn = document.getElementById('quoteno').value || '-';
+
+  let text = `FRANMARINE — FY26 QUOTE SUMMARY\n`;
+  text += `Quote: ${qn} | Client: ${client} | Vessel: ${vessel}\n`;
+  text += `Location: ${loc} | Job Type: ${jt}\n`;
+  text += `─────────────────────────────────────\n`;
+  text += `Personnel: ${document.getElementById('tot-personnel').textContent}\n`;
+  text += `Equipment: ${document.getElementById('tot-equip').textContent}\n`;
+  text += `Logistics: ${document.getElementById('tot-logistics').textContent}\n`;
+  text += `Subtotal (ex GST): ${document.getElementById('tot-subtotal').textContent}\n`;
+  text += `GST (10%): ${document.getElementById('tot-gst').textContent}\n`;
+  text += `TOTAL (inc GST): ${document.getElementById('tot-total').textContent}\n`;
+
+  navigator.clipboard.writeText(text).then(()=>alert('Summary copied to clipboard'));
+}
+
+function clearAll(){
+  if(!confirm('Clear all line items?')) return;
+  document.getElementById('personnel-body').innerHTML='';
+  document.getElementById('equip-body').innerHTML='';
+  document.getElementById('logistics-body').innerHTML='';
+  document.getElementById('totals-grid').style.display='none';
+}
+
+// Pre-populate one personnel row
+addPersonnel();
+</script>
+</body>
+</html>

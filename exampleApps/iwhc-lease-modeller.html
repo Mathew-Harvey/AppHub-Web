@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IWHC Lease Cost Modeller — Franmarine</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#0a0f1a;--surface:#111827;--surface2:#1a2332;--border:#2a3a50;
+--copper:#d4893f;--copper-dim:#a66a2e;--teal:#2dd4bf;--red:#f87171;
+--amber:#fbbf24;--green:#4ade80;--blue:#60a5fa;
+--text:#e5e7eb;--text-dim:#9ca3af;--text-bright:#f9fafb;
+--mono:'JetBrains Mono',monospace;--sans:'Plus Jakarta Sans',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh}
+header{padding:24px 32px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface)}
+header h1{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--copper);letter-spacing:1px}
+header .badge{font-size:11px;padding:4px 10px;border-radius:4px;background:rgba(212,137,63,.15);color:var(--copper);font-family:var(--mono);font-weight:600}
+
+.main{max-width:1100px;margin:0 auto;padding:24px 32px}
+
+.card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:16px}
+.card-title{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--copper);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
+
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:11px;color:var(--text-dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px}
+.field input,.field select{background:var(--bg);border:1px solid var(--border);color:var(--text-bright);padding:10px 12px;border-radius:6px;font-family:var(--mono);font-size:14px}
+.field input:focus{outline:none;border-color:var(--copper)}
+.field .hint{font-size:10px;color:var(--text-dim);margin-top:2px}
+
+.slider-field{display:flex;flex-direction:column;gap:4px}
+.slider-field label{font-size:11px;color:var(--text-dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px}
+.slider-field input[type=range]{-webkit-appearance:none;background:var(--border);height:4px;border-radius:2px;outline:none}
+.slider-field input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--copper);cursor:pointer}
+.slider-val{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--teal)}
+
+.btn{padding:10px 24px;border:none;border-radius:6px;font-family:var(--mono);font-weight:700;font-size:14px;cursor:pointer;transition:all .15s}
+.btn-copper{background:var(--copper);color:var(--bg)}
+.btn-copper:hover{background:var(--copper-dim);transform:translateY(-1px)}
+
+.results{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:20px}
+.res-card{padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+.res-card .rl{font-size:10px;color:var(--text-dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px}
+.res-card .rv{font-size:20px;font-weight:700;font-family:var(--mono);margin-top:4px}
+
+.scenario-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:20px}
+.scenario{padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+.scenario h3{font-family:var(--mono);font-size:13px;font-weight:700;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px}
+.scenario .s-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(42,58,80,.4);font-size:13px;font-family:var(--mono)}
+.scenario .s-row:last-child{border-bottom:none}
+.scenario .s-label{color:var(--text-dim)}
+.scenario .s-val{font-weight:600}
+
+.chart-wrap{margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px}
+.chart-title{font-family:var(--mono);font-size:12px;color:var(--copper);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+
+.compare-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.compare-bar{height:28px;border-radius:4px;display:flex;align-items:center;padding:0 10px;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bg);transition:width .5s ease}
+.compare-label{font-family:var(--mono);font-size:11px;color:var(--text-dim);min-width:120px;text-align:right}
+
+@media(max-width:768px){.main{padding:16px}.form-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>▼ IWHC LEASE MODELLER</h1>
+  <span class="badge">FINANCIAL MODEL</span>
+</header>
+
+<div class="main">
+  <div class="card">
+    <div class="card-title">System Parameters</div>
+    <div class="form-grid">
+      <div class="field">
+        <label>System Capital Cost (AUD)</label>
+        <input type="number" id="capex" value="2000000" step="50000">
+        <span class="hint">IWHC system purchase price</span>
+      </div>
+      <div class="field">
+        <label>EFA Interest Rate (%)</label>
+        <input type="number" id="rate" value="15" step="0.5" min="1" max="30">
+        <span class="hint">Equipment Finance Agreement rate</span>
+      </div>
+      <div class="field">
+        <label>Finance Term (years)</label>
+        <input type="number" id="term" value="5" min="1" max="10">
+      </div>
+      <div class="field">
+        <label>Residual Value (%)</label>
+        <input type="number" id="residual" value="0" min="0" max="50">
+        <span class="hint">Balloon payment at end of term</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Deployment Scenario</div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Lease Duration (months)</label>
+        <input type="number" id="lease-months" value="3" min="1" max="60">
+      </div>
+      <div class="field">
+        <label>Sea Freight Days (each way)</label>
+        <input type="number" id="freight-days" value="60" min="0" max="180">
+        <span class="hint">Transit hire accrues during freight</span>
+      </div>
+      <div class="field">
+        <label>Freight Cost per Container (AUD)</label>
+        <input type="number" id="freight-cost" value="24825" step="500">
+      </div>
+      <div class="field">
+        <label>Containers Required</label>
+        <input type="number" id="containers" value="2" min="1" max="6">
+      </div>
+      <div class="field">
+        <label>Client Daily Hire Rate (AUD)</label>
+        <input type="number" id="client-rate" value="1586" step="10">
+        <span class="hint">What you charge the client per day</span>
+      </div>
+      <div class="field">
+        <label>Expected Utilisation (%)</label>
+        <input type="number" id="utilisation" value="70" min="0" max="100">
+        <span class="hint">% of deployment days system is earning</span>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <button class="btn btn-copper" onclick="model()">MODEL SCENARIO</button>
+    </div>
+  </div>
+
+  <div id="output" style="display:none">
+    <div class="results" id="kpi-grid"></div>
+
+    <div class="scenario-grid">
+      <div class="scenario" id="cost-breakdown">
+        <h3 style="color:var(--copper)">Cost Breakdown</h3>
+      </div>
+      <div class="scenario" id="revenue-breakdown">
+        <h3 style="color:var(--teal)">Revenue & Margin</h3>
+      </div>
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-title">Break-Even Analysis — Daily Hire vs Finance Cost</div>
+      <div id="bar-chart"></div>
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-title">Sensitivity — Utilisation vs Monthly Margin</div>
+      <canvas id="sensChart" height="250"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+function fmt(n){return '$'+n.toLocaleString('en-AU',{minimumFractionDigits:0,maximumFractionDigits:0})}
+function fmt2(n){return '$'+n.toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2})}
+
+function model(){
+  const capex = parseFloat(document.getElementById('capex').value);
+  const rate = parseFloat(document.getElementById('rate').value)/100;
+  const termYrs = parseInt(document.getElementById('term').value);
+  const residualPct = parseFloat(document.getElementById('residual').value)/100;
+  const leaseMonths = parseInt(document.getElementById('lease-months').value);
+  const freightDays = parseInt(document.getElementById('freight-days').value);
+  const freightCost = parseFloat(document.getElementById('freight-cost').value);
+  const containers = parseInt(document.getElementById('containers').value);
+  const clientRate = parseFloat(document.getElementById('client-rate').value);
+  const utilisation = parseFloat(document.getElementById('utilisation').value)/100;
+
+  // EFA monthly payment calculation (standard amortisation)
+  const monthlyRate = rate / 12;
+  const totalMonths = termYrs * 12;
+  const residualVal = capex * residualPct;
+  const financeAmount = capex - residualVal;
+  const monthlyPayment = financeAmount * (monthlyRate * Math.pow(1+monthlyRate, totalMonths)) / (Math.pow(1+monthlyRate, totalMonths) - 1);
+  const dailyFinanceCost = monthlyPayment / 30.44;
+
+  // Deployment period
+  const totalFreightDays = freightDays * 2;
+  const deploymentDays = leaseMonths * 30.44;
+  const totalHireDays = deploymentDays + totalFreightDays; // hire accrues during freight
+  const freightTotal = freightCost * containers * 2; // return freight too
+
+  // Costs
+  const hireCostToFranmarine = monthlyPayment * (totalHireDays / 30.44);
+  const totalCost = hireCostToFranmarine + freightTotal;
+
+  // Revenue
+  const earningDays = deploymentDays * utilisation;
+  const revenue = earningDays * clientRate;
+  const margin = revenue - totalCost;
+  const marginPct = revenue > 0 ? (margin / revenue * 100) : 0;
+
+  // Break-even
+  const breakEvenDays = totalCost / clientRate;
+  const breakEvenUtil = (totalCost / (deploymentDays * clientRate)) * 100;
+
+  // KPIs
+  const kpis = [
+    {label:'Monthly EFA Payment', value:fmt(monthlyPayment), color:'var(--copper)'},
+    {label:'Daily Finance Cost', value:fmt2(dailyFinanceCost), color:'var(--amber)'},
+    {label:'Total Deployment Cost', value:fmt(totalCost), color:'var(--red)'},
+    {label:'Projected Revenue', value:fmt(revenue), color:'var(--teal)'},
+    {label:'Margin', value:fmt(margin), color: margin>=0?'var(--green)':'var(--red)'},
+    {label:'Break-Even Utilisation', value:breakEvenUtil.toFixed(1)+'%', color:'var(--blue)'},
+  ];
+
+  document.getElementById('kpi-grid').innerHTML = kpis.map(k=>`
+    <div class="res-card"><div class="rl">${k.label}</div><div class="rv" style="color:${k.color}">${k.value}</div></div>
+  `).join('');
+
+  // Cost breakdown
+  document.getElementById('cost-breakdown').innerHTML = `
+    <h3 style="color:var(--copper)">Cost Breakdown</h3>
+    <div class="s-row"><span class="s-label">EFA Monthly Payment</span><span class="s-val" style="color:var(--copper)">${fmt(monthlyPayment)}</span></div>
+    <div class="s-row"><span class="s-label">Hire Period (inc freight)</span><span class="s-val">${totalHireDays.toFixed(0)} days</span></div>
+    <div class="s-row"><span class="s-label">Total Hire Cost</span><span class="s-val" style="color:var(--copper)">${fmt(hireCostToFranmarine)}</span></div>
+    <div class="s-row"><span class="s-label">Freight (${containers} × 2 legs)</span><span class="s-val" style="color:var(--amber)">${fmt(freightTotal)}</span></div>
+    <div class="s-row"><span class="s-label"><strong>Total Cost</strong></span><span class="s-val" style="color:var(--red)"><strong>${fmt(totalCost)}</strong></span></div>
+  `;
+
+  document.getElementById('revenue-breakdown').innerHTML = `
+    <h3 style="color:var(--teal)">Revenue & Margin</h3>
+    <div class="s-row"><span class="s-label">Deployment Days</span><span class="s-val">${deploymentDays.toFixed(0)}</span></div>
+    <div class="s-row"><span class="s-label">Utilisation</span><span class="s-val">${(utilisation*100).toFixed(0)}%</span></div>
+    <div class="s-row"><span class="s-label">Earning Days</span><span class="s-val" style="color:var(--teal)">${earningDays.toFixed(0)}</span></div>
+    <div class="s-row"><span class="s-label">Client Daily Rate</span><span class="s-val">${fmt2(clientRate)}</span></div>
+    <div class="s-row"><span class="s-label">Total Revenue</span><span class="s-val" style="color:var(--teal)">${fmt(revenue)}</span></div>
+    <div class="s-row"><span class="s-label"><strong>Net Margin</strong></span><span class="s-val" style="color:${margin>=0?'var(--green)':'var(--red)'}"><strong>${fmt(margin)} (${marginPct.toFixed(1)}%)</strong></span></div>
+    <div class="s-row"><span class="s-label">Break-Even Days</span><span class="s-val" style="color:var(--blue)">${breakEvenDays.toFixed(0)} days</span></div>
+  `;
+
+  // Bar chart
+  const maxBar = Math.max(totalCost, revenue);
+  document.getElementById('bar-chart').innerHTML = `
+    <div class="compare-row">
+      <span class="compare-label">Total Cost</span>
+      <div class="compare-bar" style="width:${(totalCost/maxBar*100).toFixed(1)}%;background:var(--red)">${fmt(totalCost)}</div>
+    </div>
+    <div class="compare-row">
+      <span class="compare-label">Revenue</span>
+      <div class="compare-bar" style="width:${(revenue/maxBar*100).toFixed(1)}%;background:var(--teal)">${fmt(revenue)}</div>
+    </div>
+    <div class="compare-row">
+      <span class="compare-label">Margin</span>
+      <div class="compare-bar" style="width:${Math.abs(margin)/maxBar*100}%;background:${margin>=0?'var(--green)':'var(--red)'}">${fmt(margin)}</div>
+    </div>
+  `;
+
+  // Sensitivity chart
+  drawSensitivity(monthlyPayment, totalHireDays, freightTotal, deploymentDays, clientRate);
+
+  document.getElementById('output').style.display = 'block';
+}
+
+function drawSensitivity(monthlyPmt, hireDays, freight, deployDays, dailyRate){
+  const canvas = document.getElementById('sensChart');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width = canvas.parentElement.offsetWidth - 32;
+  const H = canvas.height = 250;
+  ctx.clearRect(0,0,W,H);
+
+  const pad = {t:30,r:20,b:40,l:80};
+  const cw = W-pad.l-pad.r;
+  const ch = H-pad.t-pad.b;
+
+  const points = [];
+  for(let u=10;u<=100;u+=5){
+    const util = u/100;
+    const cost = monthlyPmt*(hireDays/30.44)+freight;
+    const rev = deployDays*util*dailyRate;
+    const margin = rev-cost;
+    const monthlyMargin = margin/(deployDays/30.44);
+    points.push({u, margin: monthlyMargin});
+  }
+
+  const minM = Math.min(...points.map(p=>p.margin));
+  const maxM = Math.max(...points.map(p=>p.margin));
+  const range = maxM-minM||1;
+
+  // Grid
+  ctx.strokeStyle='#2a3a50';ctx.lineWidth=0.5;
+  for(let i=0;i<=5;i++){
+    const y=pad.t+ch-(ch*i/5);
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+    ctx.fillStyle='#9ca3af';ctx.font='10px JetBrains Mono';ctx.textAlign='right';
+    const val = minM+(range*i/5);
+    ctx.fillText(fmt(val),pad.l-8,y+4);
+  }
+
+  // Zero line
+  if(minM<0 && maxM>0){
+    const zeroY = pad.t+ch-((0-minM)/range*ch);
+    ctx.strokeStyle='rgba(248,113,113,.4)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(pad.l,zeroY);ctx.lineTo(W-pad.r,zeroY);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='var(--red)';ctx.font='10px JetBrains Mono';ctx.textAlign='left';
+    ctx.fillText('BREAK EVEN',pad.l+4,zeroY-6);
+  }
+
+  // Line
+  ctx.beginPath();
+  points.forEach((p,i)=>{
+    const x=pad.l+(i/(points.length-1))*cw;
+    const y=pad.t+ch-((p.margin-minM)/range*ch);
+    if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+  });
+  ctx.strokeStyle='var(--teal)';ctx.lineWidth=2;ctx.stroke();
+
+  // Fill
+  ctx.lineTo(pad.l+cw,pad.t+ch);
+  ctx.lineTo(pad.l,pad.t+ch);
+  ctx.closePath();
+  ctx.fillStyle='rgba(45,212,191,.08)';
+  ctx.fill();
+
+  // X labels
+  points.forEach((p,i)=>{
+    if(i%2===0){
+      const x=pad.l+(i/(points.length-1))*cw;
+      ctx.fillStyle='#9ca3af';ctx.font='10px JetBrains Mono';ctx.textAlign='center';
+      ctx.fillText(p.u+'%',x,H-pad.b+16);
+    }
+  });
+
+  ctx.fillStyle='#9ca3af';ctx.font='11px Plus Jakarta Sans';ctx.textAlign='center';
+  ctx.fillText('Utilisation Rate → Monthly Margin',W/2,H-4);
+}
+
+// Auto-run
+model();
+</script>
+</body>
+</html>

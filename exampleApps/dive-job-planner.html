@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dive Job Planner — Franmarine</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#0a0f1a;--surface:#111827;--surface2:#1a2332;--border:#2a3a50;
+--copper:#d4893f;--copper-dim:#a66a2e;--teal:#2dd4bf;--red:#f87171;
+--amber:#fbbf24;--green:#4ade80;--blue:#60a5fa;--purple:#a78bfa;
+--text:#e5e7eb;--text-dim:#9ca3af;--text-bright:#f9fafb;
+--mono:'JetBrains Mono',monospace;--sans:'Plus Jakarta Sans',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh}
+header{padding:24px 32px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface)}
+header h1{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--copper);letter-spacing:1px}
+header .badge{font-size:11px;padding:4px 10px;border-radius:4px;background:rgba(212,137,63,.15);color:var(--copper);font-family:var(--mono);font-weight:600}
+
+.main{max-width:1200px;margin:0 auto;padding:24px 32px}
+.two-col{display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start}
+
+.card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:16px}
+.card-title{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--copper);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
+
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.field label{font-size:11px;color:var(--text-dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px}
+.field input,.field select,.field textarea{background:var(--bg);border:1px solid var(--border);color:var(--text-bright);padding:8px 12px;border-radius:6px;font-family:var(--mono);font-size:13px}
+.field textarea{resize:vertical;min-height:60px;font-family:var(--sans)}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--copper)}
+
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.btn{padding:10px 20px;border:none;border-radius:6px;font-family:var(--mono);font-weight:700;font-size:13px;cursor:pointer;transition:all .15s;width:100%}
+.btn-copper{background:var(--copper);color:var(--bg)}
+.btn-copper:hover{background:var(--copper-dim)}
+.btn-teal{background:var(--teal);color:var(--bg);margin-top:8px}
+
+.checklist{list-style:none;padding:0}
+.checklist li{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(42,58,80,.3);font-size:13px;font-family:var(--mono);cursor:pointer;user-select:none}
+.checklist li:hover{color:var(--teal)}
+.checklist li.checked{color:var(--green);text-decoration:line-through;opacity:.6}
+.check-box{width:18px;height:18px;border:2px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.checked .check-box{background:var(--green);border-color:var(--green)}
+.checked .check-box::after{content:'✓';color:var(--bg);font-size:12px;font-weight:700}
+
+/* JOB CARD */
+.job-card{background:var(--surface2);border:1px solid var(--copper);border-radius:12px;overflow:hidden;display:none}
+.job-card.visible{display:block}
+.jc-header{background:linear-gradient(135deg,#1a2332,#0f1726);padding:20px;border-bottom:1px solid var(--border)}
+.jc-header h2{font-family:var(--mono);font-size:18px;color:var(--copper);font-weight:700}
+.jc-header .jc-sub{font-size:12px;color:var(--text-dim);margin-top:4px;font-family:var(--mono)}
+.jc-body{padding:20px}
+.jc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.jc-item{padding:10px;background:var(--surface);border-radius:6px;border:1px solid var(--border)}
+.jc-item .ji-label{font-size:9px;color:var(--text-dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px}
+.jc-item .ji-value{font-size:14px;font-weight:600;color:var(--text-bright);font-family:var(--mono);margin-top:2px}
+
+.jc-section{margin-top:16px}
+.jc-section-title{font-family:var(--mono);font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+
+.timeline{position:relative;padding-left:20px}
+.timeline::before{content:'';position:absolute;left:6px;top:0;bottom:0;width:2px;background:var(--border)}
+.tl-item{position:relative;padding:8px 0 8px 16px;font-size:13px}
+.tl-item::before{content:'';position:absolute;left:-16px;top:12px;width:10px;height:10px;border-radius:50%;background:var(--copper);border:2px solid var(--bg)}
+.tl-time{font-family:var(--mono);color:var(--amber);font-weight:600;font-size:12px}
+.tl-task{color:var(--text);margin-top:2px}
+
+.personnel-tags{display:flex;flex-wrap:wrap;gap:6px}
+.p-tag{padding:4px 10px;background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.2);border-radius:20px;font-family:var(--mono);font-size:11px;color:var(--teal)}
+
+.print-btn{margin-top:12px;padding:8px 16px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);color:var(--blue);border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:600;cursor:pointer;width:100%}
+.print-btn:hover{background:rgba(96,165,250,.2)}
+
+@media(max-width:900px){.two-col{grid-template-columns:1fr}.main{padding:16px}}
+@media print{
+  body{background:#fff;color:#000}
+  header,.card:not(.job-card){display:none!important}
+  .two-col{grid-template-columns:1fr}
+  .job-card{border-color:#333}
+  .jc-header{background:#f5f5f5!important}
+  .jc-header h2{color:#333!important}
+  .jc-item{border-color:#ddd}
+  .print-btn{display:none}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>▼ DIVE JOB PLANNER</h1>
+  <span class="badge">PRE-START BOARD</span>
+</header>
+
+<div class="main">
+<div class="two-col">
+  <!-- INPUT FORM -->
+  <div>
+    <div class="card">
+      <div class="card-title">Job Details</div>
+      <div class="field"><label>Vessel / Structure</label><input type="text" id="vessel" placeholder="e.g. HMAS Brisbane"></div>
+      <div class="field"><label>Client</label><input type="text" id="client" placeholder="e.g. Babcock"></div>
+      <div class="field-row">
+        <div class="field"><label>Location</label><input type="text" id="location" placeholder="e.g. HMAS Stirling"></div>
+        <div class="field"><label>Berth</label><input type="text" id="berth" placeholder="e.g. Berth 2"></div>
+      </div>
+      <div class="field"><label>Job Type</label>
+        <select id="jobtype" onchange="updateChecklist()">
+          <option value="iwhc">IWHC — In-Water Hull Clean</option>
+          <option value="inspect">Hull Inspection (Biofouling)</option>
+          <option value="uwild">UWILD</option>
+          <option value="proppolish">Propeller Polish</option>
+          <option value="mgr">Marine Growth Removal</option>
+          <option value="rov">ROV Inspection</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Start Date</label><input type="date" id="startdate"></div>
+        <div class="field"><label>Duration (days)</label><input type="number" id="duration" value="2" min="1"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Start Time</label><input type="time" id="starttime" value="06:00"></div>
+        <div class="field"><label>End Time</label><input type="time" id="endtime" value="18:00"></div>
+      </div>
+      <div class="field"><label>Team Size</label><input type="number" id="teamsize" value="4" min="1" max="20"></div>
+      <div class="field"><label>Notes / Special Requirements</label><textarea id="notes" placeholder="e.g. Night ops, restricted access, DPIRD approval required..."></textarea></div>
+      <button class="btn btn-copper" onclick="generateCard()">GENERATE JOB CARD</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Equipment Checklist</div>
+      <ul class="checklist" id="checklist"></ul>
+    </div>
+  </div>
+
+  <!-- JOB CARD OUTPUT -->
+  <div>
+    <div class="job-card" id="job-card">
+      <div class="jc-header">
+        <h2 id="jc-title">—</h2>
+        <div class="jc-sub" id="jc-subtitle">—</div>
+      </div>
+      <div class="jc-body">
+        <div class="jc-grid" id="jc-grid"></div>
+
+        <div class="jc-section">
+          <div class="jc-section-title">Personnel</div>
+          <div class="personnel-tags" id="jc-personnel"></div>
+        </div>
+
+        <div class="jc-section">
+          <div class="jc-section-title">Timeline</div>
+          <div class="timeline" id="jc-timeline"></div>
+        </div>
+
+        <div class="jc-section">
+          <div class="jc-section-title">Key Equipment</div>
+          <div id="jc-equipment" style="font-size:13px;line-height:1.8;font-family:var(--mono)"></div>
+        </div>
+
+        <div class="jc-section" id="jc-notes-section" style="display:none">
+          <div class="jc-section-title">Notes</div>
+          <div id="jc-notes" style="font-size:13px;line-height:1.6"></div>
+        </div>
+
+        <button class="print-btn" onclick="window.print()">🖨 PRINT JOB CARD</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+const EQUIPMENT = {
+  iwhc: ['IWHC System (Envirocart)','Filtration unit','Hoses & manifold','Diver comms','Underwater camera','Surface supply panel','Umbilicals','PPE — dive','Spares kit','MarineStream tablet','Containment boom','Water sampling kit'],
+  inspect: ['Underwater camera (HD)','GoPro / action cam','Dive lights','Diver comms','Surface supply panel','Umbilicals','PPE — dive','MarineStream tablet','FR rating cards','Barnacle scraper (sample)'],
+  uwild: ['Underwater camera','CP probes','UT gauge','Diver comms','Surface supply panel','Umbilicals','PPE — dive','Defect markers','Reporting templates'],
+  proppolish: ['Prop polishing kit','Underwater camera','Diver comms','Surface supply panel','Umbilicals','PPE — dive','Roughness gauge'],
+  mgr: ['Hydraulic scraper','Pneumatic tools','Containment system','Diver comms','Surface supply panel','Umbilicals','PPE — dive','Waste collection bags'],
+  rov: ['ROV system','Tether management system','Control console','HD camera','Lights','Tooling skid','Launch/recovery frame','Spares kit'],
+  other: ['Diver comms','Surface supply panel','Umbilicals','PPE — dive','Underwater camera'],
+};
+
+const ROLES = {
+  iwhc: ['Dive Supervisor','IWHC Operator','IWHC Operator','Diver / Tender'],
+  inspect: ['Dive Supervisor','Inspector Diver','Diver / Tender'],
+  uwild: ['Dive Supervisor','UWILD Inspector','Diver / Tender','NDT Tech'],
+  proppolish: ['Dive Supervisor','Diver','Diver / Tender'],
+  mgr: ['Dive Supervisor','Diver','Diver','Tender'],
+  rov: ['ROV Supervisor','ROV Pilot','ROV Pilot','Deck Tech'],
+  other: ['Dive Supervisor','Diver','Tender'],
+};
+
+const TIMELINES = {
+  iwhc: [
+    {offset:0,task:'Team muster & toolbox talk'},
+    {offset:30,task:'Set up IWHC system & filtration'},
+    {offset:60,task:'Deploy containment / connect hoses'},
+    {offset:90,task:'Diver enters water — commence clean'},
+    {offset:210,task:'Diver changeover / progress check'},
+    {offset:330,task:'Water sampling (pre-discharge)'},
+    {offset:360,task:'Clean complete — demobilise gear'},
+    {offset:420,task:'Filter backwash & waste containment'},
+    {offset:450,task:'Debrief & MarineStream report upload'},
+  ],
+  inspect: [
+    {offset:0,task:'Team muster & toolbox talk'},
+    {offset:20,task:'Camera & light check'},
+    {offset:40,task:'Diver enters water — commence survey'},
+    {offset:100,task:'Starboard side complete — swap'},
+    {offset:160,task:'Port side complete'},
+    {offset:200,task:'Niche areas — sea chest, rudder, keel'},
+    {offset:260,task:'Diver exits — gear recovery'},
+    {offset:280,task:'Photo review & FR rating'},
+    {offset:300,task:'MarineStream report generation'},
+  ],
+  uwild: [
+    {offset:0,task:'Team muster & toolbox talk'},
+    {offset:30,task:'UT calibration & CP probe check'},
+    {offset:50,task:'Diver enters water'},
+    {offset:60,task:'Hull plate readings — zone 1'},
+    {offset:120,task:'Hull plate readings — zone 2'},
+    {offset:180,task:'Anode survey & CP readings'},
+    {offset:240,task:'Defect marking & photography'},
+    {offset:300,task:'Diver exits — debrief'},
+    {offset:330,task:'Data compilation & report'},
+  ],
+};
+TIMELINES.proppolish = TIMELINES.inspect;
+TIMELINES.mgr = TIMELINES.iwhc;
+TIMELINES.rov = TIMELINES.inspect;
+TIMELINES.other = TIMELINES.inspect;
+
+function updateChecklist(){
+  const jt = document.getElementById('jobtype').value;
+  const items = EQUIPMENT[jt] || EQUIPMENT.other;
+  document.getElementById('checklist').innerHTML = items.map(item=>
+    `<li onclick="this.classList.toggle('checked')"><span class="check-box"></span>${item}</li>`
+  ).join('');
+}
+
+function generateCard(){
+  const vessel = document.getElementById('vessel').value || 'TBC';
+  const client = document.getElementById('client').value || 'TBC';
+  const location = document.getElementById('location').value || 'TBC';
+  const berth = document.getElementById('berth').value || '-';
+  const jt = document.getElementById('jobtype').value;
+  const jtText = document.getElementById('jobtype').selectedOptions[0].text;
+  const startDate = document.getElementById('startdate').value || 'TBC';
+  const duration = document.getElementById('duration').value || '1';
+  const startTime = document.getElementById('starttime').value || '06:00';
+  const endTime = document.getElementById('endtime').value || '18:00';
+  const teamSize = parseInt(document.getElementById('teamsize').value) || 4;
+  const notes = document.getElementById('notes').value;
+
+  document.getElementById('jc-title').textContent = `${vessel} — ${jtText}`;
+  document.getElementById('jc-subtitle').textContent = `${client} | ${location} | ${berth}`;
+
+  document.getElementById('jc-grid').innerHTML = [
+    {l:'Start Date',v:startDate},{l:'Duration',v:duration+' day(s)'},
+    {l:'Shift',v:`${startTime} — ${endTime}`},{l:'Team Size',v:teamSize},
+    {l:'Location',v:location},{l:'Berth',v:berth},
+  ].map(i=>`<div class="jc-item"><div class="ji-label">${i.l}</div><div class="ji-value">${i.v}</div></div>`).join('');
+
+  // Personnel
+  const roles = ROLES[jt] || ROLES.other;
+  const allRoles = [];
+  for(let i=0;i<teamSize;i++) allRoles.push(roles[i] || 'Crew Member');
+  document.getElementById('jc-personnel').innerHTML = allRoles.map(r=>`<span class="p-tag">${r}</span>`).join('');
+
+  // Timeline
+  const tl = TIMELINES[jt] || TIMELINES.other;
+  const [sh,sm] = startTime.split(':').map(Number);
+  document.getElementById('jc-timeline').innerHTML = tl.map(t=>{
+    const totalMin = sh*60+sm+t.offset;
+    const h = Math.floor(totalMin/60)%24;
+    const m = totalMin%60;
+    const timeStr = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+    return `<div class="tl-item"><div class="tl-time">${timeStr}</div><div class="tl-task">${t.task}</div></div>`;
+  }).join('');
+
+  // Equipment
+  const equip = EQUIPMENT[jt] || EQUIPMENT.other;
+  document.getElementById('jc-equipment').innerHTML = equip.map(e=>`• ${e}`).join('<br>');
+
+  // Notes
+  if(notes){
+    document.getElementById('jc-notes-section').style.display='block';
+    document.getElementById('jc-notes').textContent = notes;
+  } else {
+    document.getElementById('jc-notes-section').style.display='none';
+  }
+
+  document.getElementById('job-card').classList.add('visible');
+}
+
+// Init
+updateChecklist();
+document.getElementById('startdate').valueAsDate = new Date();
+</script>
+</body>
+</html>

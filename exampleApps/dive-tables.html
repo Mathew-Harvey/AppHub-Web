@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dive Tables — DCIEM / USN / NOAA</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#0a0f1a;--surface:#111827;--surface2:#1a2332;--border:#2a3a50;
+--copper:#d4893f;--copper-dim:#a66a2e;--teal:#2dd4bf;--red:#f87171;
+--amber:#fbbf24;--green:#4ade80;--blue:#60a5fa;
+--text:#e5e7eb;--text-dim:#9ca3af;--text-bright:#f9fafb;
+--mono:'JetBrains Mono',monospace;--sans:'Plus Jakarta Sans',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden}
+.grain{position:fixed;inset:0;opacity:.03;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+header{padding:24px 32px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface)}
+header h1{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--copper);letter-spacing:1px}
+header .badge{font-size:11px;padding:4px 10px;border-radius:4px;background:rgba(212,137,63,.15);color:var(--copper);font-family:var(--mono);font-weight:600}
+
+.disclaimer{margin:16px 32px;padding:12px 16px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;font-size:12px;color:var(--red);line-height:1.5;display:flex;align-items:flex-start;gap:8px}
+.disclaimer svg{flex-shrink:0;margin-top:1px}
+
+.tabs{display:flex;gap:2px;padding:16px 32px 0;background:var(--surface)}
+.tab{padding:10px 20px;font-family:var(--mono);font-size:13px;font-weight:600;border:1px solid var(--border);border-bottom:none;border-radius:8px 8px 0 0;cursor:pointer;background:var(--bg);color:var(--text-dim);transition:all .2s}
+.tab.active{background:var(--surface2);color:var(--copper);border-color:var(--copper)}
+.tab:hover:not(.active){color:var(--text)}
+
+.content{margin:0 32px 32px;padding:24px;background:var(--surface2);border:1px solid var(--border);border-radius:0 8px 8px 8px}
+
+.table-section{display:none}
+.table-section.active{display:block}
+
+.section-title{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--teal);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px}
+.section-sub{font-size:13px;color:var(--text-dim);margin-bottom:16px}
+
+table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:13px}
+th{background:var(--surface);color:var(--copper);padding:8px 10px;text-align:center;font-weight:600;border:1px solid var(--border);position:sticky;top:0;font-size:12px}
+td{padding:6px 10px;text-align:center;border:1px solid var(--border);color:var(--text);transition:background .15s}
+td:first-child{font-weight:600;color:var(--text-bright);background:rgba(212,137,63,.05)}
+tr:hover td{background:rgba(45,212,191,.05)}
+
+.depth-col{color:var(--amber)!important;font-weight:700!important}
+.ndl-col{color:var(--green)!important;font-weight:600!important}
+.group-col{color:var(--blue)!important}
+
+.calc-panel{margin-top:24px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+.calc-title{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--copper);margin-bottom:16px;text-transform:uppercase;letter-spacing:1px}
+.calc-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;align-items:end}
+.calc-field{display:flex;flex-direction:column;gap:4px}
+.calc-field label{font-size:11px;color:var(--text-dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px}
+.calc-field input,.calc-field select{background:var(--bg);border:1px solid var(--border);color:var(--text-bright);padding:8px 12px;border-radius:6px;font-family:var(--mono);font-size:14px;width:140px}
+.calc-field input:focus,.calc-field select:focus{outline:none;border-color:var(--copper)}
+.calc-btn{padding:8px 20px;background:var(--copper);color:var(--bg);border:none;border-radius:6px;font-family:var(--mono);font-weight:700;font-size:13px;cursor:pointer;transition:all .15s;align-self:end}
+.calc-btn:hover{background:var(--copper-dim);transform:translateY(-1px)}
+
+.result-box{margin-top:16px;padding:16px;background:rgba(45,212,191,.05);border:1px solid rgba(45,212,191,.2);border-radius:8px;font-family:var(--mono);font-size:13px;line-height:1.8}
+.result-box .label{color:var(--text-dim);font-size:11px;text-transform:uppercase}
+.result-box .value{color:var(--teal);font-weight:700;font-size:16px}
+.result-box .warn{color:var(--red);font-weight:600}
+.result-box .ok{color:var(--green);font-weight:600}
+
+.table-wrap{max-height:500px;overflow-y:auto;border-radius:6px;border:1px solid var(--border)}
+.table-wrap::-webkit-scrollbar{width:6px}
+.table-wrap::-webkit-scrollbar-track{background:var(--bg)}
+.table-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.info-card{padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+.info-card .ic-label{font-size:10px;color:var(--text-dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px}
+.info-card .ic-value{font-size:18px;font-weight:700;color:var(--text-bright);font-family:var(--mono);margin-top:2px}
+
+@media(max-width:768px){
+  header,.tabs,.content,.disclaimer{padding-left:16px;padding-right:16px;margin-left:0;margin-right:0}
+  .content{margin:0 16px 16px}
+  .disclaimer{margin:16px}
+  .calc-row{flex-direction:column}
+  .calc-field input,.calc-field select{width:100%}
+}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<header>
+  <h1>▼ DIVE TABLES</h1>
+  <span class="badge">REFERENCE TOOL v1.0</span>
+</header>
+
+<div class="disclaimer">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+  <span><strong>NOT FOR OPERATIONAL DIVE PLANNING.</strong> This is a digital reference tool only. Always use official printed tables, consult your dive supervisor, and follow your company's diving procedures manual. No-decompression limits shown are for air dives at sea level. Altitude, temperature, and individual physiology affect safe limits.</span>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('dciem')">DCIEM</div>
+  <div class="tab" onclick="switchTab('usn')">USN Rev 7</div>
+  <div class="tab" onclick="switchTab('noaa')">NOAA</div>
+  <div class="tab" onclick="switchTab('compare')">COMPARE</div>
+  <div class="tab" onclick="switchTab('planner')">DIVE PLANNER</div>
+</div>
+
+<div class="content">
+  <!-- DCIEM -->
+  <div class="table-section active" id="sec-dciem">
+    <div class="section-title">DCIEM Air Diving Tables</div>
+    <div class="section-sub">Defence and Civil Institute of Environmental Medicine — Standard Air No-Decompression Limits</div>
+    <div class="info-grid">
+      <div class="info-card"><div class="ic-label">Origin</div><div class="ic-value">Canada</div></div>
+      <div class="info-card"><div class="ic-label">Max Depth</div><div class="ic-value">57m</div></div>
+      <div class="info-card"><div class="ic-label">Units</div><div class="ic-value">Metres</div></div>
+      <div class="info-card"><div class="ic-label">Known For</div><div class="ic-value">Conservative</div></div>
+    </div>
+    <div class="table-wrap">
+      <table id="dciem-table">
+        <thead><tr><th>Depth (m)</th><th>NDL (min)</th><th>Group A</th><th>Group B</th><th>Group C</th><th>Group D</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="calc-panel">
+      <div class="calc-title">Quick NDL Lookup</div>
+      <div class="calc-row">
+        <div class="calc-field"><label>Depth (m)</label><input type="number" id="dciem-depth" min="9" max="57" placeholder="30"></div>
+        <button class="calc-btn" onclick="lookupDCIEM()">LOOK UP</button>
+      </div>
+      <div id="dciem-result"></div>
+    </div>
+  </div>
+
+  <!-- USN -->
+  <div class="table-section" id="sec-usn">
+    <div class="section-title">US Navy Dive Tables — Revision 7</div>
+    <div class="section-sub">Table 1: No-Decompression Limits and Repetitive Group Designators</div>
+    <div class="info-grid">
+      <div class="info-card"><div class="ic-label">Origin</div><div class="ic-value">US Navy</div></div>
+      <div class="info-card"><div class="ic-label">Max Depth</div><div class="ic-value">190 fsw</div></div>
+      <div class="info-card"><div class="ic-label">Units</div><div class="ic-value">Feet (fsw)</div></div>
+      <div class="info-card"><div class="ic-label">Known For</div><div class="ic-value">Industry Std</div></div>
+    </div>
+    <div class="table-wrap">
+      <table id="usn-table">
+        <thead><tr><th>Depth (fsw)</th><th>NDL (min)</th><th>Group</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="calc-panel">
+      <div class="calc-title">Quick NDL Lookup</div>
+      <div class="calc-row">
+        <div class="calc-field"><label>Depth (fsw)</label><input type="number" id="usn-depth" min="35" max="190" placeholder="60"></div>
+        <button class="calc-btn" onclick="lookupUSN()">LOOK UP</button>
+      </div>
+      <div id="usn-result"></div>
+    </div>
+  </div>
+
+  <!-- NOAA -->
+  <div class="table-section" id="sec-noaa">
+    <div class="section-title">NOAA Diving Tables</div>
+    <div class="section-sub">National Oceanic and Atmospheric Administration — No-Decompression Limits for Air</div>
+    <div class="info-grid">
+      <div class="info-card"><div class="ic-label">Origin</div><div class="ic-value">NOAA / USA</div></div>
+      <div class="info-card"><div class="ic-label">Max Depth</div><div class="ic-value">130 fsw</div></div>
+      <div class="info-card"><div class="ic-label">Units</div><div class="ic-value">Feet (fsw)</div></div>
+      <div class="info-card"><div class="ic-label">Known For</div><div class="ic-value">Scientific</div></div>
+    </div>
+    <div class="table-wrap">
+      <table id="noaa-table">
+        <thead><tr><th>Depth (fsw)</th><th>NDL (min)</th><th>Group</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- COMPARE -->
+  <div class="table-section" id="sec-compare">
+    <div class="section-title">NDL Comparison — All Tables</div>
+    <div class="section-sub">Side-by-side no-decompression limits at common depths (converted to metres)</div>
+    <div class="table-wrap">
+      <table id="compare-table">
+        <thead><tr><th>Depth</th><th>DCIEM (min)</th><th>USN (min)</th><th>NOAA (min)</th><th>Most Conservative</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div style="margin-top:16px">
+      <canvas id="compareChart" height="300"></canvas>
+    </div>
+  </div>
+
+  <!-- PLANNER -->
+  <div class="table-section" id="sec-planner">
+    <div class="section-title">No-Deco Dive Planner</div>
+    <div class="section-sub">Calculate remaining NDL and repetitive dive limits. Select table system first.</div>
+    <div class="calc-panel" style="margin-top:0">
+      <div class="calc-title">Dive 1</div>
+      <div class="calc-row">
+        <div class="calc-field"><label>Table</label>
+          <select id="plan-table"><option value="dciem">DCIEM (m)</option><option value="usn">USN (fsw)</option><option value="noaa">NOAA (fsw)</option></select>
+        </div>
+        <div class="calc-field"><label>Depth</label><input type="number" id="plan-depth1" placeholder="30"></div>
+        <div class="calc-field"><label>Bottom Time (min)</label><input type="number" id="plan-bt1" placeholder="10"></div>
+      </div>
+      <div class="calc-title" style="margin-top:16px">Surface Interval</div>
+      <div class="calc-row">
+        <div class="calc-field"><label>Hours</label><input type="number" id="plan-si-h" min="0" placeholder="1"></div>
+        <div class="calc-field"><label>Minutes</label><input type="number" id="plan-si-m" min="0" max="59" placeholder="30"></div>
+      </div>
+      <div class="calc-title" style="margin-top:16px">Dive 2</div>
+      <div class="calc-row">
+        <div class="calc-field"><label>Planned Depth</label><input type="number" id="plan-depth2" placeholder="20"></div>
+        <button class="calc-btn" onclick="calculatePlan()">CALCULATE</button>
+      </div>
+    </div>
+    <div id="plan-result"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DIVE TABLE DATA
+// ============================================================
+
+// DCIEM No-Decompression Limits (metres, sea level, air)
+const dciemData = [
+  {depth:9,  ndl:300, groups:[60,120,180,300]},
+  {depth:12, ndl:150, groups:[30,70,120,150]},
+  {depth:15, ndl:75,  groups:[20,40,60,75]},
+  {depth:18, ndl:50,  groups:[15,30,40,50]},
+  {depth:21, ndl:40,  groups:[10,20,30,40]},
+  {depth:24, ndl:30,  groups:[10,15,25,30]},
+  {depth:27, ndl:25,  groups:[7,12,20,25]},
+  {depth:30, ndl:20,  groups:[5,10,15,20]},
+  {depth:33, ndl:15,  groups:[5,8,12,15]},
+  {depth:36, ndl:12,  groups:[5,7,10,12]},
+  {depth:39, ndl:10,  groups:[4,6,8,10]},
+  {depth:42, ndl:8,   groups:[3,5,7,8]},
+  {depth:45, ndl:7,   groups:[3,4,6,7]},
+  {depth:48, ndl:6,   groups:[3,4,5,6]},
+  {depth:51, ndl:5,   groups:[2,3,4,5]},
+  {depth:54, ndl:5,   groups:[2,3,4,5]},
+  {depth:57, ndl:4,   groups:[2,3,3,4]},
+];
+
+// USN Rev 7 No-Decompression Limits (fsw, air)
+const usnData = [
+  {depth:35,  ndl:310, group:'N'},
+  {depth:40,  ndl:200, group:'M'},
+  {depth:50,  ndl:100, group:'L'},
+  {depth:60,  ndl:60,  group:'K'},
+  {depth:70,  ndl:50,  group:'J'},
+  {depth:80,  ndl:40,  group:'I'},
+  {depth:90,  ndl:30,  group:'H'},
+  {depth:100, ndl:25,  group:'G'},
+  {depth:110, ndl:20,  group:'F'},
+  {depth:120, ndl:15,  group:'E'},
+  {depth:130, ndl:10,  group:'D'},
+  {depth:140, ndl:10,  group:'D'},
+  {depth:150, ndl:5,   group:'C'},
+  {depth:160, ndl:5,   group:'C'},
+  {depth:170, ndl:5,   group:'B'},
+  {depth:180, ndl:5,   group:'B'},
+  {depth:190, ndl:5,   group:'A'},
+];
+
+// NOAA No-Decompression Limits (fsw, air)
+const noaaData = [
+  {depth:35,  ndl:232, group:'L'},
+  {depth:40,  ndl:163, group:'K'},
+  {depth:50,  ndl:80,  group:'J'},
+  {depth:60,  ndl:55,  group:'I'},
+  {depth:70,  ndl:40,  group:'H'},
+  {depth:80,  ndl:30,  group:'G'},
+  {depth:90,  ndl:25,  group:'F'},
+  {depth:100, ndl:22,  group:'F'},
+  {depth:110, ndl:16,  group:'E'},
+  {depth:120, ndl:13,  group:'D'},
+  {depth:130, ndl:10,  group:'D'},
+];
+
+// ============================================================
+// RENDER TABLES
+// ============================================================
+
+function renderDCIEM(){
+  const tb = document.querySelector('#dciem-table tbody');
+  tb.innerHTML = dciemData.map(r=>`<tr>
+    <td class="depth-col">${r.depth}</td>
+    <td class="ndl-col">${r.ndl}</td>
+    <td class="group-col">${r.groups[0]}</td>
+    <td class="group-col">${r.groups[1]}</td>
+    <td class="group-col">${r.groups[2]}</td>
+    <td class="group-col">${r.groups[3]}</td>
+  </tr>`).join('');
+}
+
+function renderUSN(){
+  const tb = document.querySelector('#usn-table tbody');
+  tb.innerHTML = usnData.map(r=>`<tr>
+    <td class="depth-col">${r.depth}</td>
+    <td class="ndl-col">${r.ndl}</td>
+    <td class="group-col">${r.group}</td>
+  </tr>`).join('');
+}
+
+function renderNOAA(){
+  const tb = document.querySelector('#noaa-table tbody');
+  tb.innerHTML = noaaData.map(r=>`<tr>
+    <td class="depth-col">${r.depth}</td>
+    <td class="ndl-col">${r.ndl}</td>
+    <td class="group-col">${r.group}</td>
+  </tr>`).join('');
+}
+
+function renderCompare(){
+  const depths = [
+    {m:10, label:'10m / 33ft'},
+    {m:12, label:'12m / 40ft'},
+    {m:15, label:'15m / 50ft'},
+    {m:18, label:'18m / 60ft'},
+    {m:21, label:'21m / 70ft'},
+    {m:24, label:'24m / 80ft'},
+    {m:27, label:'27m / 90ft'},
+    {m:30, label:'30m / 100ft'},
+    {m:33, label:'33m / 110ft'},
+    {m:36, label:'36m / 120ft'},
+    {m:39, label:'39m / 130ft'},
+  ];
+
+  function getNDL(data, depth, isFsw){
+    const d = isFsw ? Math.round(depth * 3.28084) : depth;
+    const match = data.reduce((best,r)=>{
+      const rd = r.depth;
+      if(rd <= (isFsw ? Math.round(depth*3.28084)+2 : depth)) return r;
+      return best;
+    }, null);
+    if(!match) return '-';
+    return match.ndl;
+  }
+
+  const tb = document.querySelector('#compare-table tbody');
+  tb.innerHTML = depths.map(d=>{
+    const dciem = dciemData.find(r=>r.depth===d.m);
+    const fsw = Math.round(d.m * 3.28084);
+    const usn = usnData.reduce((b,r)=> r.depth<=fsw+2 ? r : b, null);
+    const noaa = noaaData.reduce((b,r)=> r.depth<=fsw+2 ? r : b, null);
+
+    const dv = dciem ? dciem.ndl : '-';
+    const uv = usn ? usn.ndl : '-';
+    const nv = noaa ? noaa.ndl : '-';
+
+    const vals = [dv,uv,nv].filter(v=>v!=='-').map(Number);
+    const min = vals.length ? Math.min(...vals) : '-';
+    let most = '';
+    if(min === dv) most = 'DCIEM';
+    else if(min === nv) most = 'NOAA';
+    else most = 'USN';
+
+    return `<tr>
+      <td class="depth-col">${d.label}</td>
+      <td>${dv}</td>
+      <td>${uv}</td>
+      <td>${nv}</td>
+      <td style="color:var(--amber);font-weight:600">${most} (${min} min)</td>
+    </tr>`;
+  }).join('');
+
+  // Simple bar chart via canvas
+  drawCompareChart(depths);
+}
+
+function drawCompareChart(depths){
+  const canvas = document.getElementById('compareChart');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width = canvas.parentElement.offsetWidth;
+  const H = canvas.height = 300;
+
+  ctx.fillStyle = '#111827';
+  ctx.fillRect(0,0,W,H);
+
+  const pad = {t:40,r:20,b:50,l:60};
+  const cw = W - pad.l - pad.r;
+  const ch = H - pad.t - pad.b;
+
+  const labels = [];
+  const dciemVals = [];
+  const usnVals = [];
+  const noaaVals = [];
+
+  depths.forEach(d=>{
+    labels.push(d.m+'m');
+    const dc = dciemData.find(r=>r.depth===d.m);
+    dciemVals.push(dc ? dc.ndl : 0);
+    const fsw = Math.round(d.m * 3.28084);
+    const us = usnData.reduce((b,r)=>r.depth<=fsw+2?r:b,null);
+    usnVals.push(us ? us.ndl : 0);
+    const no = noaaData.reduce((b,r)=>r.depth<=fsw+2?r:b,null);
+    noaaVals.push(no ? no.ndl : 0);
+  });
+
+  const maxVal = Math.max(...dciemVals,...usnVals,...noaaVals);
+
+  // Grid
+  ctx.strokeStyle = '#2a3a50';
+  ctx.lineWidth = 0.5;
+  for(let i=0;i<=5;i++){
+    const y = pad.t + ch - (ch * i / 5);
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = '11px JetBrains Mono';
+    ctx.textAlign = 'right';
+    ctx.fillText(Math.round(maxVal*i/5), pad.l-8, y+4);
+  }
+
+  // Bars
+  const gw = cw / labels.length;
+  const bw = gw * 0.22;
+  const colors = ['#d4893f','#60a5fa','#2dd4bf'];
+
+  labels.forEach((lbl,i)=>{
+    const x = pad.l + i * gw + gw/2;
+    const vals = [dciemVals[i], usnVals[i], noaaVals[i]];
+    vals.forEach((v,j)=>{
+      const bh = (v/maxVal)*ch;
+      const bx = x - bw*1.5 + j*bw;
+      ctx.fillStyle = colors[j];
+      ctx.globalAlpha = 0.85;
+      ctx.fillRect(bx, pad.t+ch-bh, bw-2, bh);
+    });
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = '10px JetBrains Mono';
+    ctx.textAlign = 'center';
+    ctx.fillText(lbl, x, H - pad.b + 16);
+  });
+
+  // Legend
+  const legendX = pad.l;
+  const legendY = 14;
+  const names = ['DCIEM','USN','NOAA'];
+  names.forEach((n,i)=>{
+    const lx = legendX + i*90;
+    ctx.fillStyle = colors[i];
+    ctx.fillRect(lx,legendY-8,12,12);
+    ctx.fillStyle = '#e5e7eb';
+    ctx.font = '11px JetBrains Mono';
+    ctx.textAlign = 'left';
+    ctx.fillText(n, lx+16, legendY+2);
+  });
+
+  // Axis label
+  ctx.fillStyle = '#9ca3af';
+  ctx.font = '11px Plus Jakarta Sans';
+  ctx.textAlign = 'center';
+  ctx.fillText('NDL (minutes) by depth — lower = more conservative', W/2, H-4);
+}
+
+// ============================================================
+// LOOKUPS
+// ============================================================
+
+function lookupDCIEM(){
+  const depth = parseInt(document.getElementById('dciem-depth').value);
+  if(!depth) return;
+  const match = dciemData.reduce((b,r)=> r.depth<=depth ? r : b, null);
+  const exact = dciemData.find(r=>r.depth===depth);
+  const el = document.getElementById('dciem-result');
+
+  if(!match || depth < 9){
+    el.innerHTML = `<div class="result-box"><span class="warn">Depth ${depth}m outside table range (9-57m)</span></div>`;
+    return;
+  }
+
+  const note = exact ? '' : `<br><span class="label">NOTE:</span> <span class="warn">Use next deeper table depth: ${match.depth}m</span>`;
+  el.innerHTML = `<div class="result-box">
+    <span class="label">Depth</span> <span class="value">${match.depth}m</span><br>
+    <span class="label">No-Deco Limit</span> <span class="value">${match.ndl} min</span><br>
+    <span class="label">Group Limits</span> A: ${match.groups[0]} min &nbsp;|&nbsp; B: ${match.groups[1]} min &nbsp;|&nbsp; C: ${match.groups[2]} min &nbsp;|&nbsp; D: ${match.groups[3]} min
+    ${note}
+  </div>`;
+}
+
+function lookupUSN(){
+  const depth = parseInt(document.getElementById('usn-depth').value);
+  if(!depth) return;
+  const match = usnData.reduce((b,r)=> r.depth<=depth ? r : b, null);
+  const exact = usnData.find(r=>r.depth===depth);
+  const el = document.getElementById('usn-result');
+
+  if(!match || depth < 35){
+    el.innerHTML = `<div class="result-box"><span class="warn">Depth ${depth} fsw outside table range (35-190 fsw)</span></div>`;
+    return;
+  }
+
+  const note = exact ? '' : `<br><span class="label">NOTE:</span> <span class="warn">Use next deeper table depth: ${match.depth} fsw</span>`;
+  el.innerHTML = `<div class="result-box">
+    <span class="label">Depth</span> <span class="value">${match.depth} fsw</span><br>
+    <span class="label">No-Deco Limit</span> <span class="value">${match.ndl} min</span><br>
+    <span class="label">Group at NDL</span> <span class="value">${match.group}</span>
+    ${note}
+  </div>`;
+}
+
+// ============================================================
+// DIVE PLANNER
+// ============================================================
+
+function calculatePlan(){
+  const table = document.getElementById('plan-table').value;
+  const d1 = parseInt(document.getElementById('plan-depth1').value);
+  const bt1 = parseInt(document.getElementById('plan-bt1').value);
+  const siH = parseInt(document.getElementById('plan-si-h').value)||0;
+  const siM = parseInt(document.getElementById('plan-si-m').value)||0;
+  const d2 = parseInt(document.getElementById('plan-depth2').value);
+  const el = document.getElementById('plan-result');
+
+  if(!d1||!bt1||!d2){
+    el.innerHTML = `<div class="result-box"><span class="warn">Please fill in all fields</span></div>`;
+    return;
+  }
+
+  let data, unit;
+  if(table==='dciem'){ data=dciemData; unit='m'; }
+  else if(table==='usn'){ data=usnData; unit='fsw'; }
+  else { data=noaaData; unit='fsw'; }
+
+  const match1 = data.reduce((b,r)=> r.depth<=d1 ? r : b, null);
+  const match2 = data.reduce((b,r)=> r.depth<=d2 ? r : b, null);
+
+  if(!match1 || !match2){
+    el.innerHTML = `<div class="result-box"><span class="warn">Depth outside table range</span></div>`;
+    return;
+  }
+
+  const ndl1 = match1.ndl;
+  const ndl2 = match2.ndl;
+  const siTotal = siH*60 + siM;
+
+  let status1 = bt1 <= ndl1 ? 'ok' : 'warn';
+  let status1Text = bt1 <= ndl1 ? 'WITHIN NDL' : 'EXCEEDS NDL — DECO REQUIRED';
+
+  // Simplified residual nitrogen penalty (conservative estimate)
+  // Penalty decreases with surface interval
+  let penalty = 0;
+  if(siTotal < 10) penalty = bt1 * 0.8;
+  else if(siTotal < 30) penalty = bt1 * 0.6;
+  else if(siTotal < 60) penalty = bt1 * 0.45;
+  else if(siTotal < 120) penalty = bt1 * 0.3;
+  else if(siTotal < 180) penalty = bt1 * 0.2;
+  else if(siTotal < 360) penalty = bt1 * 0.1;
+  else if(siTotal < 720) penalty = bt1 * 0.05;
+  else penalty = 0;
+
+  const adjustedNDL = Math.max(0, Math.round(ndl2 - penalty));
+  let status2 = adjustedNDL > 0 ? 'ok' : 'warn';
+
+  el.innerHTML = `<div class="result-box">
+    <span class="label">DIVE 1</span><br>
+    Depth: <span class="value">${match1.depth} ${unit}</span> &nbsp;|&nbsp; Bottom Time: <span class="value">${bt1} min</span> &nbsp;|&nbsp; NDL: <span class="value">${ndl1} min</span> &nbsp;|&nbsp; Status: <span class="${status1}">${status1Text}</span><br><br>
+    <span class="label">SURFACE INTERVAL</span><br>
+    Duration: <span class="value">${siH}h ${siM}m (${siTotal} min)</span> &nbsp;|&nbsp; Residual N₂ Penalty: <span class="value">~${Math.round(penalty)} min</span><br><br>
+    <span class="label">DIVE 2</span><br>
+    Depth: <span class="value">${match2.depth} ${unit}</span> &nbsp;|&nbsp; Base NDL: <span class="value">${ndl2} min</span><br>
+    Adjusted NDL (after residual N₂): <span class="${status2}" style="font-size:18px">${adjustedNDL} min</span><br><br>
+    <span class="warn" style="font-size:11px">⚠ Residual nitrogen calculation is SIMPLIFIED. Use official RNT tables for operational planning.</span>
+  </div>`;
+}
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+
+function switchTab(id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.table-section').forEach(s=>s.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('sec-'+id).classList.add('active');
+  if(id==='compare') setTimeout(()=>drawCompareChart([
+    {m:10},{m:12},{m:15},{m:18},{m:21},{m:24},{m:27},{m:30},{m:33},{m:36},{m:39}
+  ]),50);
+}
+
+// Init
+renderDCIEM();
+renderUSN();
+renderNOAA();
+renderCompare();
+</script>
+</body>
+</html>

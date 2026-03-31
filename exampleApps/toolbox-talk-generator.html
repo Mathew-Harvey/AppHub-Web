@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toolbox Talk Generator — Franmarine</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#0a0f1a;--surface:#111827;--surface2:#1a2332;--border:#2a3a50;
+--copper:#d4893f;--copper-dim:#a66a2e;--teal:#2dd4bf;--red:#f87171;
+--amber:#fbbf24;--green:#4ade80;--blue:#60a5fa;
+--text:#e5e7eb;--text-dim:#9ca3af;--text-bright:#f9fafb;
+--mono:'JetBrains Mono',monospace;--sans:'Plus Jakarta Sans',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh}
+header{padding:24px 32px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface)}
+header h1{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--copper);letter-spacing:1px}
+header .badge{font-size:11px;padding:4px 10px;border-radius:4px;background:rgba(212,137,63,.15);color:var(--copper);font-family:var(--mono);font-weight:600}
+
+.main{max-width:1100px;margin:0 auto;padding:24px 32px}
+.two-col{display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start}
+
+.card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:16px}
+.card-title{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--copper);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
+
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.field label{font-size:11px;color:var(--text-dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px}
+.field input,.field select,.field textarea{background:var(--bg);border:1px solid var(--border);color:var(--text-bright);padding:8px 12px;border-radius:6px;font-family:var(--mono);font-size:13px}
+.field textarea{resize:vertical;min-height:80px;font-family:var(--sans)}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--copper)}
+
+.chip-group{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{padding:5px 12px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .15s;user-select:none}
+.chip.selected{background:rgba(212,137,63,.15);border-color:var(--copper);color:var(--copper)}
+.chip:hover{border-color:var(--copper)}
+
+.btn{padding:10px 20px;border:none;border-radius:6px;font-family:var(--mono);font-weight:700;font-size:13px;cursor:pointer;transition:all .15s;width:100%}
+.btn-copper{background:var(--copper);color:var(--bg)}
+.btn-copper:hover{background:var(--copper-dim)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.loading{display:none;align-items:center;justify-content:center;gap:8px;padding:40px;font-family:var(--mono);font-size:13px;color:var(--text-dim)}
+.loading.active{display:flex}
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--copper);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* OUTPUT */
+.talk-output{display:none;background:var(--surface2);border:1px solid var(--copper);border-radius:12px;overflow:hidden}
+.talk-output.visible{display:block}
+.talk-header{background:linear-gradient(135deg,#1a2332,#0f1726);padding:20px;border-bottom:2px solid var(--copper)}
+.talk-header h2{font-family:var(--mono);font-size:16px;color:var(--copper);font-weight:700}
+.talk-header .th-sub{font-size:12px;color:var(--text-dim);margin-top:4px;font-family:var(--mono)}
+.talk-body{padding:20px}
+
+.talk-section{margin-bottom:20px}
+.talk-section-title{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
+.talk-content{font-size:14px;line-height:1.7}
+.talk-content ul{padding-left:20px;margin-top:6px}
+.talk-content li{margin-bottom:4px}
+.talk-content strong{color:var(--copper)}
+
+.hazard-badge{display:inline-block;padding:3px 10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:4px;font-family:var(--mono);font-size:11px;color:var(--red);margin:2px}
+.control-badge{display:inline-block;padding:3px 10px;background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.2);border-radius:4px;font-family:var(--mono);font-size:11px;color:var(--teal);margin:2px}
+.ppe-badge{display:inline-block;padding:3px 10px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);border-radius:4px;font-family:var(--mono);font-size:11px;color:var(--blue);margin:2px}
+
+.sign-off{margin-top:20px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+.sign-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px}
+.sign-field{border-bottom:1px solid var(--border);padding:8px 0;font-family:var(--mono);font-size:11px;color:var(--text-dim)}
+
+.action-btns{display:flex;gap:8px;margin-top:16px}
+.action-btn{flex:1;padding:8px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);color:var(--blue);border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:600;cursor:pointer;text-align:center}
+.action-btn:hover{background:rgba(96,165,250,.2)}
+
+@media(max-width:900px){.two-col{grid-template-columns:1fr}.main{padding:16px}}
+@media print{
+  body{background:#fff;color:#000}
+  header,.card{display:none!important}
+  .two-col{grid-template-columns:1fr}
+  .talk-output{border-color:#333}
+  .talk-header{background:#f5f5f5!important;-webkit-print-color-adjust:exact}
+  .action-btns{display:none}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>▼ TOOLBOX TALK GENERATOR</h1>
+  <span class="badge">AI-POWERED</span>
+</header>
+
+<div class="main">
+<div class="two-col">
+  <!-- INPUT -->
+  <div>
+    <div class="card">
+      <div class="card-title">Talk Parameters</div>
+
+      <div class="field"><label>Job Type</label>
+        <select id="jobtype">
+          <option>In-Water Hull Cleaning (IWHC)</option>
+          <option>Hull Inspection — Biofouling Survey</option>
+          <option>UWILD — Underwater Inspection in Lieu of Drydocking</option>
+          <option>Propeller Polishing</option>
+          <option>Marine Growth Removal</option>
+          <option>ROV Inspection</option>
+          <option>Anode Replacement</option>
+          <option>Cofferdam Installation</option>
+          <option>Sea Chest Inspection</option>
+          <option>Salvage / Recovery</option>
+        </select>
+      </div>
+
+      <div class="field"><label>Vessel / Location</label>
+        <input type="text" id="vessel" placeholder="e.g. HMAS Brisbane, Berth 2, HMAS Stirling">
+      </div>
+
+      <div class="field">
+        <label>Hazards (select all that apply)</label>
+        <div class="chip-group" id="hazards">
+          <span class="chip" onclick="toggleChip(this)">Working at heights</span>
+          <span class="chip selected" onclick="toggleChip(this)">Diving — SSBA</span>
+          <span class="chip" onclick="toggleChip(this)">Diving — SCUBA</span>
+          <span class="chip selected" onclick="toggleChip(this)">Vessel movement</span>
+          <span class="chip" onclick="toggleChip(this)">Crane operations</span>
+          <span class="chip selected" onclick="toggleChip(this)">Hydraulic pressure</span>
+          <span class="chip" onclick="toggleChip(this)">Electrical</span>
+          <span class="chip selected" onclick="toggleChip(this)">Marine fauna</span>
+          <span class="chip" onclick="toggleChip(this)">Confined space</span>
+          <span class="chip" onclick="toggleChip(this)">Hot work</span>
+          <span class="chip selected" onclick="toggleChip(this)">Manual handling</span>
+          <span class="chip" onclick="toggleChip(this)">Chemical exposure</span>
+          <span class="chip" onclick="toggleChip(this)">Noise > 85dB</span>
+          <span class="chip" onclick="toggleChip(this)">Night operations</span>
+          <span class="chip" onclick="toggleChip(this)">Adverse weather</span>
+          <span class="chip" onclick="toggleChip(this)">Other vessel traffic</span>
+        </div>
+      </div>
+
+      <div class="field"><label>Environmental Conditions</label>
+        <select id="conditions">
+          <option>Standard — calm conditions</option>
+          <option>Wind > 15 knots</option>
+          <option>Swell > 0.5m</option>
+          <option>Reduced visibility (underwater)</option>
+          <option>Current > 1 knot</option>
+          <option>Night operations</option>
+          <option>Extreme heat (> 35°C)</option>
+          <option>Rain / wet deck</option>
+        </select>
+      </div>
+
+      <div class="field"><label>Additional Context (optional)</label>
+        <textarea id="context" placeholder="e.g. First job with new team member, recently serviced equipment, client reps on-site, defence base access restrictions..."></textarea>
+      </div>
+
+      <button class="btn btn-copper" id="gen-btn" onclick="generate()">GENERATE TOOLBOX TALK</button>
+    </div>
+  </div>
+
+  <!-- OUTPUT -->
+  <div>
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <span>Generating toolbox talk...</span>
+    </div>
+
+    <div class="talk-output" id="output">
+      <div class="talk-header">
+        <h2 id="talk-title">—</h2>
+        <div class="th-sub" id="talk-meta">—</div>
+      </div>
+      <div class="talk-body" id="talk-body"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+function toggleChip(el){ el.classList.toggle('selected'); }
+
+function getSelectedChips(containerId){
+  return [...document.querySelectorAll(`#${containerId} .chip.selected`)].map(c=>c.textContent);
+}
+
+async function generate(){
+  const jobType = document.getElementById('jobtype').value;
+  const vessel = document.getElementById('vessel').value || 'Not specified';
+  const hazards = getSelectedChips('hazards');
+  const conditions = document.getElementById('conditions').value;
+  const context = document.getElementById('context').value;
+
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true;
+  document.getElementById('loading').classList.add('active');
+  document.getElementById('output').classList.remove('visible');
+
+  const prompt = `You are a senior dive supervisor at Franmarine, a commercial diving company in Western Australia. Generate a structured toolbox talk for the following job. Respond ONLY with a JSON object (no markdown, no backticks).
+
+Job Type: ${jobType}
+Vessel/Location: ${vessel}
+Identified Hazards: ${hazards.join(', ')}
+Environmental Conditions: ${conditions}
+Additional Context: ${context || 'None'}
+
+Return this exact JSON structure:
+{
+  "title": "Short title for the talk",
+  "scope": "2-3 sentence scope of work description",
+  "hazards": [{"hazard": "name", "risk": "High/Medium/Low", "control": "control measure"}],
+  "ppe": ["list of required PPE items"],
+  "emergency": {
+    "muster_point": "where to muster",
+    "nearest_hospital": "nearest hospital/medical",
+    "emergency_contacts": "key contacts",
+    "diver_emergency": "diver emergency procedure summary"
+  },
+  "environmental": "2-3 sentences on environmental controls, biofouling containment, waste management",
+  "comms": "Communication plan — channels, signals, check-in intervals",
+  "key_points": ["3-5 key safety points for the team to remember"]
+}`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        messages: [{role: 'user', content: prompt}]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content.map(c => c.text || '').join('');
+    const clean = text.replace(/```json|```/g, '').trim();
+    const talk = JSON.parse(clean);
+
+    renderTalk(talk, jobType, vessel, conditions);
+  } catch(err) {
+    console.error(err);
+    document.getElementById('talk-body').innerHTML = `<div style="color:var(--red);font-family:var(--mono);padding:20px">Error generating talk. Check console. Error: ${err.message}</div>`;
+    document.getElementById('output').classList.add('visible');
+  } finally {
+    btn.disabled = false;
+    document.getElementById('loading').classList.remove('active');
+  }
+}
+
+function renderTalk(talk, jobType, vessel, conditions){
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-AU',{day:'2-digit',month:'short',year:'numeric'});
+  const timeStr = now.toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'});
+
+  document.getElementById('talk-title').textContent = talk.title;
+  document.getElementById('talk-meta').textContent = `${jobType} | ${vessel} | ${dateStr} ${timeStr}`;
+
+  let html = '';
+
+  // Scope
+  html += `<div class="talk-section">
+    <div class="talk-section-title">📋 Scope of Work</div>
+    <div class="talk-content">${talk.scope}</div>
+  </div>`;
+
+  // Hazards
+  html += `<div class="talk-section">
+    <div class="talk-section-title">⚠️ Hazards & Controls</div>
+    <div class="talk-content">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;font-family:var(--mono)">
+        <tr style="border-bottom:1px solid var(--border)">
+          <th style="text-align:left;padding:6px;color:var(--red)">Hazard</th>
+          <th style="text-align:center;padding:6px;color:var(--amber)">Risk</th>
+          <th style="text-align:left;padding:6px;color:var(--teal)">Control</th>
+        </tr>
+        ${talk.hazards.map(h=>`<tr style="border-bottom:1px solid rgba(42,58,80,.3)">
+          <td style="padding:6px"><span class="hazard-badge">${h.hazard}</span></td>
+          <td style="padding:6px;text-align:center;color:${h.risk==='High'?'var(--red)':h.risk==='Medium'?'var(--amber)':'var(--green)'};font-weight:600">${h.risk}</td>
+          <td style="padding:6px"><span class="control-badge">${h.control}</span></td>
+        </tr>`).join('')}
+      </table>
+    </div>
+  </div>`;
+
+  // PPE
+  html += `<div class="talk-section">
+    <div class="talk-section-title">🦺 Required PPE</div>
+    <div class="talk-content">${talk.ppe.map(p=>`<span class="ppe-badge">${p}</span>`).join(' ')}</div>
+  </div>`;
+
+  // Emergency
+  html += `<div class="talk-section">
+    <div class="talk-section-title">🚨 Emergency Procedures</div>
+    <div class="talk-content" style="font-family:var(--mono);font-size:13px;line-height:2">
+      <strong>Muster Point:</strong> ${talk.emergency.muster_point}<br>
+      <strong>Nearest Medical:</strong> ${talk.emergency.nearest_hospital}<br>
+      <strong>Emergency Contacts:</strong> ${talk.emergency.emergency_contacts}<br>
+      <strong>Diver Emergency:</strong> ${talk.emergency.diver_emergency}
+    </div>
+  </div>`;
+
+  // Environmental
+  html += `<div class="talk-section">
+    <div class="talk-section-title">🌊 Environmental Controls</div>
+    <div class="talk-content">${talk.environmental}</div>
+  </div>`;
+
+  // Comms
+  html += `<div class="talk-section">
+    <div class="talk-section-title">📡 Communications Plan</div>
+    <div class="talk-content">${talk.comms}</div>
+  </div>`;
+
+  // Key Points
+  html += `<div class="talk-section">
+    <div class="talk-section-title">🔑 Key Safety Points</div>
+    <div class="talk-content">
+      ${talk.key_points.map((p,i)=>`<div style="padding:6px 0;border-bottom:1px solid rgba(42,58,80,.3)"><span style="color:var(--copper);font-weight:700;font-family:var(--mono)">${i+1}.</span> ${p}</div>`).join('')}
+    </div>
+  </div>`;
+
+  // Sign-off
+  html += `<div class="sign-off">
+    <div style="font-family:var(--mono);font-size:12px;color:var(--copper);font-weight:700;text-transform:uppercase;letter-spacing:1px">Team Acknowledgement</div>
+    <div style="font-size:12px;color:var(--text-dim);margin-top:4px">All personnel must sign below confirming they understand the scope, hazards, and controls.</div>
+    <div class="sign-row">
+      <div class="sign-field">Name: _______________</div>
+      <div class="sign-field">Signature: _______________</div>
+      <div class="sign-field">Date: ${dateStr}</div>
+    </div>
+    <div class="sign-row">
+      <div class="sign-field">Name: _______________</div>
+      <div class="sign-field">Signature: _______________</div>
+      <div class="sign-field">Date: ${dateStr}</div>
+    </div>
+    <div class="sign-row">
+      <div class="sign-field">Name: _______________</div>
+      <div class="sign-field">Signature: _______________</div>
+      <div class="sign-field">Date: ${dateStr}</div>
+    </div>
+    <div class="sign-row">
+      <div class="sign-field">Name: _______________</div>
+      <div class="sign-field">Signature: _______________</div>
+      <div class="sign-field">Date: ${dateStr}</div>
+    </div>
+  </div>`;
+
+  // Actions
+  html += `<div class="action-btns">
+    <div class="action-btn" onclick="window.print()">🖨 Print</div>
+    <div class="action-btn" onclick="copyTalk()">📋 Copy Text</div>
+  </div>`;
+
+  document.getElementById('talk-body').innerHTML = html;
+  document.getElementById('output').classList.add('visible');
+}
+
+function copyTalk(){
+  const el = document.getElementById('talk-body');
+  const text = el.innerText;
+  navigator.clipboard.writeText(text).then(()=>alert('Toolbox talk copied to clipboard'));
+}
+</script>
+</body>
+</html>

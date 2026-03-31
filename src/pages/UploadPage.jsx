@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/Toast';
-
-const EMOJI_OPTIONS = ['📱', '🧮', '📊', '📝', '🔧', '📋', '💰', '🗓️', '📈', '🔍', '⚙️', '🎯', '📦', '🚀', '💡', '🛠️', '📁', '🏗️', '⏱️', '🌊'];
+import IconPicker from '../components/IconPicker';
 
 const INSPIRATION = [
   { icon: '💰', name: 'Quote calculator', desc: 'Enter line items, get a total with GST.', prompt: 'Build me an HTML quote calculator where I can add line items with description, quantity, and unit price, then see a subtotal plus GST.' },
@@ -325,13 +324,7 @@ export default function UploadPage() {
 
           <div className="form-group">
             <label className="label">Icon</label>
-            <div className="emoji-picker">
-              {EMOJI_OPTIONS.map((emoji) => (
-                <button key={emoji} type="button" className={`emoji-option ${icon === emoji ? 'selected' : ''}`} onClick={() => setIcon(emoji)}>
-                  {emoji}
-                </button>
-              ))}
-            </div>
+            <IconPicker value={icon} onChange={setIcon} appName={name} />
           </div>
 
           <div className="form-group">

@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Franmarine — FY26 Quote Calculator</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap">
+<script>var _libsLoaded={jspdf:false,autotable:false,xlsx:false};</script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" onload="_libsLoaded.jspdf=true" onerror="document.getElementById('libErr').style.display='block'"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js" onload="_libsLoaded.autotable=true" onerror="document.getElementById('libErr').style.display='block'"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" onload="_libsLoaded.xlsx=true" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--navy:#002060;--navy-light:#003399;--blue:#4472C4;--blue-pale:#D6E4F0;--blue-pale2:#EBF0F7;--bg:#F4F5F7;--card:#FFF;--border:#D1D5DB;--blight:#E5E7EB;--text:#1F2937;--muted:#6B7280;--red:#DC2626;--green:#059669;--amber:#D97706;--radius:8px}
+body{font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+.hdr{background:linear-gradient(135deg,var(--navy),var(--navy-light));padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+.hdr h1{color:#fff;font-size:18px;font-weight:700}.hdr .sub{color:rgba(255,255,255,.6);font-size:11px;margin-top:1px}
+.hdr-r{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.hdr .ref{font-size:10px;color:rgba(255,255,255,.4);text-align:right}
+.hdr .save-ind{font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.7)}
+.lib-err{display:none;background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;padding:12px 20px;margin:10px 12px;border-radius:8px;font-size:13px;line-height:1.5}
+.lib-err strong{display:block;margin-bottom:4px}
+.wrap{max-width:1100px;margin:0 auto;padding:16px 12px 80px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.g4{display:grid;grid-template-columns:2fr 1fr 1fr 80px;gap:8px;align-items:end}
+.cd{background:var(--card);border-radius:var(--radius);border:1px solid var(--blight);margin-bottom:14px;overflow:hidden}
+.cd-h{padding:10px 16px;border-bottom:1px solid var(--blight);display:flex;align-items:center;justify-content:space-between;background:var(--blue-pale2)}
+.cd-h h2{font-size:13px;font-weight:600;color:var(--navy)}
+.cd-b{padding:14px 16px}
+.fg{display:flex;flex-direction:column;gap:2px}
+.fg label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.fg input,.fg select,.fg textarea{padding:7px 9px;border:1px solid var(--border);border-radius:5px;font-size:12px;font-family:inherit;transition:border .15s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(68,114,196,.1)}
+.btn{padding:6px 12px;border:none;border-radius:5px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;transition:all .1s;display:inline-flex;align-items:center;gap:4px}
+.btn-p{background:var(--navy);color:#fff}.btn-p:hover{background:var(--navy-light)}
+.btn-s{background:var(--green);color:#fff;padding:10px 20px;font-size:13px;border-radius:7px}.btn-s:hover{opacity:.9}
+.btn-o{background:transparent;color:var(--navy);border:1px solid var(--border)}.btn-o:hover{background:var(--blue-pale2)}
+.btn-d{background:transparent;color:var(--red);padding:2px 6px;font-size:10px;border:1px solid transparent;border-radius:4px}.btn-d:hover{border-color:var(--red)}
+.btn-t{padding:7px 12px;border-radius:7px;background:var(--card);border:1.5px solid var(--border);color:var(--text);font-size:11px;cursor:pointer;transition:all .12s;text-align:left}
+.btn-t:hover{border-color:var(--blue);background:var(--blue-pale2)}
+.btn-t.active{border-color:var(--navy);background:var(--blue-pale);box-shadow:0 0 0 2px rgba(0,32,96,.1)}
+.btn-t .tt{font-weight:600;font-size:12px;display:block;margin-bottom:1px}.btn-t .td{font-size:10px;color:var(--muted);display:block}
+.tpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+/* Search dropdown (rate card) */
+.search-wrap{position:relative}
+.search-wrap input{width:100%;padding:9px 12px 9px 32px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-family:inherit}
+.search-wrap input:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(68,114,196,.08);outline:none}
+.search-wrap .ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
+.dd{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:7px;max-height:300px;overflow-y:auto;z-index:50;box-shadow:0 6px 20px rgba(0,0,0,.1);display:none;margin-top:3px}
+.dd.open{display:block}
+.dd-cat{padding:5px 12px;font-size:9px;font-weight:700;color:var(--navy);background:var(--blue-pale2);text-transform:uppercase;letter-spacing:.5px;position:sticky;top:0}
+.dd-item{padding:6px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:12px;border-bottom:1px solid #f3f3f3}
+.dd-item:hover{background:var(--blue-pale2)}
+.dd-item .rt{color:var(--muted);font-size:10px;white-space:nowrap}
+.dd-item mark{background:#FEF08A;border-radius:2px;padding:0 1px}
+/* Location typeahead */
+.loc-wrap{position:relative}
+.loc-wrap input{width:100%}
+.loc-dd{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:7px;max-height:220px;overflow-y:auto;z-index:50;box-shadow:0 6px 20px rgba(0,0,0,.1);display:none;margin-top:3px;font-size:12px}
+.loc-dd.open{display:block}
+.loc-dd-item{padding:7px 12px;cursor:pointer;display:flex;justify-content:space-between;border-bottom:1px solid #f5f5f5}
+.loc-dd-item:hover{background:var(--blue-pale2)}
+.loc-dd-item .loc-region{font-size:10px;color:var(--muted)}
+.loc-dd-item .loc-type{font-size:9px;padding:1px 6px;border-radius:3px}
+.loc-dd-item .loc-local{background:#D1FAE5;color:#065F46}
+.loc-dd-item .loc-remote{background:#FEF3C7;color:#92400E}
+/* Table */
+.lt{width:100%;border-collapse:collapse;font-size:12px}
+.lt thead th{background:var(--navy);color:#fff;padding:6px 8px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.lt thead th:first-child{border-radius:5px 0 0 0}.lt thead th:last-child{border-radius:0 5px 0 0}
+.lt td{padding:4px 7px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
+.lt .cat-row td{background:var(--blue-pale);font-weight:600;font-style:italic;color:var(--navy);font-size:10px;padding:4px 8px}
+.lt .rq{width:48px;text-align:center;padding:3px;border:1px solid var(--blight);border-radius:3px;font-size:12px;font-family:inherit}.lt .rq:focus{border-color:var(--blue);outline:none}
+.lt .rr{width:78px;text-align:right;padding:3px 5px;border:1px solid var(--blight);border-radius:3px;font-size:12px;font-family:inherit}.lt .rr:focus{border-color:var(--blue);outline:none}
+.lt td.right{text-align:right;font-variant-numeric:tabular-nums}
+.lt .zero-warn{background:#FEF3C7}
+.totals{border-top:2px solid var(--navy);margin-top:12px;padding-top:8px;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.tot-row{display:flex;justify-content:space-between;width:220px;font-size:12px;padding:2px 0}
+.tot-row.grand{font-weight:700;font-size:14px;color:var(--navy);border-top:2px solid var(--navy);padding-top:5px;margin-top:2px}
+.badge{display:inline-block;background:var(--blue-pale);color:var(--navy);padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600}
+.gd-bar{display:flex;align-items:center;gap:10px;padding:8px 16px;background:var(--blue-pale2);border-bottom:1px solid var(--blight);flex-wrap:wrap}
+.gd-bar label{font-size:11px;font-weight:600;color:var(--navy);white-space:nowrap}
+.gd-bar input{width:55px;text-align:center;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:inherit}
+.gd-bar .hint{font-size:10px;color:var(--muted)}
+.empty{text-align:center;padding:24px;color:var(--muted);font-size:12px}
+.actions{display:flex;gap:10px;justify-content:center;padding:14px 0;flex-wrap:wrap}
+.flash{animation:flash .6s}
+@keyframes flash{0%{background:#FEF9C3}100%{background:transparent}}
+/* T&Cs editor */
+.tcs-editor{border:1px solid var(--blight);border-radius:6px;min-height:200px;padding:14px 16px;font-size:13px;line-height:1.7;font-family:inherit;color:var(--text);outline:none;white-space:pre-wrap}
+.tcs-editor:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(68,114,196,.08)}
+/* Modal */
+.modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:10px;max-width:600px;width:95%;max-height:85vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.2)}
+.modal-h{padding:14px 18px;border-bottom:1px solid var(--blight);display:flex;justify-content:space-between;align-items:center}
+.modal-h h3{font-size:15px;font-weight:600;color:var(--navy)}
+.modal-b{padding:16px 18px}
+.modal-f{padding:12px 18px;border-top:1px solid var(--blight);display:flex;gap:8px;justify-content:flex-end}
+.loc-card{border:1px solid var(--blight);border-radius:6px;padding:10px 14px;margin-bottom:8px}
+.loc-card h4{font-size:12px;font-weight:600;margin-bottom:6px;color:var(--navy)}
+.loc-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.hdr-total{color:#fff;font-variant-numeric:tabular-nums;text-align:right;line-height:1.2}
+.hdr-total-lbl{font-size:9px;font-weight:500;color:rgba(255,255,255,.5);display:block}
+.hdr-total-val{font-size:16px;font-weight:700}
+.float-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.97);backdrop-filter:blur(8px);border-top:2px solid var(--navy);padding:10px 20px;display:flex;align-items:center;justify-content:center;gap:10px;z-index:99;transform:translateY(100%);transition:transform .25s ease;box-shadow:0 -4px 20px rgba(0,0,0,.1)}
+.float-bar.show{transform:translateY(0)}
+.float-bar .float-total{font-size:14px;font-weight:700;color:var(--navy);margin-right:auto;font-variant-numeric:tabular-nums}
+.cat-subtotal td{background:#EBF0F7!important;font-weight:600;font-size:11px;color:var(--navy);border-top:1.5px solid var(--blue-pale)!important}
+@media(max-width:768px){.g2,.g3,.g4{grid-template-columns:1fr}.tpl-grid{grid-template-columns:1fr 1fr}.wrap{padding:10px 6px 80px}.loc-grid{grid-template-columns:1fr}.svc-row{grid-template-columns:28px 1fr 70px}.svc-unit{display:none}}
+/* Service Catalogue */
+.svc-filter{position:relative}
+.svc-filter input{width:100%;padding:9px 12px 9px 32px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-family:inherit;background:var(--card)}
+.svc-filter input:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(68,114,196,.08);outline:none}
+.svc-filter .ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
+.cat-sec{border-top:1px solid var(--blight)}
+.cat-sec:first-child{border-top:none}
+.cat-hdr{display:flex;align-items:center;gap:8px;padding:9px 16px;cursor:pointer;user-select:none;background:var(--blue-pale2);transition:background .15s}
+.cat-hdr:hover{background:var(--blue-pale)}
+.cat-hdr h3{font-size:12px;font-weight:600;color:var(--navy);display:flex;align-items:center;gap:8px;margin:0;flex:1}
+.cat-hdr .cat-ct{font-size:9px;font-weight:600;color:var(--muted);background:var(--card);padding:1px 7px;border-radius:10px;min-width:32px;text-align:center}
+.cat-hdr .cat-ct.has{background:var(--navy);color:#fff}
+.cat-hdr .cat-arrow{transition:transform .25s ease;font-size:10px;color:var(--muted);padding:2px 4px}
+.cat-sec.open .cat-hdr .cat-arrow{transform:rotate(90deg)}
+.cat-body{max-height:0;overflow:hidden;transition:max-height .25s ease}
+.cat-sec.open .cat-body{max-height:2000px;transition:max-height .4s ease}
+.cat-acts{display:flex;gap:4px}
+.cat-acts button{font-size:9px;padding:2px 7px;border-radius:3px;border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;font-family:inherit;transition:all .1s}
+.cat-acts button:hover{border-color:var(--blue);color:var(--navy);background:var(--blue-pale2)}
+.svc-row{display:grid;grid-template-columns:32px 1fr 80px 90px;align-items:center;padding:5px 16px;border-bottom:1px solid #f5f5f5;transition:background .12s,border-left .12s,padding-left .12s;font-size:12px}
+.svc-row:last-child{border-bottom:none}
+.svc-row:hover{background:var(--blue-pale2)}
+.svc-row.active{background:rgba(68,114,196,.06);border-left:3px solid var(--blue);padding-left:13px}
+.svc-row.hidden{display:none}
+.svc-chk{width:16px;height:16px;cursor:pointer;accent-color:var(--navy)}
+.svc-desc{color:var(--text);line-height:1.3}.svc-desc .svc-daily{font-size:9px;margin-left:4px}
+.svc-unit{font-size:10px;color:var(--muted)}
+.svc-rate{text-align:right;color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div class="lib-err" id="libErr">
+<strong>&#9888; Library Loading Error</strong>
+Some required libraries failed to load. This usually happens when opening the file directly from OneDrive or a restricted folder.<br><br>
+<b>Fix:</b> Copy the file to your Desktop or Documents folder, then open it from there. The file needs internet access to load PDF and Excel libraries from CDN on first use.
+</div>
+<div class="hdr">
+<div><h1>FY26 WA Quote Calculator</h1><div class="sub">Franmarine Underwater Services — Valid from 1 July 2025</div></div>
+<div class="hdr-r">
+<span class="save-ind" id="saveInd">Not saved</span>
+<button class="btn btn-o" style="color:#fff;border-color:rgba(255,255,255,.3)" onclick="saveState()">Save</button>
+<button class="btn btn-o" style="color:#fff;border-color:rgba(255,255,255,.3)" onclick="loadState()">Load</button>
+<div class="hdr-total" id="hdrTotal" style="display:none"><span class="hdr-total-lbl">Quote Total (ex GST)</span><span class="hdr-total-val" id="hdrTotalVal">$0.00</span></div>
+<div class="ref">QA007FUS-0017<br>Rev. 30/06/2025</div>
+</div></div>
+<div class="wrap">
+<div class="cd"><div class="cd-h"><h2>Job Details</h2></div><div class="cd-b">
+<div class="g3">
+<div class="fg"><label>Quote No.</label><input id="quoteNo" placeholder="e.g. RQ2025041"></div>
+<div class="fg"><label>Date</label><input type="date" id="quoteDate"></div>
+<div class="fg"><label>Prepared By</label><select id="preparedBy"><option>Mat Harvey</option><option>Marc Green</option><option>Hamish Brown</option><option>Sam Diamond</option><option>Kyden Bradley</option><option>Adam Falconer-West</option></select></div>
+</div>
+<div class="g2" style="margin-top:8px">
+<div class="fg"><label>Client</label><input id="client" placeholder="e.g. Teekay Shipping"></div>
+<div class="fg"><label>Contact</label><input id="contact" placeholder="e.g. Paul Taylor"></div>
+</div>
+<div class="g2" style="margin-top:8px">
+<div class="fg"><label>Location <span id="locBadge" style="font-size:9px;padding:1px 5px;border-radius:3px"></span></label>
+ <div class="loc-wrap">
+  <input id="location" placeholder="Start typing... e.g. Onslow, Darwin, Singapore" autocomplete="off" oninput="onLocInput()" onfocus="onLocInput()">
+  <div class="loc-dd" id="locDropdown"></div>
+ </div>
+</div>
+<div class="fg"><label>Mob. Type</label><select id="mobType" onchange="updateTravelDays()"><option value="local">Local (Henderson/Fremantle)</option><option value="remote">Remote (fly-in/drive)</option></select></div>
+</div>
+<div class="g2" style="margin-top:8px">
+<div class="fg"><label>Proposed Date</label><input id="proposedDate" placeholder="e.g. Saturday, 7 March 2026"></div>
+<div class="fg"><label>Scope / Task</label><input id="scopeTask" placeholder="e.g. ADV Ocean Shield; Arrival IMS Inspection"></div>
+</div>
+</div></div>
+<div class="cd"><div class="cd-h"><h2>Quick Start Templates</h2><span class="badge">One-click</span></div><div class="cd-b">
+<div class="tpl-grid">
+<button class="btn-t" onclick="loadTpl('ims_dive',this)"><span class="tt">IMS Inspection (Dive)</span><span class="td">5-person, dive system, MarineStream</span></button>
+<button class="btn-t" onclick="loadTpl('insp_rov',this)"><span class="tt">Inspection (ROV)</span><span class="td">2-person ROV team + system</span></button>
+<button class="btn-t" onclick="loadTpl('clean_cliin',this)"><span class="tt">Hull Clean (CLIIN)</span><span class="td">ROV + CLIIN crawler spread</span></button>
+<button class="btn-t" onclick="loadTpl('clean_dive',this)"><span class="tt">Hull Clean (Dive)</span><span class="td">4-person, HP blaster, compressor</span></button>
+<button class="btn-t" onclick="loadTpl('repair',this)"><span class="tt">Underwater Repair</span><span class="td">4-person, hydraulic + welding</span></button>
+<button class="btn-t" onclick="loadTpl('blank',this)"><span class="tt">Blank Quote</span><span class="td">Start from scratch</span></button>
+</div></div></div>
+<div class="cd"><div class="cd-h"><h2>Service Catalogue</h2><span class="badge" id="itemCount">0 items</span></div>
+<div class="gd-bar">
+<label>Working days:</label><input type="number" id="gDays" value="1" min="0" step="1" oninput="applyGDays()">
+<label>Travel days:</label><input type="number" id="gTravel" value="0" min="0" step="1" oninput="applyGDays()">
+<span class="hint"><span style="color:var(--blue)">&#9679;</span> daily <span style="color:var(--amber)">&#9650;</span> travel</span>
+<button class="btn btn-o" onclick="openLogistics()" style="margin-left:auto">&#128666; Logistics Estimator</button>
+</div>
+<div class="cd-b" style="padding:14px 16px 10px">
+<div class="svc-filter">
+<span class="ico">&#8981;</span>
+<input type="text" id="svcSearch" placeholder="Filter services... e.g. ROV, generator, 5 person" autocomplete="off" oninput="filterSvc()">
+</div>
+</div>
+<div id="svcCatalogue"></div>
+<div class="cd-b" style="border-top:1px dashed var(--blight)">
+<div class="g4">
+<div class="fg"><label>Custom item</label><input id="cDesc" placeholder="e.g. Freight to site"></div>
+<div class="fg"><label>Unit</label><input id="cUnit" placeholder="Total"></div>
+<div class="fg"><label>Rate $</label><input type="number" id="cRate" step="0.01" placeholder="0.00"></div>
+<div class="fg"><label>&nbsp;</label><button class="btn btn-o" onclick="addCustom()">+ Add</button></div>
+</div>
+</div></div>
+<div class="cd"><div class="cd-h"><h2>Quote Line Items</h2></div>
+<div class="cd-b" style="padding:0">
+<div id="tblWrap"><div class="empty">No items yet. Pick a template or search above.</div></div>
+<div class="totals" id="totals" style="display:none;padding:8px 16px 14px">
+<div class="tot-row"><span>Sub-Total</span><span id="subtotal">$0.00</span></div>
+<div class="tot-row"><span>GST (10%)</span><span id="gst">$0.00</span></div>
+<div class="tot-row grand"><span>Total AUD</span><span id="grandTotal">$0.00</span></div>
+</div></div></div>
+<div class="cd"><div class="cd-h"><h2>Terms &amp; Conditions</h2><span style="font-size:10px;color:var(--muted)">Click to edit</span></div><div class="cd-b" style="padding:8px 16px 16px">
+<div class="tcs-editor" id="terms" contenteditable="true">By accepting this quotation via email, written correspondence or purchase order you agree to the following terms and conditions:
+- This quote is valid for a period of 30 days.
+- All goods remain the property of Franmarine until payment has been received in full.
+- Any collection costs, dishonour cheque(s) fees, legal costs whether charged on scale or on any other basis incurred, shall be paid by the Debtor on demand.
+- Payment terms are 7 days from issue of invoice.
+- Budget estimates for project consumables and task durations are best estimates based on previous performance however, remain subject to change.
+- All diving and equipment to be strictly in accordance with AS/NZS 2299.1:2015.
+- Rates exclude delays outside the control of Franmarine ie. port operations, inclement weather and are only for working hours 0600-1800 Monday-Friday.
+- The dive team needs to remain present for the entirety of the repair procedure.
+- Hourly overtime rate apply for a dive team if job runs over 8 hours.
+- Should the job extend into the weekend then separate penalty rates apply.</div>
+</div></div>
+<div class="actions">
+<button class="btn btn-o" onclick="if(confirm('Clear all items?')){items=[];render()}">Clear All</button>
+<button class="btn btn-s" onclick="genPDF()" style="background:var(--navy)">&#128196; PDF</button>
+<button class="btn btn-s" onclick="genXLSX()" style="background:var(--green)">&#128200; Excel</button>
+</div></div>
+<div class="float-bar" id="floatBar">
+<span class="float-total" id="floatTotal"></span>
+<button class="btn btn-o" onclick="if(confirm('Clear all items?')){items=[];render()}">Clear All</button>
+<button class="btn btn-s" onclick="genPDF()" style="background:var(--navy)">&#128196; PDF</button>
+<button class="btn btn-s" onclick="genXLSX()" style="background:var(--green)">&#128200; Excel</button>
+</div>
+<div class="modal-bg" id="logModal">
+<div class="modal">
+<div class="modal-h"><h3>Logistics Estimator</h3><button class="btn btn-d" onclick="closeLog()">&#10005;</button></div>
+<div class="modal-b" id="logBody"></div>
+<div class="modal-f"><button class="btn btn-o" onclick="closeLog()">Cancel</button><button class="btn btn-p" onclick="applyLog()">Add to Quote (+15%)</button></div>
+</div></div>
+<script>
+const LOGO_B64="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZoAAACWCAIAAABo0dn7AAAACXBIWXMAAAsSAAALEgHS3X78AAAgAElEQVR42ux9d5xdVdX2s9a+k0YKgSQQOgSSAAldCF06ht5iEMFXbGB5URQRsaEQioICAn6KiEhPCAgI0kEQeRWQFIr0TqiZtMnM3LPX8/2x9yn3zp3J0JKZeNYP5nfvzb7n7HPu3s9Z9VlCEqV81NLaVl24cDGoAEiKSC+7ALEw+Uwuu+ml75z1OAVCAAgv2OGyih+G112PByAiYRE2HF982/VxMlGDaYfjiITfouOJlv38qRATglDACyQMq1T03JO3OHbyOqT0viW0TJZtCWcfWAJOpX8BRNjyns3NLXHzdMCF3nSB6sQ8gH8/NXffrz2UVJFeMQEDNEVqAzT9i8KLmt2ebelO12J+M1m8yQA03EdVM1PVdEB2XhQnQDI9UoAwL+LCgQEFEhFnZqoV0tceZ5nMv34C4SArDqpMPXeHXScML4GshLOlL0YoYEbMn9viLdcV0v3WWyROWETMTESaF7buevSDr7y+CFBRT1+BiIgnnaoBMCYCR3hQVcRIp0oTigmVYgIYRYWWLrZco0khIH88mAXgAQkRAAIQGr6ucOGwEAtvDV5EACWqApev7IgTXtBEVEEFKpB2sAIgQx4RWSbzp1j+OMwmpBSqkWPWG3rjRduPXnsQ0wsppYSzpaedZc/Y+fPa2qtVkqrqQWUvQ7QMxQK0JUyOOP6hu//5jiqMEvcWwxbNANCBVaACGgQRGuqVDgMUXa81Sb8iAnqIgzHdzcWDeIgL04jzyL7I1EyWcBzCHNTDXMGCtvx1+LtM5s9ao94ESqjAuPt2q0z75Y6DhzQJQaBUzrovlfIWfJidHx6rgABmkMUtre3VBEAwKFKLpTdpZxk6iwhoP//9f+7+17viYB4ilikdtLD3BDCxoGi0AxAv5kw90x3qw1+qiNGki1uh4j3VKT1JuookVbgKaEr1CvXhIAFoPABTp95THRimDZKgiBlVAK9Uc+1iFUp7PAUSUgJqAB5UwC+z+Yuq0RQqNPWiyiT56hFjzj15i0olQrNEz1q520rtbOlKktj8eYuDYyloZ4wbprfKnQ/NOfzbDyGzm8JSEREjVVJjyoAKkAAKKKQKOoiBBBzgAQcJtrgsSbtJNSaRqK2YAAUVjJn6Y4j7PNVuUssOjDoOwgwRJoN0jEPwl0kPmL9JDFuoiKfr4849eatjPzM61YBLECvhbBlpNIC8N3cBTYq+fxFnlvQuV25mRb70xqLd/ufueQuS1FBSSBJ3ILQO4NJdyhrvfA4ZCvrglqr9vMYPVbyhnTr1su/GQwV4UgizyYTzdzioRnxRgsUQoy2b+SObAyEcOrj/1efttOe2IzvEJUop4WxpQFiNU2Nec0s1seViRRioi9v8xGPuefw/86JWIQQl7Oe4ESkmEDAsIU1VoBrXeAEcpaBuFMN/xfFFt11nY1h3qCWpMJ3Noe5ptPTnXzzm+usOufk3u45ed3DtvIJC2DsTfUrfWc93JxXfFhfYooVt1cR6XRCTpAbPX3Q7IfOmn/SLf89+qjlDhPh/QbNgActAmhQBJP3bFZaw4/jg/0KEFQBMzUcrakDZF6RwzNoMCSlaxtkXRZVmha8ttflTVcxY900IQN19h1WvOXeXoYObGjjjCi7aUko4+4j0ldr1lL8lIGhtqy5urYbHaa+7rtSnJOkmJKmX/fn5K25+TsSRVKjBwjgzLxTSizp6L07pPQSiSm9h95EGuBx6mEFn1DNq4SEO4BLzuazWzBQCWvvdPJc1jVaQGUoDwmU2f0RstRQOgzlMEl89cvS5J2/jtASs0thcFqpZnTlQTTB/3uJgYvRio0AMjDmxM556Z+9j7rPFVVMnBOFz93lNFkITLIFWCisJFKRZCD46tqLBBLAK6QMm2a0LcBkHx8SL2u/Wf16NCEsz0Q5jqpAm0AMG6QO2Q5p6xvwNJNQhxjRNqSaoVPRXP9zua0eMrVtRpcushLOlI/VLjYbm5hajpMnlvfCSRIVVSpOjGfzcedU9Pn/ny68vhJjEtRGjhyJCE9HUMMvztooaEzq4scO292AFkoAViAEGVoAqxIGEKswgEnNQVQGEFyTjqZmkMco0LAjkryOsVIEmANAEVoEkEXFyFW9ZzD9fLl6kT8hoG7pin2vP32P3bVchKeLKrfVRSfko+GD3ygDMX9hSZRKwTNL87952SYnAOZqRCd0xP3no1dfmA1ADvMbaQu9AkoS0h7+QRIRAmwidQExE0+hn3OqW2WAkwSwdvw0ICk5biCeKKuhFNaq3qiSzFyIiSrJVVCHtQBLRJEJUkmIygPY4RtrV4ukimqSVs8tk/tlqEVWi6sAx6w79x7SDdt92JKAS8mnZwSNXSqmdLU1js2VR++LF7XUrsEHMvuevAMBUxHjGxbPO+e1MhKrsoHQU8xIKGCg0MlphEvQnega4rx+M2g8VsJoS8aAhSTcXq+blRlKwEIFQNlSrXnXmyly6889D4ArYbtutNfWC3VPHf7HutUw0K7WzpbDbG2FZteoXt1YNnmKhnkaCrdHrng1iBMR4599fPfvimVSjACLRjCKFgJmkppgQAUpUteBvMjBiXygcyEu1jYCGIwAAEgm1UgV9pMhgAWQjLTsjAIEBYFTHkhwrsqhMnq9vabFR4evLcP6QOH/hMUdu/NdL9w5YFivTi+Wf5WYrtbOlr6mZR3PzAuPys/xenLNgjyNumTe/7cNfUyh4DKXg4UWsfwwcOHk55Ed2zI6/UucZZstk/oRUKg7n/miHr35244b/jhLMPiIpEzXet6a2YEFLb8MyBSxucZG0MD5qPS1t/MIJ981b2P7Br6nGPZ+IKixhtOSSuFMlK/zu8tFa5FrK87h89rf4Ao0rKOV9w8NHOH9QoAAL85ehg5quuXDPPbZbo1Nrv5QSzpai5D6ONGO2180/K1uMHA8B3YzyvbMenPn421pxtKpIBQ2YQlA07oQdib18PLqRTiTx0JQiJ8RHM+uMNZgpomZeRDMPpDArQ0i/2zlfWKeZ98tq/mIIAeEUlAGOXnelm37/qQ3WHhTMUkmXU7mpSt/ZMrtLpIewta3a2pZk6dq9zk0WUEyzjHdxV9z4/JV/flZcmhLBuNvD39R5BBhD3qd4kKSniJiF6giBMfylQHzc/EIoRA1CqAEW3HAUgiSMJM28QsjomyPDv1r4V/HMMmNThjPTAC+pL0zTFNWij2zZzF+EJgqBEYkPaLbntms8dP3Bo9dZUcRRomOu3HSl72wZqzag+iqaFyzqvQSzKR1r/ubR/7w18X9uSRKr01bElC5B4kQkvIAalPlVi6BK9CGqCjISUlSyB2TSaMfW0sbWu72yD2s04lqm2RSUvYMr+M7CrAr8Zct4/lEH8185YtPzf7Zjk4Q0ES/i6qo+y61VwtmygjS+O3ee+Erm7mBvArLazUNC3HvzWnc/8oZXX18oIgaqF3OED/U3XuECt5eD8/AOjqQ5qqe5oM6Q5kR9MdUAgJg359T7sMNNNNBYOOQ+u/StF3FiDCQXQM6po4Q5UU+qAFDCK8JbMcnIfMxRvYSDikl4i2U2/4B3Bqg24dwf7/bVo8aFooIPFZsopYSzjxzN5s9rq1Y9e+GjNTKvZcnxAAHv/RHfvOOuB18DEtApxMQDoS4H4YVoJesJEJNXcw4vKxb3iDhaEgt9Mi3J0oqCwBfG1GGUvy4oO6FoyTyiHyrlGqNCpJ4pLOe/KGTwZxVF4bvLZv4JpDJ0xT5TL5i42w5r1vYrKf1lS0PKUMCSZVFL0l71GS5oXfFKD39e1XXiAEie/fvH7nrwFZhBFUKjAaGSUVJoEFqW3hU85RI1EyBmpYW/eajRopcqYkEw0i2eNRwnddohjUjEk1pGqRgYLxzo0+5GGSO2Ah4QsAq4/Ls5HWOYvyyj+ZtoZYO1B9946YFj1h2aOiuz/FgFjNTSxCy1s2Up7VW/YH5r771LseSwIHc++PLhX//rR8f/oTDmzKtKMaErUr9qvS+syNSamZdxOabJ/ZFnkaDWjfmo5SOb/+47rXPNBfuuNKRfJ6pYqaCVcLZsjUzDe+8tXJ6u6KXX5+/+meubmxchZRwsJjqgtrtasTclgJAnUWdo162fhgkT3fy8a99fw4Xac+Z/zFGbnXfKbhXHXAVr5C0zUGJuWikfx6OplPoVl6/vBfNbev8DK7p4TLC4vfr579zePK8lrSKMjQ0KL/IsBBjpLbxAzhcGmgGgN4D0lmdCRNsr/iu9CeNbpOljNCOJ7LBGmoW/aYuFVLzR+3Cc7LAdqil70PzffXdx8/w2QKUm4mkd9puUWFZqZ0sf0nTRorbW1rZe3bukaMER/rhT7rtq+pPIrKasRQhSJuewq9PPYy5YnWaUfcsbnNZ/N/fRCVSynnCwtJFIrrcE7UZJa3iu4G3qqi9bT5o/gOEr9b/ojL0P2nuDyJAWrNCa3tJlfkapnS0tCCsYBNreVm1d7EOL2d59VQKIUeWK6U9fM/3xSEWdpZiKhezQ1P8dlZ6QVlo0x0QECEmnQEgWFQ0aioggM+ICTUWM9NHUwwh6gDAfzyyW/hWyGlNYzRyUNKWkHSslEO8oIJq1kzEtPnR6zPxhfPudlkO/NG3yV6e//W5bfIpklfB5r7+SBajUzpauVH3SPK/NLHHo9dR6oR/HzKfm7Pu56a1VEZ9QXCMGxGLdYspomNEEiYCa8hcmAARNZHvkIyzQexVpC8WEGb2iFpo/5ezkFFV4UClwRDV2LAdyukSghrWR2uBtD5h/QT+wESsPvOC0PQ/Zd4zUuc/K3LMSzpa2OmOY17zQvAam+TyTvtcq4O/Na9l98jWvvDFXaEQFkohVKAAsiySmLzRw5ggbcXhlafcAQ9JWhiBGESl+scNx8shgOJcEVsWaGkgHpp1JQ8QwHr/2u+HbPXD+eUWBAXrYfhtdMGWv4UP7R13TJOXpLkGthLOlJfPmL662e3RIQO2tmibss8fceM+DLwKgOjFG9kJZ4spAw+0d9nBkLUzfNhxWVFg60RydFfh2imfs4iES1aieNv9Q66lOzGedsYattMKFZ3zq0H3HFgCxlBLOlpZmtqilfXFLssR13IvkjIsePOeif6YN2UpZahsrL+w9bP+Nfj3lUyNWHlCqZiWcfbxSDDZVEyyY38I0Ko9eXipsgnv+9sLkr97QYJvV+aG6+Lz41TQECCCNBdYTKNboRB2OHzuPSCfKDo2o1B+/IUz0tvkPHzbgwtP3SdW0zI8W9bUy4lnC2UfvMpvbvKDYP7aXesogCU2c6nOvzd1z0uXz5rVlOznvSxR3kVetmCVZM6GQTNBZVkHtJ7U890yztyqKxMTFbdyJ8Rj9UCKuY15rfrrCt3rv/BXiGcccst/GF5w+ccTKAzroaKUdWsLZh1XMQDGBGrzANTcv8t5n7SZ7+8Utamvf78hrZz35WkgtiNuyltqh2ORb0WSoKlxa5hN8SZr2r6wChd6R9KJ9zNpVKwDMt6vrZ74VotFNDghcTevyDGKUFrvvKmAKlxEDRSYMeOnYgLw3zx+FCQ8bMfDCKZ86bN/xcf4E4cvedCWcfXg0MzGFGqgtC9sXt7VbygiWFwj2QmozAbzg+B/99YrrHgMqEIsMELlewtoQW70HXigUIvQdF4EZIBAHJJAKmEAU3sM5eA8A2gSrotIH5rtFhcNGk67zKxWhq1fPP7wJ/U8YLdBJ+294/un7jVi5H6ApS22poJVw9kGRLCy1oJ21tFcXzG8RcYoIXtILUx2jnQWvUrl86r+/ecptYo5aFWrKF5Y5l+K2MxW1wClGMTVn6hX1fGHwVCcGiKmI93QONDAwgDmIkYmgD6QKqBjMmXqJOJQ26nVQj5Aim9OHSUiKE1GGp0gYLEqYCxMWgL19/mIxRu7hARfmP3zlgRecte+h+2wMyXxoJaKVcPahHGb0xLy5rSQpvT6IGRBtxhOv7vuZa1ur7YibJ4XnmP+ZYrkBWkgKpYdUQIsMXzlfWMHeC9U8Vr9gRJVmkaosHF7SKsigldTZXZ1pN5ZqMfkDBznfWa+ev3moi/EFwphAHEQO23/cBWceMHyl/qUTrYSzD62lkc1zF/mM9AXWyys09b35C/c69NKXX2s2CoKdtUQ/YMx0D96maKE1zkPNDDpB6PGRJmsVYYWNO+82PA7qkr5qjhM6wWGJ67OHzz8cM0fBIg0kABsxbNCFZx5wyH4bl2BUwtmHkgXzW9vbkw7XH4JW4c70mtQzEamaP+LYa+++/xmwklIbBhXDgb7zrubvA/4Lx+wEAkTESKdd4UJnx6lxN3E5mT8VjrDIfFu7ogKTrYF66H4bX3DWgSNWHlhC0od6nv/XXnnLova2BliG2MaN2bO0ByqVEn87yfidQfLsC++/+75nhSowyUquRUAfqqxBgh5moI8ljemL6BNiqP82CeZb/Nc4RlUl634U4r/hIMh1KAGgIvGASXac8EI6dsHMvh7ChXECWH7mr6HK3aUTrham5OGTMO3rbnp83A7nTrtxdmdukRKqSu2sU4kcs/AxK5Laa5IzgjPcRIVGkdCgSOyuv70w+ctX5HpBRnojyN7WW2CBIcdb7p9qkAHRiIRHRY3WcUx2OhKsJ+rJBxSjllL4Vg1gC3NP1nI6/7SNJ+ChlUCKe9gBm//6zANGrDwwTeMoM2xLOOtCtQFAzH1vUYhFFeuWe4tRSYa6S9G0Oe1Lr87d9eDfzZ+3OG0JqjG5IaPVLqRcpVaPiVMmXiqO9DVl1fCCJkoCIIbo6rKLSTgVb6zjCwskYqm7XSqOCaUiZNagiXHNqYsz1NiNiQJQRCPRP4MjLFN/lsP5A+phTpwRoZuWwTvARgwfdP7PD5y03yYdmvWVUsJZB5nX3NLmTYxerZculiIrYVs12X/SJTOffJdsD0w4ooHcVRqmxWf8XzVN4UAn4kmIOIinOamQDMyPoUFcMds+fBj64IYXVGHqMIqp9oFsJ4Qj8iCjNGS+rqPf6SKtf/mYP2KHKPXwIQYqgfCAMAd4PfTA8b8+86ARKw8ok2xLOOtUFi5qa11cVZEEdKYNI/c9Xzsrvj3uh9Mvv/YxiIepU/VMsjxgYUh9QsHtXVvPSELziEc8uJk4F0ioa/ZqcRrZPgdgBudgHf07aXM5RMKfsDEzZrEaT3w4TubvL1zh8jl/MrBEmqbNqEKzlUIDveEjBlx05qRDDhhX4lQJZ11rNx5wFC85QaP1lqmH2oW0ziY2XAtmpohkfFvd4274oIlOxUrGTjLpl8QobTWNMtPfRWK7zG7OqvfOv66JevohNbZRL7gBSynhrAvn2fKyRmqupVhTbbXt1D6WM38UNKsNp5d1Av4Yf6YeN38WfsfMX1aCWQln/62SBfCwlDCgN6K/9I5pAjVVnF13gCmlhLNSSilleZOyQKyUUkop4ayUUkoppYSzUkoppZQSzkoppZRSSjgrpZRSSjgrpZRSSinhrJRSSimlhLP3L+83h+6D5dyVmXpL+2f98KuCDY/VsazNPra1Z+nJrcGl8X2fpfHZiK7O0uBtKMGPn3yAhf3x7wQDrJun4XIGZ2l9T2H1knV3nYUfLdbicck/UvE4Aun2Orau1z07+aTRfKzRka3zk/bK8Y2uNC/46Xhf0t0YGDd9w3snUvjFpPZZzrrjave3K2t/4gZ1nTUYmlXX1pwiLRo1dm/xpGexhkUCkeK79ixkPfdV4a2G6l+pvYS0c7YBlhI0BI6WsFaNDW9nx5nz/eFdo62keTfoJW7/5aMqIBDd1dfgdbjZJEW4hEqgrDK5UdEca3dXXiecFx5nu8K6UH4bUcekTTPyx6ZmteUd6pespmi502dSw8rNnju+cFvqqruLb2OPccJL1golJwWrP3vND9hpC7huVbYuuV9dgR0g7HmpKd6sK1ZHJ4uxwQ3ppAze6mFLpOF0P0zr2C6vuvP79tEST3a7Ok2XByxD2jcnPp8NYhArEmRHKqva5cNOsCwwK5OeUqPpCtPHKYtYFnhdAruyprdUa++t5f/RizB7G0whEcsXX2xSFA6ugQeVsPS5k+1qS7sZZA/POlpw7UXjgSRu3Uxvym9gIGVUwEglRQiFEygQG/2m907r9JpaVqA6zcXSX1C6Y2oJl2BuSUrbGBWf7ERSM7eUry3lbkopReu2JAvqUj23WlG7rLu4+GVv4hv/U+2yTxWxGv3IshkVtddaDTL77RrfNykyWVl3rPgaRZk19yQwoLNLJq+4j5YzT9CVt7576u/mRMUY1ax9iULoYfCZ+m0puTsAS7muIiOgj6uSlqiqDyz1oZFl4btiDM89s0TEkT5VyEVo2WHTO6wwRnA0ZitJVT0TNUHg0zJvIGmAwEgYKE4McBaQLmsUABMFGFu0hIbHAYzDMNHwG/eO8QBESNgXPzPqzJO3aKBkRZg3IrPdUmSkmlAiAFgNInSiU0SFpU77ZtqQPGsaHZEUYoxEkakmaAjNsjrRIzqeu5GOVq+Ld/rA7kp/DI/qTmdiTG3KzpW1TviRsvtJEsIcoDu5s/kNzO+1V7j3o5gsSSnrHK4yqvLlRP4+c+Gxp72UJAlJDyo16GvZc9UsV9bic4nMaK2U8KENokDMkzRRMa8iJL33Rc1ffCAvNfMI3WKZYmV0bohkABeeySwAaPZUDH9Db1ozS88eIJPC0JdWIKSFVhpGC53N4ifxddyf9fxcvWV8+Nddtlv12v+3s2qDVc2sIdz7sEQao0BD4ys+mWqBpWsrp+Pu7cYXuzRsG1uIBirBsKq6aVHVkbU1hO9sPhknUR0fb800mON7t734+hFZnUZEXszODkUA9MsPnL34RvvhJz3XPM+nz9XUWebNQCFCy+qIKWlwiGSmppGxNbZYDQbVqWZRoQu2Za7bRQLFeF5qUNnMko5O2TANAAFAHaQOZ1NN3wsVMHhQVB3NS6byiLjQuDuoPKKgqWgEQrAG+Hr+eCdYZ52Bd12z26CBfRtpHAbgP8++e+W1Mym5RyDs1wH9mtZYbfDI1Qauu+ZK6669YmH7LWHNnH3Bg/Pmt+65ywY7TFizgQe2gDBPP/v25VNnNTk98bid+/Rd8uY87Rd/a22v/uTEXZ3LLEoL2s38Ba1XXTe7IvqFz22xBIRNp5N4/v5PjwA4atKm/Qc0dfQIZ3ZfOMi9D7zUXk323GVUeicLilWtzF/QetV1T4Tbq7EjgprYikP6rrHakNVHDlpjtSGVijL4Q2o8mPm1HH7IuMGD+tXNfMGC1mumzd51l1Gj1hnanf17yx3PrDR0wIStVq/76cIMlWZd3nUlttx89crygWXzF9nXznypeaGn80oNWldEGoFSCAY1J6JF2k+siFAi4kllJEQuRkBrOo9J3EjpAYKbQIPRlMXXRBzJECIoxNdZdIVYdPnRhEqQhrR/UIQ7AynqCIN5EZHM3gwKKCTMR0gDLB5AQcK8qMvtux4+ftAQd+WFOw0c2Lc+6Cy5R+n5F+ee9ssHuvZtb7/1Wscdu+2BE8eqWlCjO8O1p59597s/ulNE/vnwa3+97kjpJFAXPnvuxblTzrkfQFOT+963dqxp5lT02afjzzr3gUWt1R8c/0nnXHqcCChvvrXwuJNuFePYscO232attNmTZB70YHdH/ykBwR33PHPCD25raUsOmrhRgLN8HUraLa+A/1/65g2ti/2LM7+lCol9lBtrPW++2fK1E27aZos1BqyQQ0FStbfeXvTm2y3zFrQOW7n/Vz+/5bFHTxg2bEDBtadhYm++tfAb3751t53WrYMzAd58a+Gx3/3LjhPWuuemz3dnC1948b823nD4hK1Wr7GLgTffWvi1E27aZovVBqzQp+sj9B/Q1GvhrHDR3nD8OS+/8Fq7kCrOGFyPoVUTNDSfKz4DWZ/uI6nyBUR7M7VMQ4NHy0Ct6J2tA6nwQuEyzMqUteD4Ceu/ODioKIS50IQMAtAY9njMl1IntEzzF9G0XVno1kQhIYGQWUALSCJAbOfUA8cHPFZV8wzjm/rIpb/ccf21B9YrVVJv0ymx3qihvz/vwGDgh3vy3nstc95e+Mpr86+5ftYD/3z57/98eb+9R1//p8OliDgdwOraG2aL8hObjbz3/hffemvhiBEDu6PQnX7O/UdM2mSN1QZL6mGv8dl3x/4CBg7qu91Wa1w5ddb226wlHVMxGI+UPlhx1bTHDz1w3GXXPJYtngZonn7w4D9fGb7SCsOGDbj9nmf23n00YBDtNBIoBuCPFx24/npDOxqSC+a3XnbtzN9c8vAvzn/o7huP2mLzNaTD6Uw7dfP36aMvvTrv8mtmfPbTm+Z3gArp6k5Lo9d/vOjg9ddbeTmMbAZ3fiEVxab84Y0HHlugRkuTj/JmOQZKaJkDVU31NbEYKyjGjMxBlHCQMNK5pqBYqaSx0yy4aFa3sMIRgu4EDeBYcKxYfQAoBAGCj6+jn5NkPEW0y7LncNB3UmeTMCxUkjSYl1TZKUysh403z9AHMIK+AsBpJ2624zbDO4t/Ff1TJlhhQN/ttllru0+svf02a22/zVo7TFhz/4ljvvy5LX/2/V2e/tf/3njF4QMHNN3016d/+LO7gLzhphTiX+G3v3LazDGjVj7hGztUzU+7YVaMBHXpe9lxwlqLWqvf+cFfa7yB72Pxxu22uKX9s4dtOu3Gp5IkBIes5lhS825xS3LTLU8etO+YwirpNL+P5JXTZhw4cezB+2x45dTZ8j72eINhgwb3+9oXt37s/mO322bNQ4689p23F72vrdqn4s46Zc8TfnL7vPkt6cxjIEU+nnT03gdnAgf66LYCrr5t3lV/bXbOeYGLfrC05Y4RKsEdRkoWvgwIVTQzATg4k9h223uSNGsvPnVDrKCgeUUlLgTgo49WKQQs7OGKWRKPLyKaR7XTeGgE0EKcWkgFoE5EAowpYUzDguqCjexoEUdomuUEqGMeWIyqkPW08SJCU2GeFPPFI9b/wuT1s9UoRC2uWcMDOI0AACAASURBVIOUCKJOL86gap89R//p/x1cQeX08x54+fV5rMWbkFIrwL9nznn6+ff23XvMnrus17dv0xXXPRF8fJK2Lm241T61++jddlx32s1P3fW3F4AQ+vkga7itze+795j29vbb73kOgrwxVYdQA4Abbnli5MhB4zYcURPD62QvJ55Tpz9xwMSx++415i+3P724Jcmepx94xzkn1/x+Ep2b8qv7uxOCyJIz2qrJIfttuNHoET+ccm8WlGOHNJT/WjizuDhDzir54KwFZ/zhNVFPUkhjeIyrWRLayiJBSIFggCpqXe/JzMZMaEqYmZmpWnBehDhAjC0CcJr9DC4EhamQBFSz1OedBVFTNIx+uDQtQyQ2VAxxgMJMov4lAm8EXRp0lcz7FvQd0qsLR64QiWhSCJKqiiOSqKWa9sjxFOfMjJBPbjfi9JO2YO6oDPl32pkRUuhrGdObCs+C+G6/vcZuNH4lAI8+9oZ0LPEhAVw5bRZE9tlz9MBBfXfdbs1/PvrG8y/OExFSpHOdq701Oftne1ec/O93/5Ik5j5ot2mSFZEDJm505dSZtaZGrnyRFDgQV0ydPfngcb5NMiDLql86yh13PTt8lYFjRg8bNmzA+I2GT7/5iZAV1M1+snVpaNntGjSk7y47rDFj1pxu6RvhhKxUqxSRX56298V/+veMWe8ER3XmVfk4pHfBmWbrmJQX51S/86vXq6biHRBsstRvrBWg4r33FZJ0FQrNzLK8sxDERGwCG+GpSoNWADULtVBVkaiweZ8nrCXeA0hAqkASmoOYqgKqEAooIMW5JnR4EAUTMmpnEVo1tT0lDa4HJcLTIJrEbAZG91OYcOrOq6q4gBFp4k3VzFQc6HrweEffrk42WHfQxedsG1Q2ySNUxXIlqzPEo5cz3OS4u60AbACMgq02XoPkozPmoLZGKqjWBk69ftZKQ/rtuM2aMO77qXGeybXXPxG2Wxc5n/Nb2sZtPOJzn97s6effO/f/PeSls+LJTh/G6frUhDx80sY33/qflkXtdXm8EpLyRAi+/c6iO+579vBDNm0N90TSJsmNcJTkFdNmHTxxdHh9yH4bXzF1JrRbpUZ5M+YOjVwD3m628eqPzXhjiUfKIhMQcxASm4xb5fOHb/a1E26UmBto8rEVe/YyY5OxGggLWvjVM15snp8IvYkJ6agRgACyGppOik9ExCeUAtgF/2qt0wqJoUnUW9UkERGRJglO/YB9aXwqM1Q1niimmwXtzDNJKwcsTdGIGe0WUCpNBTIzx1CrF7ZuiphIYvaIqTqhKSmExSe2gaQogn4HOoZcJEr0W9HlwYceOd48RY2uadDgvldeuNOKg/qkjczz37jgLCsUV+S/XtwyEnY3a/eriRDDR64gwlfemF/n4RJCgPv//sIrby7Yf+IYcaDKgRNHN1UqV02fkVZ3dropWlqrgJ1y8i4r9Gv62Vn3vjtn0fvpsKQFmLAkSfbYaf2Bg/recMuTBd9ohiwhdCjX/vnxzcetuv6ooawmNR58kToTnOTiFrvx1icmH7pZONrBB4y95+8vvvVWS+ZAZFcwJA1fxyeE2uCBfRe1VZP27gKRgyS09tYEwM++v8vTzzVfctms0DKZ9MISztK4T+J5/Dkvv/xGAqhBQxJ9Aq9ayVLww0+irklZE7hEbSlc9lcdPNikziHk91cLuydqH0pkdiJS750qzEw1nNRly1HEZcnxpFeRLGXXe6+qJrCYAQKAqgqaWBrX1+iNCv4yQa7yBEeVOklTT+JmSMdHqySGs3rY+PB5xekfz9l21FordCyuFRF26o5BnWlGifU0hRUtFPznybcAHbveSh2j4QSuvu5xFTl0/3EhGWLVVQduv/Uajz/19uwn3+q6HGdxi4fJyOGDTvzm9gtbqsefcrvQ84M8lcU8VDH54PFXXjerbpJpajEEuHLqrM8cNj7k9zbQWAu3TkSm3zx71HrDNhozLHyyxsgVt9litaunz87GfVATT4X62BNvjF5npaY+3T2GB0WkmngAK6004Gcn73TSqbfPndsGgYj7mKzNXgRnKVWG4PRL5/xjVgtjMREl+jxcEZ5CLiuMlrsbVDpEAGpCjVEVYwGVakbWKXSpngVVkBExDR4a6gF89kyWWq9EEV4tuoRAgnDpzIUGiI+hwwwLNI8hmmeIwEKqcVhQCz2DZkTrueNPP2mznSaMaLjBSEpeTVlMBM8qbAoV2gUVpfg7PTzjDSXGjhne0fvmE5t+81NDBvXbfed1MwQ57MBxAK66blbXO6K1tT3Yucd/dftRaw+9etrM+x96TZYMXg2yK8KHn5206R33Pv/uu4sbfvG5F957eMYrhx+8Sff2rF0xdebkg8YVk4E+ffAmV9XB5ZJs4dqtkYdcH3709XEbr4LuRT+iWxlIUrT/yv9svd7aK5700zs63pb/EjizjlMV4Orb5l5921ySCghZQaj8EyU8vIjAfK27NCucNOuQWlyIbErHNWfSQXFINbvMQEr9XxaMACcVoYk4EQF9wCtl7qTL6gFCYoALLuzoozME91tALroMxWJKVwZtFHUS4BNsEs3uAoqaUU8Yr+n49F/lS5/d4OjJ63Zp9WgnVk8n9lFR9SC+f9pdr76+cPU1Bu+x03odta3b7n723bktB3xqTKWSm7EH7TdWVa+Z/kTXK3LBovbwK/bt535x6p4AvnHiX7KKjs5AoYu6nM02WWXM+itfc8NsNMr7uPq62XvsPGb48BW6U8L91pzFd93//KcP3lhiFi4AHLb/Ro/MfP3pZ97t4h6mS7rhPY+O3V//7v8envHaCd/YKfP2LNmKEquD8l+ftc8lV/774UdfI2qSfpcAAuwW2UnPhzMtsF9FFrcHZy0649I5yD+CAZ4UEgz1ABRXCTpRUIrSrK00OinCAqZkEFMopfRZraWyRkfIUj1MCtmwMctM0tLkqDQQFoaJqql0zFNzqRcoraSKcQJoSG9Idcxs0wU/uma5qdnnRkNPHC8UowlBp2BFRcTtsv0qp524yQdYeJkGlv4oOS9jRhs3b/7in551z8/Pf4CCc07be8AKTaDWUTZeM/0JMX/ogRsWP111+MAdt13jxVfee/Cfr3Qzp2Hfvcfutet6M59488Lf/x9ryT+C32HJcAwAOPLTm1517Yy6Sw1P3yumzjh80sZAY8d/3Veuun72Nputue7aKxWZlIYN67frDuteft1jXahRNb7/DqQV3vOyq2Z850e3f+fr22+x2SryIZxeW26+2heP2OKY794ixm4bmxqSAV95bcGzL7z33Itzn3u++fkX5z73wnvPv9T8/Itzw+t5za1hdI+rCigGcQVIK4KVwItvtB1/zstJEm+5qpqZMZFgowkkQkNOjeKdqCdFYWKIxeT5d1Ply+UJMWFF+rAizYyAqIL0ZtGYqnrRHBNh4YxKMSMIr3CkB0TDj2ENHq0mcICnCBMRBQTwqsXK0FjkyBhn95FUItUvJSQFe4HFBK6eNx5GCARWDewZo9bpe8nZ2zvnigXS3QnbpxqEAGheVL37by9k5eIJ7d13Fr708vwXXmq+9oaZ8xdW+/Z1Z/10j4P22bAmwwMAfVur3njr7JVWHrLnzuvVWrI4dP+N7/v7y1dNn7Xd1mt2iyCMPH/KxHE7/eYnU+49/MDxKw8bUKB4inROXdhT2dE/c+imJ596z4svz11nraHxvAKB/HvG23PebDlo77HoToqW4KrrZhx1+OaBZI0hUxFG6OGHbDLlV/efcuKutVxyNfLO3JYhb/fLlLWq+Vdea37t9Zann3n7t5c9Mnd+27mnf+rLn9vywytAp/94zzFbn3/hHx7+6he2zDSNJd1nFeEeB/0JYqmCowoziUWmAH70nZ1/dOIneyKcFcq1TPKyNZvfYl8/89UFLR6iSB3qIqJSCRBFEZhlpqVQDb5CMUCQEOIgBoa7EF3ySRJClj4lMFMI6YUVSGKkODChGL3AMTIbWEWLjlkRAZyZxR1NF0lBxRmrIfaflYuGn4dMgmbhhOmD3ZMK+BDLJk1EaZrqPh50pAEOMHViPtJ/xFVLr9LUo8YLKqEEnUY4p5YMGTLgygt3GTSogGWQbvqn03VPEXnhxXf3POSybGcqzdO5ipjZkIH9Jx0w+gcnfHLD0cMKcYM0O1fcDbfMWriIkw4cpU0VKXBsCXDIvuOOO+m2626cfe6UidqNbSbC9Uat/O1jJpxx/t+/c+rtl5y7f1qVaZJGomTJ9pGtPnLQLtuve/V1s0/81o6F7W1/mvrIARNH91+h0h0Sjqf+8/ajs9646YrPSA2DhYrhwH02/Mq3//yvR17fequRHWj44OAA7LDXpZCE0JCgLnBOuPLwATttveY3vzJh0v4br7raoI9kdw8Z0nTaj/c48Ye3Hbb/RsOHr8A0Qb0m8aDuLokR+uRDx4xab3geCGKobFaICWPBT0+EsyIqQwJRFs30+HNee/GNtpAt2+Scz1h9AItEUiYiGWWGOa9ePELpeEXEQiaEAhZHWqVS8d47iEcxWaDitS3SkyV0qkY6o2nwxhE+gpmIwOhpAJxzkboj3T9miYoamC2vlNKjquqCTWteXNTzVDShaRYcJEQ0mJyBjqIdbCKqgop5inpaBVINOxxWIXvaeLoKzSiiSi99+l5yzrbrr90/K4eOiMbuhdyiCudIP3LEoK9+YUKalOE8/EW/+9cbby049uitzj1tomuqI7yNPBHhFFdfPwtikw7dNJJKFzTDESMG7Dhhrb89+Mpdf3tu90+O6gbIKoDvf3vny66dceUVs79y5CcmbLV6fl7hEhIj4jZWAJ+dNO6s8x783rd2zK0K02nT/3PJRfuDwkKVcYMbEwKgN8zebcf1hq0ysJYYWaE2ZEjfT+0+9o/X/nvrrVbvqPN6eAAzHjhmzHrDgrZLoKW1dZPtL/rU7qMv+uW+UvRiyYel+iH0C4ePu/iPj57409svOe+g1P3TKX1meOQ4QpBRk2j8wyw6lucq9FA4I0JhpagIKFMufe0fM5uzcqLEiqH6Qkl5SEMP+aheDT5Q+sUCi7SGXDSy94kxsGg4iCngE0DNqip9gCTcoejWCm6xQMcoaUkAQDEVNTPvvUIUgjTAGszQUG6dhTKDzzXwmgmgmtI9itEqgBcXSqslpJ7lrmWrkCbioBQBrQLxgj6kJ4MS1LPGC9UnMRfUqzv7xPE7ThhWl52eGpoZ3dYSHRAG6IgRg046frvoURIRYM1VB33huJuumf74z07abejQ/tmzMN0S8dHd3Nx6293P9+tXEeO9D7wcnmJF7Buz/vD7Hnzxqmmz9/jkqCVOJvya/QdUzvrpHkd8efpxJ974j7uO0UiZu2QzqphcfdA+G379hFtmzH5j03Ejwyf3/O05qN9tp/VienDnRwv0ildPm3XU4Zs/98zbImJSb6RvvdXq513wz19NsaaK1mSEpDnDfftopY9kDGWD+/Q/59S9D//y1KOP2nTrzdaM16uR4OjD5PQLQHEX/XzvT+z52y98dsvtt1mrO1/xAnVmEvIaIjODxEI5B+TF0T0UziR3p+KaO9676tZmEUeEbAyf/U4KJDSXV/D5tMIJpl4sT3FmVnPuLfyMBHyaXuhBNUAc6Z1rSpJ2ERdgsiZbTSOHXEhCiOmO5iNeQSSmevjsKhzEaKzNd8vDpnlpukQt0wjChKqgWVbRHUOHlvrdkSiaID4ibjTretT4RFQczESPnrzO5yZvIA12Qso20+X+yEI6KfRIyl4b+dCPOnzTi/746L8eefWHU+779c/3LvrLioxp1/35Catatco9D/sjTCqiMVYDR2S0TnLDX5686Bf79u3nuvaGZD/lpw8a/9s//Ou+f7xy8R8f/fLntgzrtk+fiixOupeLYAMH9d1/4tgrrn0ig7Mrp82efMj47mlC+tDDr73wUvOUs++dcva9sYqoQB8UqpirVX/bXc/su+eYDl1gtObnSDuhHHzARp+8dJ1vnnjb32/7oqR9D5hmL3+orU1stsnIYz631de/e8vDd38lU7o6I8iNTzyvyroOLRkXe/5L9WRjExA8OKvlZ5e8UcCjagh2xAeFhBLuwEWdUYwJSTHRDly7ImKaspSlgcygavmYv6ZmiaqSxjQmgAI/WrBeaqiBAptXIDCu2aiehchRMYQkIhnBaKpcMtJQCx3gQ0EnYj6EhJJty3NrQx1MgBKR7Ip61HgBxUN22W6V07/3iQLbTTERR7v7bIu0OdHM6Pjku+CMiRP2uvh3l/7zS0dttun4VXMmqPycevX1sxPwxP/dfo3VhhTDeQW3plx8+cMzH3/zljueOWi/sV2mENXM/Nwz991q54t+eNrdh+2/UVAP+/ervNfczSCgAvjMp8d/+Rs3nfGTXVS1tc1Pv+XJ+/78P+ieLnTF1McO+tTYa/84qfPBdsSXpl81bda+e42pxQor5hDk1p1AgPPP3G/TnS/4w5/+ffRRm3dRx/o+U6/io+vU7+8+dsJ5v/7tQ8cdu234sSqVSuPHRgw0dRIMrf1wWcJZjbbSoWeSCF58Pfn2L1/2SeTSCU53ImboxdQzgEAFYpGYzEIuATtklgVO2qgWFVaaBzXkncXopkY+2FglJ0xL0JnFHUWCZSqSxy2z4wfjMVcMC4knvjCldGIOSAqHQGJUZ+jAFxZeRPBEyk4Q+cWwjMeH6iGCkMCvJd7R2XprD7zk7B1dpa4z0wdKEpKuouBbbDby6M9sfvHlj/zv92699y+fz3WTdMgbby667x8vrTpshVNP3jXzHGcMsQVNkMd975arrnusCGfp79hpg65xG474yhe2vuDif/74zHvOO2MigP793Pu6uL0+uQGMd9z7/F67rn/rnU+vvfrgTcev2nFXd5Qksak3PHnh2ft2Nih46D590PjPfnnaooXtKwzsUxiomaEQE0QKiZZjRq903FcmfG/KXYccsNGQIX0/qtQriTGBvmf9eI/jTvrr5IPHrbLKIAB9+7DrjK3uaD/LMu+sxgUoNTkvQsxfZN8484X5Cy0rdgt5WdladCKRp1HE04KJZ7EJU0zbLAZNNPV5FNWrDE99qDqnZ+y0FJxuREGryvLUvFlaOSBUcRQppAXGRIQsbb22ACAcRH0G5T5YpRR4Dc5W6UX8ZbRgY0tocaJige7NxFYc3PfKC3caPLjY3erjiYIDAE77wW4rDu7/wP+9dNXUGVliYlZgcO30mWZ28AEbSaETgeSd7qIcts9GqvqXO59dsLAt9wrEMGVX6uRPT9p5+MoDf/vHR559/l0AA1bo2/2HOgBVfPqQ8ZdfMxPANdfNOnLS5h2d6PFnqaEUwe33PFdtt31236Au9FCkoiI5cc8N+vRtmn7zE3lqW8dQRfTT5V24fnzCzv0q8oMpd+LDUQw1/MWOnLzZuA1HfPcnd4Wb3K9fk9ZzQ8W31m21cJmm0TI3gYOvLNeYiO/88vXnXm8PlUyqFaT8iyE/I2SYh8IAKaQ1hxSKNFUiQkNw4XfM7y/imgYOWxERSRj6xeXQGeIGPrhajJWCGaumXiLzSdhC3ldFxIcyTInMkcVaAvVkRbOOBQEhqVCfpuz2Hv6yNCwQ1FY1L/QmIk199JJzth219sAlNR7/qMRWWrn/KSftpKrfPeWuhQvaQM3yEkheef1sAJ8+cLw02gJp+wgMW3XA9luv0dZW/fNfnqrfI126soYMHnD6D3dNEjvpJ3cS6N+3qXvGV57Bf8Tk8X/+y5Ovz1n41zufO/zQcXU9d0mvjDWq2SOf5JVTZx6835g+fbUOLdIQQtSjK6qH7DP2iqmPR7KpNEem6DbJW46lu2nACn3OPm3v31zy7xmz5mhw7H44a6x47STPP3Pi1dfPfPDhlwHt26diHTs5ZcEHyZtoNPwvJHAsUziraeKDNGXME5hy6Wt/m9EcgEmBYgMR51zIZgiFkdktJplZbYFUv8AXpg3jwMXk/mIdpYM4VRYa1oVMF0coQacJUmsxtGg2j5Qm19LuRKE9QVGvRAg+AF4h3vu8vQABSBLRUzRtdNhL+MtC6hkkbTXlhIYp39t8pwkjYlVAIe78sS0mFdixR0/YeOzwN99aeOo59xeLbJ574b3HHn1zjVUGbb/NGtmuZQMPHZSxNP2KtNSxhpGuS/mfIzbfevOR19/6xL8efmWFFfp2I6chV1pJbj5u5DrrrHjkV677xFYjVx85KKM8yrKCTGoUSQhaF/ubbv3P5EM3kdhBDrXEtrGLa9hFkw4Zd/cDz8+Z01LnN8y3TLGkNFNX9994t53W+saJt4R+r++3sXmdOZYqecGJJpuOX/XYo7f+1om3kujX19UrWOklqIR+aqGGpvF/IAHrAUVOUvucFHft7c1X3Tq/AhFxwYApmqWBjgJB51FlUyzbVlWR+Ei0xKcKGmM/J5WsF0zs5xQYGgPjdkzhSCvAAR8IfGrb3AcODKn6pljWTkhC0rkmIRxdSjoLM6MA4qTWrHZEAopISPxUjZFyH7pphvI/ato0uBfwl6m4tK+BVFwsz/rCZ0YdPXlUeAakAamPhX0038AMoXCed8ZEkr+86MFnn54X7UTjNdMfT8QfvP9GEh90tevOUDDBeMh+G4rIPfc+9847Le/L/03yV2fs5+C+/cPb+/Sx7vYeZ5azgiMnbf63f7x05GGbR9L10EQsdfOBlbr5XH/TE4MH99llh7WL4Fh4cKfZDCIkd91pvRErD7hm2izk7HDW6Cq81LZr+OXp+/zfoy9fde2sXK37oOoZEJZDqhHT//SkT746Z+Gfrp7R1Fif1bAaRX1UxKSz/xygyxrOOkD932cvOv0Pb4jQJLrD1FisR8nVKDN6Lz66NsySWIIOiFNhTvVnZmIxnpCZfkxb/6JGC9NI2VjQ3fL6TW/qKU4tbXoYtL/EPEmPaqCIjHaxN9Bn9QDhHzwoQSnzZszP60wsif00hWmIsDfwl3nvM4eaTwBy1+1HTvne5qnVXMPX+pGTKGQthMOTXER23HatyQduaIbjfnBLmnIpV103yxGHHjg+zVaz3H9UVAjEhLLqqgO3+8SaCXHdn2c3XKJd+IK33mLkUUds9o+HX77//te6e72FhImvf/ETMx84dvLB42MNi4R2cPHZVvCIR5Pk8mkzJx04vhDZyLLJ8khitmtEcNhB4/40fVYnWRrZVWRZuNHg2HD00G8fs8N3T7lj4cLkA/+IKbib1PSNd4MH9fv5T/b8/s/ubG+vClyHCF7af4iVEG0SWGf/YdmXoEvNI+LFN9pP+OWr7UlwdTUFB6TVRtNzUBOBakZsDVaUKtSsx3UcH0Od9S2UMogJ7U7gNPP7dqyyDNmJVDEnqV9fzSBqpI+12NKkWknBlqIa6j3jWcKaozqhpuSP8elt8EpxSqEU1l+v4C9T1TBeFE5s/VFDfv+L7SoVTTsSWUwO4segoKVpgbnTBxCRM07Zu38fd8ddzwf/14xZc5569p01Vh+83darp3tDsnSEmqZe1LAhDt1/IwCXT5uVgt77aJd7+g92X3HwCovaWz/Azu8/oGnD0cMrfUVqTdE0x8iKaSJvvbXwzr+98JlDx9fZy3XmTiHGj08fvNFjs9548um3WVTNGlBWpIX08emlPzhhZ1X8+PS7luhD7DruV5NjmE7s8MPGbzBqpd/+8RFGZwwKLsU4k+dffu/pZ9/9z9PvPP3M3Ib//efZuS+81FxZlnpZ7SNi/qLka2e+NH9+kiZheOZXrxljQ272hwRB+FDbBEkM6mIfM6HFnIpQsApxtAQpVGX0/0qpwpwIfe7nyhVAqtCriCfF0qa/QVmzUKUogFAscKtRUlM/ZWWUAt8DSSchL4RpkULk4nCW9aErZHgJQYl8YSIxzyttGmI+QCQh1eC8X0bjQ04JaTJ0xX5XXbDT4MGVwvbSjyRhqbNnYVYwVfx4jdUGn/ydnU8+7a4TfnLn3ruNDvyIkw7YOMtCq+vDVNMwnKDg4P03+tYPb3vokddeeqV57TVXTJOcu4TjdD0PGzbglJM+edxJt34w+M6IjhvlL2X7xQR69fTZo9YeusVmI5G2bm+cdpZ3z8OELVdfd+0Vr5g669STdy2EOKx4phobOb27A1Zo+sWpex117PVHH7lFTROWD6BNZ8fPymmBX/983813uagI1tn0wvaZOOnyJeaArL7G4B7RBZ2kUb485aWHZi6qb0PfgTy2Rn2t7XSZEfukkZNCeleBAChfNyz2mktq4LK2B0Su6NUyRMYTSX66Ar0aAnR2dsaahudkKDUodorKmldmJDxZx4Dsw/zvsh7f1EenXrTTjhNGxOwlQSmlLGVZ5qEAC/bdlD+8kWFZMYe++KKuhbhmea1RfAGy0j4OmRaEgl2eQqQHTVDHu621Vm0eB+hggZIhlR8uhpSzcCqLgbDiI9rnnTSt5jjRf4YQVw0evagyaO6ryrAj8IvVgMsyG280KHjq9zbbYcLwSHVdYlkpy8R31RO0s1Sb6oQkZMkRIsui3V2QOtWp4mRjQsyOWmHjqeYUqFHXZ62CT6AhlVfdYSNDNygUE3NpCrR068JrOoQvk/EZPKf0v1puqlL+S+EsZFEUnPfRuxFepC13a8I5keioWNBMQGBmKloge8o3XPywY5sNY2jOWKeOdZhe7rNgTZ+hDBMLeBpy/kINporUlFuFwtKGOB6q2UNJoodIjYNWDNS8AjGlfIqfoweMp5oE3kp+fBkZpZTSc+GsVn+xLiFPulDWsmqtjGimxt2WUf810s46+qkb+ewaBHOCw14EoGeaX1Y8AmPVI6W2i04OwgUEz6imCmVzKdammBw5XpFPKQTdJDIKLJvxGgtvqDEBotTOSvnvNTZTG7OGRbOxdlb8XDox4royoDqafjX6mi3J3ixWIKcKYq12hkbGbIEAiMJuRccKVlzPX0FxqibU0mdWyn85nKHICdc5HUoNxLyfwFl3k7O7AYid/VNDODzZ2gAAE4FJREFUeO3kW0vUX7ql4HT/opbO+O7fjVJKWY7h7AP42uTj3pDLFtl7v6R5UKWUUsJZKaWUUsoHkNJxW0oppZRwVkoppZRSwlkppZRSSglnpZRSSiklnJVSSiklnJVSSimllHBWSimllLI8wFlXbXu4pAE1B/kYcuO6SLh737l4DXtplFJKKUtXPsI0WisQY3iBq6tDSjzMQm8jJqah/4hPYKB5mGnCxDzMzHvzpmbmPc3Dk957nzChMZHE6L0npb3qvScTqfqq92aGqmdi9IklifmE3rOa0BJfhcGj6mkG86xWvaeRYmZVDzNLPOnhva8mCDz+Pgw2SwyJN0vSt55mrHp6783U+6o3eJMvTd7guC+NLrXdUkpZhvIRkmtHpnYQEFenu9z9fwtuvO89kJbQJ/RCJLFPCGnee5paQm9VQs1Aa6c5TyPpvTcfeRETL2TVe3oDSG9GS7ypEJ6wxMy8WUKqTyLnIgVihDiiGlhuYg+J2FXAI6d4VKegmHmIONKnfc4tMP1TNPRuSNlnGfrXTT5wvRLLSilleTQ28/LwaCc+8njLTfc2wyOpgvR0FJ9y8UdefCU8xQBIAkFiVvFMYDQzUAJzbOJj60uSSgvU/GJ9lGZmUvWRoppNoX8TQiMowgSQRKVPvGRWmCgAsyRvLygCSTxoPtDbJ2nT4dgCStKJIlC1q4pTAvvtudqPjx/XqH9EKaWU0tvhLMMyKoAnX2i/+tZ3qAmoKt68QxtDD3OPVIGC94ZASp04q3qBeJrGFqNm3nt4ExHGPuGaEGLepJIgMamQklQcvTfQWCWZUD0cSQ86CM0Z2yNjqiTSRAOda2LaN83MBE0wBiCjRQUz6z4Xyqo9aKASZoBxl+1HTvnelgHESymllOUHzojcHU4oBK/MqV5685uJEQkM3gwUbw6ED31AAJhHwBHvPUxgVPGW9gExn3cOM7PQKiloZx5Ca4fR2hMSqLYh6w5JKhNBIiKx560kYCW69kzo1UG8r6qGm6AiIuoBhOasoaNSdCxKEnrfGekgkqp7E7Zc5Vc/2apS0VwVLaWUUpYPOCtQu5oA787zF09/u63VAATlC1R6Ab03CQT5wXT0vgpSxHkajLQKalov0Qxk7IwZXwROrdCCV0OjDmdWZWjJ62EUWt7/SeBEfU5nJomRqmmPTpiI+CS2g0LoHR9bZntBU/ZFb7Gx9iYbDr/w9E/06aPFJo+llFLK8mds6oIW/9tpb89flAg1uNSZuv5Dv0rvfdp/Nypf8S3I6GePqllNfyZWQuSUJiEMirQfnZmRGtQ91PKdpa2VNPswEEYXKSGDjyx3paVfFLjQuDOgtDgFsPEGQy/++TYD+lcIL2kTxlJKKWV5gLO6XI/2Ki+5/t135xpgnglJTYwmTLvABb0JgHmF0RM0S0FM0hepmGWt4YztARUL/TGj4lYnDXt05v2AU79YzRhBsQ8exLJW6vFeKYUYN3bIJedtN3hwHwAiLm+OW0oppfRyOLPcxAwb3+Oym+e/PKfdM4E5oZLeVAye9IkZjKEBr7fQldyEZqIp2PkMQNJAQbHVbq5wZfodybQ3Oc0sNCLKW22mkh0kZF107AYgDP8UdbSAv9nI0NJp002GXvqr7YYMbCqXTiml9Ho465AAX+i9LgBw5e3vPvXCQtILlaSRhJr3MFGvouoR/WhChGxVUkIaGimkGMw86QN2aYhmmpmII+mTqNyFmGOquImZp6nAZapfBogdbc/0gFJnkJoZWM3Gp51KQlxAtt5y2CU/325A/xLLSilluYAzyf6yVkGjB3DL/c2znmz3EZi8kWoEPaEKtEuVZinMJQzYoUJvlOAC86GROGhUMZ8QiU9LF7z3ACBG+FBUYNEfZwBVHZF4q0IsJL5GSMqUL5Gsk7mIOOfiAUPz80xlcxVAKSB8THuDiXKHCcN/d9aEfv2dQMp6plJKWb6MTcmc9LES4IEZC+97eHGV7RWD0Lw5miUKbw7GKpMmqxhJeJoImjxIVDLtyQygM5D0RviqqTjzTpAbj8HvFjJdM3PSTGiaJAlNQaVJhmVFV5qZOecyqzO8zYMAKbCFiieFiIg6p0Ijd9luzQunTOjT5BRCKbPMSilleYIzAsycSgLB7Gdab7qn2SwBXVVIaxJNICJewARmalINCVsE6M23BZe/Mri7KOJC6RMtJIjRe0owRs2FksnUSZ9k6Oa9kWasChyRFJ1ideZkgLAMy7Lci4B9QdmjilZCAq2aj0bxfnuucd5pm/dpkqJ+WkoppfQ0+aA1m7V7+vlX26++fR4hwXevgJcqTWjeDKB6MRPQQnQy+LxC110xr4QXqrfgLSPEAzCDEFXzAIzt4ZTBvwaqmQ+OM4AiCgqR0CqhmBJpEAC13TOzfwoQVogkhBilgWBEOu+cM7OvHDXmm1/asOseoKWUUkpvhrOCzHk7ueLmuUnVw4SoUBKYwIRmNCGNCNCTanPmGVS0oG2J0WjmYx0ASYOZwRDKNdNoJmkCaowuZGn7BGlGT5O8njz1iOXwW9tzM1i4xQ9FaMZMlxOlq+Bnx295yD5rxg6YJZaVUspyDWfWPB+X3fjeorbEjAYBDYDBM2ITKPAeNWlkFAtUQVB6LzH9QsmERMSykE+bak/RzISlOhryRDSiGLvsmFZW/KfoawM1VGKCRgIazpbVopMycIW+vzplqx22HvFhPYyllFJKD4EzkhBKJ/u5tQ2X3Ty3eZEREt30FMLoYUhoSvHwEMJn6WNmtPTIFsDOA2qWpJZm8G3FMQx8PTCa0iTUqwOaesEkRFhDJYCIA6KCVlTNVNV7H2KXSBUtEYIKNYnHSUOfYquOWOE3Z203dtSgcn2UUsryA2ciEmzAOmMNQDXBn25a8Mbb7RSFiU8TLECBAIkjjYZAnhHASb1UqRDCI6RmmCFgE6CkmQ8GaHSrAWpWReDDME9SxJm3NFIZ1D8Nn6iqWYLaFLMMy0JaRpZPm5YBWEy/hQrMSBEZN3bYhWd8YvhK/cvFUUopvUu6ZUaxg9/IPK6+vfmFOYsBqHmDRzD0AuOFmRcfsvxDfhhJemtHIh60JCPGEKFCSZoluTHIKmBkNRAokj5w+5Dira2umCnx7cHVlSRJAKli6WVw+YdS86CdmUXdLRisIk0iohJ1ucP2W+fy87dNsaysxCyllOVHOwtKE9KkrEgBJIIb71/w5POtakgYiGEdfRUCWpOhnYR4CYRnFNCriJk6l7jEJaw2GQjzBvoExqqICCqBbdtbIqgk3khHE7MqKYImbx6goMlopHlv0Z0PZ0hoUqm4LAkjyzsLGlnRj+Zcmp8BUGCoCgFx/frKKd/ZbP+9Vs/ZJ0uXWSmlLEdwFhLl8xyFQEZx978WP/LEYlEmBkAp5vn/27ueH73KMnrOc79pZ1poaYtUWtRatFRSQ4BoimIwEoMbNZG4IagsNMSwcKELoluNbv0XWCiEhQtDDA0YDcb4c4GJJCZExQgxQYlABzpz3+ccF+977/e1FE0MLpx5z2YmM3cy35dpT54f55yn1WJmTc6uTkyPtCUQmamEkW4jMpqwyHA4MrNO1CQRUXKsQzE5AU5ys1rr5SQda8xlWAlyuaysXDZ3mrjYeb40BkQoMyIMvvP4+ne/+cHT1x9Ei53sW8yOjh03O2tFGTELr379+ws/+e2mbCchSWmQMqoeVpW/2Fo1YUrQBkkrQFhSSYF2mXaUrfcDom4GJqtlSAmHBSDnpIzMquoQAIsRg1QukZJdsg24JGNjNgPY/vhHj33nwVv276+RQYiVdPCOjo6dQGeXGf8Tf3juwmM/2/QkjGjcUZN/oFRlr9Ay2qc+WWluCl+sDs0s02oSWNrCZ11r2ClpEpppCgKSJLKmcUc1Rtk5V2Rza3nZaKDVBwDs3TN89cs3fu7uk8u3WDOCPDOaesvZ0fF/T2dLLnMrtp77Wz76xGZr/XIuquqekpIJFAlVFzstNKs0LGsxNfWMhuEBtZarFd6U8yMteQ2oMdyo7DbrZpWsH+fSb/U11wVoVWy0z51e+W598pabDn/7wVvfeXzfm77xPj7r6Ng51VkVnBEA/vFPPvL4+XGcOIy0HY4685r0sY6IVDG5OqUygpYpV6tAU69O4lgtE7TnXz07BNQkuJrEtE0KBzet2UrBNQCaNph1SyBwYYyV3TwdW9pYX/vKl05/4bPXrzB27y87OnZ2dTb9F9/czId+dP61C6rZik0NayZtwLKa6MxIWByE7SoNS8DhzLScC0WGNGZTma12rBLAVNYMn5BSklUnZV5OylqzyZnLVnrVEhEXZWlwAQheIBIKkqBuPnP1t75+y7uPT1IM91lZR8dOpzOoCTS2t/zQ45uvni/pYkfYgpOgCxxycUadbM0UM0ZBsoaaSQZiyBxZMHI0AkwvHZozqdlVNOt6FM6ikZmet5aVTKt2v3oDltn/ZESkxuCCJFMxhDHCi+lEng8e3PvAfafu/cxJeq7I+g6zo2M3NJtBAlnw/R+f//uLpdgLD6OzwBIspRdwQgNCYaaNsIolQZysTAOFdEkOTpgJK014sKoHgLVDnIZaAVAuNarfOZBZitpmIId60a7espMVwbbujLS4GPZkJigvBhrEGihgGBa+59MnH7jv1MGDe2EgBAQFRL2ZeRnPQ0dHxw5qNiEgfvDTzb88P2ZoKNoWaKqk7TQIGTClUl3laLZLICmCKYCZKDYhuc37BzLV/ORgVFILe5RiMqLbYtsMuERE8zPRMOAwtqftKlslKVbpP0lgMCCYziA/fPbQNx64+cS79k9jMrOWdUE0VUbnso6OnV2dOc794sIzf96yAHM0IDeDIx1wAoadEAErZERkZto0lU3kCi+AtIlAZs6HMi2ArZoj5zINk2HT8EIarUGaUxfR0rS9APIS7QWm4wKYrmTecOqqr93/vikVY54J1iUn54azo6Njh9PZz3+39ctnXqNb40jXEH9P6T016AIGqi5DU4zPRBtyC/lRZag6429UWbcJrV7jRYc0ZzXGRdP+6Vc7YICFmOX+nDQhJGkijFtvOvLFe957x9mjl2Or6Wj5JP63kxz6P4WOjp1JZ08/u/3kbzYDLDIUcnoKGSMH1WwzxyyhsFrdlm4BZDW4caLAGt/YQhwnupotR/MhzaWMdrI0Nc/mcmmAulplsGVhkJAmkzl5x21H77/31C1nDv+nN75cAnQu6+jYiXRmgPjjX8tjT71eCxjYRg7mOBFQtZyHVOhM1oWmGTUJFh7sAsDTIM0IA84EFnZNr7ZyLsRaaUbHnN9v0SgtXKNmPTZaZMtfI2QFKRNURFy5b+2ujx37/N0n33P9gf5H7ejYvXRmuw3EiRde1CNPvoJkkJNDKbJavasd04YiGRaIkrYHarvuBywKCthmWpbg1CSdTYBy1gxriCW3IxalFLWoMWamMoxiEYjMYmKq1KQMguTCKuSixvl/6ANHP3XXtXfdcd2eoaaWGcE+E+vo2JV05jYdB/DSy3j43KtlBInKRjaNQrcrSaaKABZb0iAXCyEqNIhZA2ZRJFIL64I9mBBqnNmgNCBgMIqoajgXDBkD6kqTNHJhpzUCRjHr64sFtG0SSnA4c/rgJ+48/sk7j19zZN0wIHMAxIjOZR0du5TOZuHC5gV+79zL5y8kCMN0TKd/w0a6wLSGNtPXQGZoTXC6wLGlRNX3J23KBd5jji4OULXTpKHBKJPizOnCHBRDjqW+oLRa+A8GSB6kkpKVOHTVxu23Xv2Rs2+//ezRqw6srdRgJIY63e8iso6O3UtntfYZCx8+98pLr2SdkDeSasL9ajO32uFJwRDoRFG9nAlB7cK4A0hjtJHejmQhSmk9Y43cmEyasB1aFJY6dmuLUaGdNk8lcOTKtTM3Hj1z+sBtN19z4+kDywF+4zLBwaomY4CFWNg1srG7xzs6duHsTHj0yVdfeFEMtqT+onr4Uo1fLMkMWcg1IAUBImlK9Z4JCVE52oMTBMghKaVIVsMlVzQZNZdRLhSNiQzF9XWcOnH4hpP7z9x45P03HLz26LpX8hTn9AyzfjGmXElOb0d9U9nRsXvp7IdPbf7p+QKmHQtzdDOBA0Cd/aPuLg3ZUVKgnLazCtCWp5mMqMVRCs70dNOkjvJBKFsuozMBHDqw8Y5jGyeO7Tt2bP3E8StPXLdx9G3rl7xEghfF4UJAEBcnmrGuUQPsRVlHx26lsyd+9frTz24BoINkGYCRFgzUC+YGMrNePzHhAjSxWb3cpIud5ACQVchPIrhvMezfv9i/Lw5csXbNobXDV60dObT38KE91xzee/jwnn17qywWlz0WtUppK2iENT9fz0294bGOjo7dBaY8jt4q2BqlEVvpcduvj8otbBcVKc2idEJCSau2jxCJxWAAe4YYFgxqGLhnEet7F1dsxMY69+8bNtYXzU3kKeiVXUvR0dHxv6EzTWrXVXZxDeIBgDpMGy5fQK381HzkafVbqz9y0W/oZNbR0fFWo92ca5HXctVIkERzXwYxmNMXZ+aqn0wXTmqfR7Y8bdSLvDMlTtmwcxa238hlnmi0o6Oj47+uzioZ1eic9tHL/aCB1hnOBZcnGjSM+WxT2AASHAjBIWZgmNnKbKFDqzVg14h1dHS8ZXTW7pAQnPnlDZ3gv20Na0UWb/J05a86LUtz4Bse6aTW0dHxluBfhNC93YNUPbgAAAAASUVORK5CYII=";
+const DNV_B64="data:image/png;base64,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";
+// Southern Hemisphere Ports & Coastal Locations Database
+// Indicative rates from Perth, WA (Henderson base)
+// All flight costs are RETURN per person in AUD
+// Accommodation is per room per night (single occupancy)
+// Car hire is per day (shared vehicle)
+// Travel days = mobilisation days each way
+// These are STARTING ESTIMATES - always adjust in the logistics modal
+
+const LOCATIONS = {
+  // ═══════════════════════════════════════
+  // WESTERN AUSTRALIA - LOCAL (no logistics)
+  // ═══════════════════════════════════════
+  local: [
+    "henderson","fremantle","cockburn","kwinana","rockingham",
+    "garden island","hmas stirling","rous head","victoria quay",
+    "amc 1","amc 2","jervoise bay","owen anchorage",
+    "rottnest","carnac island","woodman point",
+    "australian marine complex"
+  ],
+
+  // ═══════════════════════════════════════
+  // ALL REMOTE LOCATIONS
+  // Format: keyword: {flight, accom, car, travelDays, region}
+  // ═══════════════════════════════════════
+  remote: {
+    // ── WA SOUTH COAST ──
+    "bunbury":           {flight:0,   accom:170, car:100, travelDays:1, region:"WA South"},
+    "busselton":         {flight:0,   accom:180, car:100, travelDays:1, region:"WA South"},
+    "albany":            {flight:400, accom:170, car:100, travelDays:1, region:"WA South"},
+    "esperance":         {flight:480, accom:180, car:110, travelDays:1, region:"WA South"},
+
+    // ── WA MID-WEST ──
+    "geraldton":         {flight:420, accom:190, car:110, travelDays:1, region:"WA Mid-West"},
+    "kalbarri":          {flight:450, accom:200, car:120, travelDays:1, region:"WA Mid-West"},
+    "carnarvon":         {flight:600, accom:210, car:130, travelDays:2, region:"WA Mid-West"},
+    "denham":            {flight:600, accom:210, car:130, travelDays:2, region:"WA Mid-West"},
+    "shark bay":         {flight:600, accom:210, car:130, travelDays:2, region:"WA Mid-West"},
+
+    // ── WA PILBARA / NORTH WEST ──
+    "exmouth":           {flight:700, accom:260, car:140, travelDays:2, region:"WA Pilbara"},
+    "learmonth":         {flight:700, accom:260, car:140, travelDays:2, region:"WA Pilbara"},
+    "onslow":            {flight:1400,accom:320, car:200, travelDays:2, region:"WA Pilbara"},
+    "barrow island":     {flight:1600,accom:0,   car:0,   travelDays:2, region:"WA Pilbara"},
+    "dampier":           {flight:800, accom:270, car:150, travelDays:2, region:"WA Pilbara"},
+    "karratha":          {flight:800, accom:270, car:150, travelDays:2, region:"WA Pilbara"},
+    "port hedland":      {flight:750, accom:290, car:150, travelDays:2, region:"WA Pilbara"},
+    "port walcott":      {flight:750, accom:290, car:150, travelDays:2, region:"WA Pilbara"},
+    "cape lambert":      {flight:800, accom:270, car:150, travelDays:2, region:"WA Pilbara"},
+    "ashburton":         {flight:900, accom:290, car:160, travelDays:2, region:"WA Pilbara"},
+    "varanus island":    {flight:1200,accom:0,   car:0,   travelDays:2, region:"WA Pilbara"},
+    "thevenard island":  {flight:1200,accom:0,   car:0,   travelDays:2, region:"WA Pilbara"},
+
+    // ── WA KIMBERLEY ──
+    "broome":            {flight:600, accom:230, car:120, travelDays:2, region:"WA Kimberley"},
+    "derby":             {flight:700, accom:210, car:130, travelDays:2, region:"WA Kimberley"},
+    "wyndham":           {flight:950, accom:210, car:150, travelDays:2, region:"WA Kimberley"},
+    "kununurra":         {flight:850, accom:210, car:140, travelDays:2, region:"WA Kimberley"},
+
+    // ── NORTHERN TERRITORY ──
+    "darwin":            {flight:600, accom:220, car:110, travelDays:2, region:"NT"},
+    "hmas coonawarra":   {flight:600, accom:220, car:110, travelDays:2, region:"NT"},
+    "larrakeyah":        {flight:600, accom:220, car:110, travelDays:2, region:"NT"},
+    "gove":              {flight:1000,accom:230, car:140, travelDays:2, region:"NT"},
+    "nhulunbuy":         {flight:1000,accom:230, car:140, travelDays:2, region:"NT"},
+    "groote eylandt":    {flight:1250,accom:210, car:130, travelDays:2, region:"NT"},
+
+    // ── SOUTH AUSTRALIA ──
+    "adelaide":          {flight:380, accom:190, car:90,  travelDays:1, region:"SA"},
+    "port adelaide":     {flight:380, accom:190, car:90,  travelDays:1, region:"SA"},
+    "port lincoln":      {flight:550, accom:180, car:100, travelDays:1, region:"SA"},
+    "whyalla":           {flight:530, accom:170, car:100, travelDays:1, region:"SA"},
+    "port augusta":      {flight:550, accom:170, car:100, travelDays:1, region:"SA"},
+    "port pirie":        {flight:530, accom:160, car:90,  travelDays:1, region:"SA"},
+    "osborne":           {flight:380, accom:190, car:90,  travelDays:1, region:"SA"},
+
+    // ── VICTORIA ──
+    "melbourne":         {flight:400, accom:240, car:95,  travelDays:1, region:"VIC"},
+    "geelong":           {flight:400, accom:200, car:95,  travelDays:1, region:"VIC"},
+    "portland":          {flight:500, accom:180, car:100, travelDays:1, region:"VIC"},
+    "westernport":       {flight:420, accom:210, car:95,  travelDays:1, region:"VIC"},
+    "hastings":          {flight:420, accom:210, car:95,  travelDays:1, region:"VIC"},
+    "williamstown":      {flight:400, accom:240, car:95,  travelDays:1, region:"VIC"},
+    "hmas cerberus":     {flight:420, accom:210, car:95,  travelDays:1, region:"VIC"},
+
+    // ── TASMANIA ──
+    "hobart":            {flight:550, accom:210, car:95,  travelDays:1, region:"TAS"},
+    "devonport":         {flight:600, accom:180, car:90,  travelDays:1, region:"TAS"},
+    "burnie":            {flight:600, accom:180, car:90,  travelDays:1, region:"TAS"},
+    "launceston":        {flight:570, accom:200, car:90,  travelDays:1, region:"TAS"},
+    "bell bay":          {flight:570, accom:200, car:90,  travelDays:1, region:"TAS"},
+
+    // ── NEW SOUTH WALES ──
+    "sydney":            {flight:450, accom:270, car:110, travelDays:1, region:"NSW"},
+    "garden island sydney":{flight:450,accom:270,car:110,travelDays:1, region:"NSW"},
+    "fleet base east":   {flight:450, accom:270, car:110, travelDays:1, region:"NSW"},
+    "hmas kuttabul":     {flight:450, accom:270, car:110, travelDays:1, region:"NSW"},
+    "port botany":       {flight:450, accom:270, car:110, travelDays:1, region:"NSW"},
+    "port kembla":       {flight:470, accom:210, car:100, travelDays:1, region:"NSW"},
+    "newcastle":         {flight:470, accom:210, car:95,  travelDays:1, region:"NSW"},
+    "wollongong":        {flight:470, accom:210, car:100, travelDays:1, region:"NSW"},
+    "eden":              {flight:550, accom:190, car:100, travelDays:1, region:"NSW"},
+    "yamba":             {flight:550, accom:180, car:100, travelDays:1, region:"NSW"},
+
+    // ── QUEENSLAND ──
+    "brisbane":          {flight:500, accom:220, car:95,  travelDays:1, region:"QLD"},
+    "port of brisbane":  {flight:500, accom:220, car:95,  travelDays:1, region:"QLD"},
+    "gladstone":         {flight:650, accom:200, car:100, travelDays:2, region:"QLD"},
+    "hay point":         {flight:700, accom:210, car:110, travelDays:2, region:"QLD"},
+    "mackay":            {flight:650, accom:200, car:100, travelDays:2, region:"QLD"},
+    "townsville":        {flight:700, accom:200, car:100, travelDays:2, region:"QLD"},
+    "hmas cairns":       {flight:750, accom:210, car:100, travelDays:2, region:"QLD"},
+    "cairns":            {flight:750, accom:210, car:100, travelDays:2, region:"QLD"},
+    "weipa":             {flight:1100,accom:230, car:130, travelDays:2, region:"QLD"},
+    "thursday island":   {flight:1300,accom:250, car:0,   travelDays:2, region:"QLD"},
+    "abbot point":       {flight:700, accom:210, car:110, travelDays:2, region:"QLD"},
+    "bundaberg":         {flight:600, accom:180, car:95,  travelDays:1, region:"QLD"},
+    "rockhampton":       {flight:630, accom:190, car:100, travelDays:2, region:"QLD"},
+    "gold coast":        {flight:500, accom:220, car:90,  travelDays:1, region:"QLD"},
+
+    // ── NEW ZEALAND ──
+    "auckland":          {flight:950, accom:260, car:100, travelDays:2, region:"NZ"},
+    "wellington":        {flight:1000,accom:250, car:95,  travelDays:2, region:"NZ"},
+    "christchurch":      {flight:980, accom:240, car:90,  travelDays:2, region:"NZ"},
+    "dunedin":           {flight:1050,accom:230, car:85,  travelDays:2, region:"NZ"},
+    "tauranga":          {flight:1000,accom:240, car:90,  travelDays:2, region:"NZ"},
+    "lyttelton":         {flight:980, accom:240, car:90,  travelDays:2, region:"NZ"},
+    "port chalmers":     {flight:1050,accom:230, car:85,  travelDays:2, region:"NZ"},
+    "bluff":             {flight:1100,accom:210, car:85,  travelDays:2, region:"NZ"},
+    "devonport nz":      {flight:950, accom:260, car:100, travelDays:2, region:"NZ"},
+    "nelson":            {flight:1050,accom:230, car:85,  travelDays:2, region:"NZ"},
+    "napier":            {flight:1020,accom:230, car:85,  travelDays:2, region:"NZ"},
+    "new plymouth":      {flight:1030,accom:230, car:85,  travelDays:2, region:"NZ"},
+    "marsden point":     {flight:980, accom:240, car:90,  travelDays:2, region:"NZ"},
+    "hmnzs":             {flight:950, accom:260, car:100, travelDays:2, region:"NZ"},
+
+    // ── SINGAPORE ──
+    "singapore":         {flight:500, accom:280, car:80,  travelDays:2, region:"SE Asia"},
+    "jurong":            {flight:500, accom:280, car:80,  travelDays:2, region:"SE Asia"},
+    "changi":            {flight:500, accom:280, car:80,  travelDays:2, region:"SE Asia"},
+    "sembawang":         {flight:500, accom:280, car:80,  travelDays:2, region:"SE Asia"},
+    "keppel":            {flight:500, accom:280, car:80,  travelDays:2, region:"SE Asia"},
+    "tuas":              {flight:500, accom:280, car:80,  travelDays:2, region:"SE Asia"},
+
+    // ── INDONESIA ──
+    "jakarta":           {flight:520, accom:130, car:70,  travelDays:2, region:"SE Asia"},
+    "tanjung priok":     {flight:520, accom:130, car:70,  travelDays:2, region:"SE Asia"},
+    "surabaya":          {flight:560, accom:110, car:60,  travelDays:2, region:"SE Asia"},
+    "balikpapan":        {flight:620, accom:120, car:65,  travelDays:2, region:"SE Asia"},
+    "bali":              {flight:350, accom:130, car:50,  travelDays:2, region:"SE Asia"},
+    "benoa":             {flight:350, accom:130, car:50,  travelDays:2, region:"SE Asia"},
+    "batam":             {flight:480, accom:110, car:50,  travelDays:2, region:"SE Asia"},
+    "makassar":          {flight:560, accom:100, car:50,  travelDays:2, region:"SE Asia"},
+    "sorong":            {flight:900, accom:110, car:60,  travelDays:2, region:"SE Asia"},
+    "ambon":             {flight:800, accom:100, car:50,  travelDays:2, region:"SE Asia"},
+    "kupang":            {flight:560, accom:90,  car:45,  travelDays:2, region:"SE Asia"},
+    "cilacap":           {flight:560, accom:90,  car:45,  travelDays:2, region:"SE Asia"},
+    "semarang":          {flight:540, accom:100, car:50,  travelDays:2, region:"SE Asia"},
+    "dumai":             {flight:560, accom:90,  car:45,  travelDays:2, region:"SE Asia"},
+    "merak":             {flight:520, accom:100, car:50,  travelDays:2, region:"SE Asia"},
+
+    // ── MALAYSIA ──
+    "port klang":        {flight:480, accom:140, car:60,  travelDays:2, region:"SE Asia"},
+    "johor bahru":       {flight:480, accom:130, car:55,  travelDays:2, region:"SE Asia"},
+    "penang":            {flight:520, accom:130, car:55,  travelDays:2, region:"SE Asia"},
+    "kuantan":           {flight:540, accom:120, car:55,  travelDays:2, region:"SE Asia"},
+    "kota kinabalu":     {flight:560, accom:120, car:55,  travelDays:2, region:"SE Asia"},
+    "labuan":            {flight:620, accom:110, car:50,  travelDays:2, region:"SE Asia"},
+    "sandakan":          {flight:620, accom:110, car:50,  travelDays:2, region:"SE Asia"},
+    "bintulu":           {flight:580, accom:120, car:55,  travelDays:2, region:"SE Asia"},
+    "kuching":           {flight:540, accom:120, car:55,  travelDays:2, region:"SE Asia"},
+    "lumut":             {flight:500, accom:120, car:55,  travelDays:2, region:"SE Asia"},
+    "langkawi":          {flight:540, accom:140, car:55,  travelDays:2, region:"SE Asia"},
+
+    // ── PHILIPPINES ──
+    "manila":            {flight:620, accom:140, car:60,  travelDays:2, region:"SE Asia"},
+    "subic bay":         {flight:650, accom:130, car:55,  travelDays:2, region:"SE Asia"},
+    "cebu":              {flight:620, accom:120, car:50,  travelDays:2, region:"SE Asia"},
+    "davao":             {flight:680, accom:110, car:50,  travelDays:2, region:"SE Asia"},
+    "zamboanga":         {flight:720, accom:100, car:45,  travelDays:2, region:"SE Asia"},
+
+    // ── VIETNAM ──
+    "ho chi minh":       {flight:550, accom:110, car:55,  travelDays:2, region:"SE Asia"},
+    "vung tau":          {flight:580, accom:110, car:55,  travelDays:2, region:"SE Asia"},
+    "cam ranh":          {flight:600, accom:100, car:50,  travelDays:2, region:"SE Asia"},
+    "da nang":           {flight:600, accom:100, car:50,  travelDays:2, region:"SE Asia"},
+    "haiphong":          {flight:650, accom:90,  car:45,  travelDays:2, region:"SE Asia"},
+    "hanoi":             {flight:620, accom:100, car:50,  travelDays:2, region:"SE Asia"},
+
+    // ── THAILAND ──
+    "bangkok":           {flight:550, accom:140, car:55,  travelDays:2, region:"SE Asia"},
+    "laem chabang":      {flight:550, accom:130, car:55,  travelDays:2, region:"SE Asia"},
+    "map ta phut":       {flight:580, accom:120, car:55,  travelDays:2, region:"SE Asia"},
+    "songkhla":          {flight:580, accom:110, car:50,  travelDays:2, region:"SE Asia"},
+    "sattahip":          {flight:550, accom:120, car:55,  travelDays:2, region:"SE Asia"},
+    "phuket":            {flight:530, accom:150, car:50,  travelDays:2, region:"SE Asia"},
+
+    // ── MYANMAR ──
+    "yangon":            {flight:720, accom:100, car:50,  travelDays:2, region:"SE Asia"},
+
+    // ── INDIA (SOUTH / COASTAL) ──
+    "mumbai":            {flight:950, accom:160, car:50,  travelDays:2, region:"Indian Ocean"},
+    "chennai":           {flight:900, accom:130, car:45,  travelDays:2, region:"Indian Ocean"},
+    "kochi":             {flight:900, accom:120, car:40,  travelDays:2, region:"Indian Ocean"},
+    "goa":               {flight:950, accom:130, car:40,  travelDays:2, region:"Indian Ocean"},
+    "visakhapatnam":     {flight:1000,accom:110, car:40,  travelDays:2, region:"Indian Ocean"},
+    "kolkata":           {flight:1000,accom:120, car:40,  travelDays:2, region:"Indian Ocean"},
+
+    // ── SRI LANKA ──
+    "colombo":           {flight:900, accom:130, car:45,  travelDays:2, region:"Indian Ocean"},
+    "hambantota":        {flight:950, accom:110, car:40,  travelDays:2, region:"Indian Ocean"},
+    "trincomalee":       {flight:950, accom:100, car:40,  travelDays:2, region:"Indian Ocean"},
+
+    // ── PACIFIC / OCEANIA ──
+    "port moresby":      {flight:1100,accom:270, car:120, travelDays:2, region:"Pacific"},
+    "lae":               {flight:1300,accom:240, car:110, travelDays:2, region:"Pacific"},
+    "rabaul":            {flight:1400,accom:220, car:100, travelDays:2, region:"Pacific"},
+    "madang":            {flight:1300,accom:220, car:100, travelDays:2, region:"Pacific"},
+    "suva":              {flight:1100,accom:220, car:95,  travelDays:2, region:"Pacific"},
+    "lautoka":           {flight:1100,accom:210, car:90,  travelDays:2, region:"Pacific"},
+    "noumea":            {flight:1050,accom:240, car:100, travelDays:2, region:"Pacific"},
+    "honiara":           {flight:1300,accom:240, car:100, travelDays:2, region:"Pacific"},
+    "port vila":         {flight:1150,accom:220, car:95,  travelDays:2, region:"Pacific"},
+    "nuku'alofa":        {flight:1200,accom:200, car:85,  travelDays:2, region:"Pacific"},
+    "apia":              {flight:1200,accom:210, car:85,  travelDays:2, region:"Pacific"},
+    "papeete":           {flight:1800,accom:270, car:110, travelDays:3, region:"Pacific"},
+    "guam":              {flight:1400,accom:220, car:85,  travelDays:2, region:"Pacific"},
+    "christmas island":  {flight:750, accom:160, car:0,   travelDays:2, region:"Indian Ocean"},
+    "cocos islands":     {flight:850, accom:130, car:0,   travelDays:2, region:"Indian Ocean"},
+
+    // ── INDIAN OCEAN ──
+    "mauritius":         {flight:1600,accom:200, car:65,  travelDays:2, region:"Indian Ocean"},
+    "port louis":        {flight:1600,accom:200, car:65,  travelDays:2, region:"Indian Ocean"},
+    "reunion":           {flight:1700,accom:190, car:65,  travelDays:2, region:"Indian Ocean"},
+    "diego garcia":      {flight:3000,accom:0,   car:0,   travelDays:3, region:"Indian Ocean"},
+    "maldives":          {flight:1200,accom:220, car:0,   travelDays:2, region:"Indian Ocean"},
+    "male":              {flight:1200,accom:220, car:0,   travelDays:2, region:"Indian Ocean"},
+    "seychelles":        {flight:1800,accom:240, car:75,  travelDays:2, region:"Indian Ocean"},
+    "madagascar":        {flight:2000,accom:130, car:50,  travelDays:3, region:"Indian Ocean"},
+    "toamasina":         {flight:2000,accom:130, car:50,  travelDays:3, region:"Indian Ocean"},
+
+    // ── MIDDLE EAST / GULF ──
+    "dubai":             {flight:1200,accom:280, car:85,  travelDays:2, region:"Middle East"},
+    "jebel ali":         {flight:1200,accom:280, car:85,  travelDays:2, region:"Middle East"},
+    "abu dhabi":         {flight:1200,accom:280, car:85,  travelDays:2, region:"Middle East"},
+    "muscat":            {flight:1250,accom:200, car:80,  travelDays:2, region:"Middle East"},
+    "sohar":             {flight:1300,accom:180, car:75,  travelDays:2, region:"Middle East"},
+    "salalah":           {flight:1350,accom:170, car:70,  travelDays:2, region:"Middle East"},
+    "doha":              {flight:1300,accom:280, car:85,  travelDays:2, region:"Middle East"},
+    "ras laffan":        {flight:1300,accom:280, car:85,  travelDays:2, region:"Middle East"},
+    "dammam":            {flight:1400,accom:200, car:80,  travelDays:2, region:"Middle East"},
+    "jeddah":            {flight:1500,accom:190, car:75,  travelDays:2, region:"Middle East"},
+    "yanbu":             {flight:1600,accom:170, car:70,  travelDays:2, region:"Middle East"},
+    "bahrain":           {flight:1300,accom:200, car:75,  travelDays:2, region:"Middle East"},
+    "kuwait":            {flight:1350,accom:200, car:75,  travelDays:2, region:"Middle East"},
+    "bandar abbas":      {flight:1500,accom:110, car:45,  travelDays:2, region:"Middle East"},
+
+    // ── EAST AFRICA ──
+    "mombasa":           {flight:2000,accom:140, car:65,  travelDays:2, region:"East Africa"},
+    "dar es salaam":     {flight:2000,accom:150, car:65,  travelDays:2, region:"East Africa"},
+    "zanzibar":          {flight:2100,accom:160, car:55,  travelDays:2, region:"East Africa"},
+    "maputo":            {flight:2000,accom:140, car:60,  travelDays:2, region:"East Africa"},
+    "beira":             {flight:2100,accom:120, car:55,  travelDays:2, region:"East Africa"},
+    "nacala":            {flight:2200,accom:110, car:55,  travelDays:2, region:"East Africa"},
+    "djibouti":          {flight:2200,accom:200, car:75,  travelDays:2, region:"East Africa"},
+
+    // ── SOUTH AFRICA ──
+    "cape town":         {flight:1800,accom:200, car:70,  travelDays:2, region:"South Africa"},
+    "simons town":       {flight:1800,accom:200, car:70,  travelDays:2, region:"South Africa"},
+    "durban":            {flight:1900,accom:180, car:65,  travelDays:2, region:"South Africa"},
+    "richards bay":      {flight:2000,accom:160, car:60,  travelDays:2, region:"South Africa"},
+    "port elizabeth":    {flight:1900,accom:170, car:60,  travelDays:2, region:"South Africa"},
+    "gqeberha":          {flight:1900,accom:170, car:60,  travelDays:2, region:"South Africa"},
+    "saldanha bay":      {flight:1850,accom:180, car:65,  travelDays:2, region:"South Africa"},
+    "east london":       {flight:2000,accom:160, car:60,  travelDays:2, region:"South Africa"},
+    "mossel bay":        {flight:1900,accom:180, car:65,  travelDays:2, region:"South Africa"},
+    "walvis bay":        {flight:2000,accom:160, car:60,  travelDays:2, region:"Namibia"},
+    "luanda":            {flight:2500,accom:220, car:85,  travelDays:3, region:"West Africa"},
+    "luderitz":          {flight:2100,accom:150, car:60,  travelDays:2, region:"Namibia"},
+
+    // ── SOUTH AMERICA ──
+    "santos":            {flight:2800,accom:170, car:65,  travelDays:3, region:"South America"},
+    "rio de janeiro":    {flight:2800,accom:180, car:70,  travelDays:3, region:"South America"},
+    "buenos aires":      {flight:3000,accom:140, car:55,  travelDays:3, region:"South America"},
+    "valparaiso":        {flight:3200,accom:150, car:60,  travelDays:3, region:"South America"},
+    "san antonio":       {flight:3200,accom:150, car:60,  travelDays:3, region:"South America"},
+    "callao":            {flight:3000,accom:120, car:55,  travelDays:3, region:"South America"},
+    "lima":              {flight:3000,accom:130, car:60,  travelDays:3, region:"South America"},
+    "guayaquil":         {flight:3100,accom:110, car:50,  travelDays:3, region:"South America"},
+    "cartagena":         {flight:3200,accom:130, car:55,  travelDays:3, region:"South America"},
+    "barranquilla":      {flight:3200,accom:120, car:55,  travelDays:3, region:"South America"},
+    "montevideo":        {flight:3000,accom:130, car:55,  travelDays:3, region:"South America"},
+    "paranagua":         {flight:2900,accom:130, car:60,  travelDays:3, region:"South America"},
+    "itajai":            {flight:2900,accom:130, car:60,  travelDays:3, region:"South America"},
+    "recife":            {flight:2900,accom:120, car:55,  travelDays:3, region:"South America"},
+    "salvador":          {flight:2900,accom:130, car:55,  travelDays:3, region:"South America"},
+    "ushuaia":           {flight:3800,accom:170, car:65,  travelDays:3, region:"South America"},
+    "punta arenas":      {flight:3500,accom:160, car:60,  travelDays:3, region:"South America"},
+
+    // ── CHINA (SOUTH) ──
+    "hong kong":         {flight:750, accom:260, car:80,  travelDays:2, region:"East Asia"},
+    "shenzhen":          {flight:720, accom:170, car:60,  travelDays:2, region:"East Asia"},
+    "guangzhou":         {flight:700, accom:160, car:55,  travelDays:2, region:"East Asia"},
+    "zhanjiang":         {flight:800, accom:110, car:45,  travelDays:2, region:"East Asia"},
+    "haikou":            {flight:750, accom:120, car:45,  travelDays:2, region:"East Asia"},
+
+    // ── TAIWAN ──
+    "kaohsiung":         {flight:780, accom:140, car:55,  travelDays:2, region:"East Asia"},
+    "keelung":           {flight:780, accom:140, car:55,  travelDays:2, region:"East Asia"},
+    "taipei":            {flight:750, accom:170, car:60,  travelDays:2, region:"East Asia"},
+
+    // ── JAPAN ──
+    "yokohama":          {flight:950, accom:230, car:90,  travelDays:2, region:"East Asia"},
+    "kobe":              {flight:950, accom:210, car:85,  travelDays:2, region:"East Asia"},
+    "nagasaki":          {flight:1000,accom:190, car:80,  travelDays:2, region:"East Asia"},
+    "sasebo":            {flight:1000,accom:190, car:80,  travelDays:2, region:"East Asia"},
+    "yokosuka":          {flight:950, accom:230, car:90,  travelDays:2, region:"East Asia"},
+
+    // ── SOUTH KOREA ──
+    "busan":             {flight:800, accom:170, car:65,  travelDays:2, region:"East Asia"},
+    "ulsan":             {flight:800, accom:160, car:60,  travelDays:2, region:"East Asia"},
+    "incheon":           {flight:780, accom:180, car:65,  travelDays:2, region:"East Asia"},
+  }
+};
+
+
+// ═══ RATE CARD ═══
+const RC={"Personnel":[
+{d:"Project Management",u:"Per/hour",r:231.18,daily:false},
+{d:"Project Management OVERTIME",u:"Per/hour",r:462.36,daily:false},
+{d:"Project Management PUBLIC HOLIDAY",u:"Per/hour",r:693.54,daily:false},
+{d:"2 person team (base to base)",u:"8 hours",r:2272.02,daily:true},
+{d:"2 person team OVERTIME",u:"Per/hour",r:568.01,daily:false},
+{d:"2 person team travel (M-F)",u:"12 hours",r:3657.29,daily:true,isTravel:true},
+{d:"2 person team OVERTIME (base to base)",u:"8 hours",r:2455.05,daily:true},
+{d:"2 person team PUBLIC HOLIDAY (base to base)",u:"8 hours",r:6816.05,daily:true},
+{d:"2 person team PUBLIC HOLIDAY",u:"Per/hour",r:852.01,daily:false},
+{d:"3 person dive team (base to base)",u:"8 hours",r:3241.56,daily:true},
+{d:"3 person dive team OVERTIME",u:"Per/hour",r:810.39,daily:false},
+{d:"3 person dive team travel (M-F)",u:"12 hours",r:5677.93,daily:true,isTravel:true},
+{d:"3 person dive team OVERTIME (base to base)",u:"8 hours",r:6483.11,daily:true},
+{d:"3 person dive team PUBLIC HOLIDAY (base to base)",u:"8 hours",r:9724.67,daily:true},
+{d:"3 person dive team PUBLIC HOLIDAY",u:"Per/hour",r:1215.58,daily:false},
+{d:"4 person dive team (base to base) 8h",u:"8 hours",r:4266.59,daily:true},
+{d:"4 person dive team (base to base) 10h",u:"10 hours",r:6350.39,daily:true},
+{d:"4 person dive team (base to base) 12h",u:"12 hours",r:8467.19,daily:true},
+{d:"4 person dive team travel (M-F)",u:"12 hours",r:7398.57,daily:true,isTravel:true},
+{d:"4 person dive team OVERTIME",u:"Per/hour",r:1058.40,daily:false},
+{d:"4 person dive team OVERTIME (base to base)",u:"8 hours",r:8467.18,daily:true},
+{d:"4 person dive team PUBLIC HOLIDAY (base to base)",u:"8 hours",r:12700.77,daily:true},
+{d:"4 person dive team PUBLIC HOLIDAY",u:"Per/hour",r:1587.60,daily:false},
+{d:"5 person dive team (base to base) 8h",u:"8 hours",r:5216.63,daily:true},
+{d:"5 person dive team (base to base) 10h",u:"10 hours",r:7824.96,daily:true},
+{d:"5 person dive team OVERTIME",u:"Per/hour",r:1304.16,daily:false},
+{d:"5 person dive team travel (M-F)",u:"12 hours",r:9119.21,daily:true,isTravel:true},
+{d:"5 person dive team OVERTIME (base to base)",u:"8 hours",r:10433.26,daily:true},
+{d:"5 person dive team PUBLIC HOLIDAY (base to base)",u:"8 hours",r:15649.89,daily:true},
+{d:"5 person dive team PUBLIC HOLIDAY",u:"Per/hour",r:1956.24,daily:false},
+{d:"6 person dive team (base to base)",u:"8 hours",r:6129.94,daily:true},
+{d:"6 person dive team OVERTIME",u:"Per/hour",r:1532.48,daily:false},
+{d:"6 person dive team travel (M-F)",u:"12 hours",r:10839.84,daily:true,isTravel:true},
+{d:"6 person dive team OVERTIME (base to base)",u:"8 hours",r:12259.87,daily:true},
+{d:"6 person dive team PUBLIC HOLIDAY (base to base)",u:"8 hours",r:18389.81,daily:true},
+{d:"6 person dive team PUBLIC HOLIDAY",u:"Per/hour",r:2298.72,daily:false},
+{d:"ROV Pilot and Tender (base to base)",u:"8 hours",r:2272.02,daily:true},
+{d:"ROV Pilot and Tender OVERTIME",u:"Per/hour",r:568.00,daily:false},
+{d:"Coxswain",u:"Per/hour",r:184.70,daily:false},
+{d:"Coxswain (base to base)",u:"8 hours",r:1477.63,daily:true},
+{d:"Coxswain OVERTIME",u:"Per/hour",r:369.41,daily:false},
+{d:"Coxswain PUBLIC HOLIDAY",u:"Per/hour",r:554.11,daily:false},
+{d:"Master CV NC / MED Grade 2",u:"Per/hour",r:195.84,daily:false},
+{d:"Master CV NC / MED Grade 2 (base to base)",u:"8 hours",r:1566.74,daily:true},
+{d:"Master CV NC / MED Grade 2 OVERTIME",u:"Per/hour",r:391.68,daily:false},
+{d:"Master CV NC / MED Grade 2 PUBLIC HOLIDAY",u:"Per/hour",r:587.53,daily:false},
+{d:"Closed circuit IWHC Operator",u:"Per/hour",r:158.70,daily:false},
+{d:"Closed circuit IWHC Operator (base to base)",u:"8 hours",r:1269.63,daily:true},
+{d:"Closed circuit IWHC Operator OVERTIME",u:"Per/hour",r:317.41,daily:false},
+{d:"Closed circuit IWHC Operator PUBLIC HOLIDAY",u:"Per/hour",r:476.11,daily:false},
+{d:"Supervisor",u:"Per/hour",r:158.70,daily:false},
+{d:"Supervisor (base to base)",u:"8 hours",r:1269.63,daily:true},
+{d:"Supervisor travel (M-F)",u:"12 hours",r:2236.66,daily:true,isTravel:true},
+{d:"Supervisor OVERTIME",u:"Per/hour",r:317.41,daily:false},
+{d:"Supervisor PUBLIC HOLIDAY",u:"Per/hour",r:476.11,daily:false},
+{d:"Diver",u:"Per/hour",r:125.29,daily:false},
+{d:"Diver (base to base)",u:"8 hours",r:1002.31,daily:true},
+{d:"Diver OVERTIME",u:"Per/hour",r:250.58,daily:false},
+{d:"Diver PUBLIC HOLIDAY",u:"Per/hour",r:375.87,daily:false},
+{d:"Living away from home allowance per diver",u:"Per/Diver/Day",r:321.36,daily:true},
+],"Plant and Equipment":[
+{d:"Vehicle (light truck with recovery hiab)",u:"Per/day",r:206.11,daily:true},
+{d:"Dive System to AS/NZS 2299.1:2015",u:"Per/day",r:1020.22,daily:true},
+{d:"Sub sea tools",u:"Per/day",r:109.92,daily:true},
+{d:"Blanking Tools - Plugs",u:"Per/day",r:257.50,daily:true},
+{d:"Blanking Tools - Magnetic Blanket",u:"Per/day",r:1437.50,daily:true},
+{d:"Hydraulic Power - Atlas Copco GP18",u:"Per/day",r:391.55,daily:true},
+{d:"Hydraulic tooling - Chainsaw",u:"Per/day",r:165.65,daily:true},
+{d:"Hydraulic tooling - Grinder",u:"Per/day",r:165.65,daily:true},
+{d:"Hydraulic tooling - Reciprocating Saw",u:"Per/day",r:165.65,daily:true},
+{d:"Hydraulic tooling - Demolition Saw",u:"Per/day",r:165.65,daily:true},
+{d:"Hydraulic tooling - Jackhammer",u:"Per/day",r:165.65,daily:true},
+{d:"Hydraulic tooling - Propeller Polisher",u:"Per/day",r:165.65,daily:true},
+{d:'9" 3M propeller polishing pads',u:"Each",r:590.84,daily:false},
+{d:"Generator 2.2kVa",u:"Per/day",r:274.81,daily:true},
+{d:"Generator 8kVa",u:"Per/day",r:274.81,daily:true},
+{d:"Generator 30kVa",u:"Per/day",r:274.81,daily:true},
+{d:"Generator 250kVa",u:"Per/day",r:274.81,daily:true},
+{d:"Wet Welding / Ultrathermic cutting spread incl consumables",u:"Per/day",r:638.92,daily:true},
+{d:"Class A HP Water Blaster",u:"Per/day",r:412.21,daily:true},
+{d:"Class B HP Water Blaster",u:"Per/day",r:412.21,daily:true},
+{d:"190 CFM compressor",u:"Per/day",r:343.51,daily:true},
+{d:"NDT - Ultrasonic Thickness Testing",u:"Per/day",r:412.21,daily:true},
+{d:"NDT - Bathycorrometer",u:"Per/day",r:412.21,daily:true},
+{d:"Lift bags",u:"Per/Tonne",r:75.57,daily:false},
+{d:"Lift Bags Mobilisation & Demobilisation",u:"Per/bag",r:287.50,daily:false},
+{d:"Plant fuel",u:"Per/Litre",r:3.46,daily:false},
+{d:"ROV System - Pivot",u:"Per/day",r:2163.00,daily:true},
+{d:"ROV System - Revolution",u:"Per/day",r:2817.50,daily:true},
+{d:"ROV System - Mag Crawler",u:"Per/day",r:1380.00,daily:true},
+{d:"ROV System - CLIIN",u:"Per/day",r:3600.00,daily:true},
+{d:"ROV Consumables",u:"Per/day",r:260.75,daily:true},
+],"Vessels & Functionality":[
+{d:"MarineStream Functionality",u:"Per/day",r:567.78,daily:true},
+{d:"Closed circuit IWHC System",u:"Per/day",r:2974.12,daily:true},
+{d:"Closed circuit IWHC System Consumables",u:"Per/day",r:336.70,daily:true},
+{d:"Deck Decompression Chamber (DDC)",u:"Per/day",r:1500.00,daily:true},
+{d:"Aluminium Punt - 50HP Out Board Motor",u:"Per/day",r:450.00,daily:true},
+{d:"Dinghy f/w outboard motor",u:"Per/day",r:300.00,daily:true},
+{d:"Support Vessel 6M",u:"Per/day",r:950.00,daily:true},
+{d:"Diving Support Vessel 7-10M",u:"Per/day",r:2200.00,daily:true},
+{d:"Diving Support Vessel 10-12M",u:"Per/day",r:3000.00,daily:true},
+{d:"Diving Support Vessel 24M",u:"Per/day",r:7700.00,daily:true},
+{d:"Diving Support Vessel fuel",u:"Per/Litre",r:3.46,daily:false},
+{d:"Float Bricks (excl. install/removal)",u:"m2",r:10.00,daily:false},
+],"Other":[
+{d:"Project reporting",u:"Per/hour",r:231.18,daily:false},
+{d:"4 person dive team site inductions",u:"Per/hour",r:535.87,daily:false},
+{d:"Port Authority permits",u:"Per/permit",r:357.25,daily:false},
+{d:"Administration",u:"Per/hour",r:171.76,daily:false},
+{d:"DPIRD approved inspector TBC cost + 15%",u:"Total",r:0,daily:false},
+{d:"Ancillary cost - Cost + 15%",u:"Total",r:0,daily:false},
+]};
+const ALL=[];Object.keys(RC).forEach(c=>RC[c].forEach(i=>ALL.push({...i,cat:c})));
+
+const TPL={
+ ims_dive:{days:1,crew:5,items:[{cat:'Personnel',d:'Project Management',qty:2},{cat:'Personnel',d:'5 person dive team (base to base) 10h',qty:1,daily:true},{cat:'Plant and Equipment',d:'Vehicle (light truck with recovery hiab)',qty:1,daily:true},{cat:'Plant and Equipment',d:'Dive System to AS/NZS 2299.1:2015',qty:1,daily:true},{cat:'Vessels & Functionality',d:'MarineStream Functionality',qty:1,daily:true},{cat:'Other',d:'Project reporting',qty:4},{cat:'Other',d:'DPIRD approved inspector TBC cost + 15%',qty:1}]},
+ insp_rov:{days:1,crew:2,items:[{cat:'Personnel',d:'Project Management',qty:3},{cat:'Personnel',d:'2 person team (base to base)',qty:1,daily:true},{cat:'Plant and Equipment',d:'ROV System - Pivot',qty:1,daily:true},{cat:'Plant and Equipment',d:'ROV Consumables',qty:1,daily:true},{cat:'Vessels & Functionality',d:'MarineStream Functionality',qty:1,daily:true},{cat:'Other',d:'Project reporting',qty:8},{cat:'Other',d:'Administration',qty:4}]},
+ clean_cliin:{days:5,crew:2,items:[{cat:'Personnel',d:'Project Management',qty:12},{cat:'Personnel',d:'2 person team (base to base)',qty:1,daily:true},{cat:'Plant and Equipment',d:'Class B HP Water Blaster',qty:1,daily:true},{cat:'Plant and Equipment',d:'190 CFM compressor',qty:1,daily:true},{cat:'Plant and Equipment',d:'ROV System - Pivot',qty:1,daily:true},{cat:'Plant and Equipment',d:'ROV System - CLIIN',qty:1,daily:true},{cat:'Plant and Equipment',d:'ROV Consumables',qty:1,daily:true},{cat:'Vessels & Functionality',d:'MarineStream Functionality',qty:1,daily:true},{cat:'Other',d:'Project reporting',qty:8},{cat:'Other',d:'Administration',qty:8}]},
+ clean_dive:{days:3,crew:4,items:[{cat:'Personnel',d:'Project Management',qty:6},{cat:'Personnel',d:'4 person dive team (base to base) 8h',qty:1,daily:true},{cat:'Plant and Equipment',d:'Vehicle (light truck with recovery hiab)',qty:1,daily:true},{cat:'Plant and Equipment',d:'Dive System to AS/NZS 2299.1:2015',qty:1,daily:true},{cat:'Plant and Equipment',d:'Class B HP Water Blaster',qty:1,daily:true},{cat:'Plant and Equipment',d:'190 CFM compressor',qty:1,daily:true},{cat:'Vessels & Functionality',d:'MarineStream Functionality',qty:1,daily:true},{cat:'Other',d:'Project reporting',qty:8},{cat:'Other',d:'Administration',qty:4}]},
+ repair:{days:2,crew:4,items:[{cat:'Personnel',d:'Project Management',qty:8},{cat:'Personnel',d:'4 person dive team (base to base) 8h',qty:1,daily:true},{cat:'Plant and Equipment',d:'Vehicle (light truck with recovery hiab)',qty:1,daily:true},{cat:'Plant and Equipment',d:'Dive System to AS/NZS 2299.1:2015',qty:1,daily:true},{cat:'Plant and Equipment',d:'Hydraulic Power - Atlas Copco GP18',qty:1,daily:true},{cat:'Plant and Equipment',d:'Sub sea tools',qty:1,daily:true},{cat:'Plant and Equipment',d:'Wet Welding / Ultrathermic cutting spread incl consumables',qty:1,daily:true},{cat:'Other',d:'Project reporting',qty:8},{cat:'Other',d:'Administration',qty:4}]},
+ blank:{days:1,crew:0,items:[]}
+};
+
+let items=[],crewSize=0,lastFlash=-1,_unsaved=false;
+document.getElementById('quoteDate').valueAsDate=new Date();
+
+// ═══ BUILD LOCATION INDEX for typeahead ═══
+const LOC_INDEX=[];
+LOCATIONS.local.forEach(l=>LOC_INDEX.push({name:l,type:'local',region:'Henderson/Fremantle'}));
+Object.entries(LOCATIONS.remote).forEach(([k,v])=>LOC_INDEX.push({name:k,type:'remote',region:v.region||'Remote',...v}));
+
+// ═══ LOCATION TYPEAHEAD ═══
+function onLocInput(){
+ const q=document.getElementById('location').value.toLowerCase().trim();
+ const dd=document.getElementById('locDropdown');
+ if(q.length<1){dd.classList.remove('open');return}
+ const matches=LOC_INDEX.filter(l=>l.name.includes(q)).slice(0,12);
+ if(!matches.length){dd.classList.remove('open');return}
+ let h='';
+ matches.forEach(m=>{
+  const cap=m.name.charAt(0).toUpperCase()+m.name.slice(1);
+  const typeClass=m.type==='local'?'loc-local':'loc-remote';
+  h+='<div class="loc-dd-item" onclick="selectLoc(\''+m.name.replace(/'/g,"\\'")+'\')">';
+  h+='<span>'+cap+'</span>';
+  h+='<span><span class="loc-region">'+m.region+'</span> <span class="loc-type '+typeClass+'">'+m.type.toUpperCase()+'</span></span>';
+  h+='</div>';
+ });
+ dd.innerHTML=h;dd.classList.add('open');
+}
+function selectLoc(name){
+ const cap=name.charAt(0).toUpperCase()+name.slice(1);
+ document.getElementById('location').value=cap;
+ document.getElementById('locDropdown').classList.remove('open');
+ detectLocation();
+}
+document.addEventListener('click',e=>{
+ if(!e.target.closest('.loc-wrap'))document.getElementById('locDropdown').classList.remove('open');
+});
+
+function detectLocation(){
+ const loc=document.getElementById('location').value.toLowerCase().trim();
+ const badge=document.getElementById('locBadge');
+ const mob=document.getElementById('mobType');
+ if(LOCATIONS.local.some(l=>loc.includes(l))){mob.value='local';badge.textContent='LOCAL';badge.style.background='#D1FAE5';badge.style.color='#065F46'}
+ else{
+  let found=false;
+  for(const k of Object.keys(LOCATIONS.remote)){if(loc.includes(k)){found=true;const r=LOCATIONS.remote[k];mob.value='remote';badge.textContent=(r.region||'REMOTE').toUpperCase();badge.style.background='#FEF3C7';badge.style.color='#92400E';break}}
+  if(!found)badge.textContent='';
+ }
+ updateTravelDays();
+}
+function updateTravelDays(){
+ const loc=document.getElementById('location').value.toLowerCase().trim();
+ if(document.getElementById('mobType').value==='local'){document.getElementById('gTravel').value=0;return}
+ let td=2;
+ for(const[k,v] of Object.entries(LOCATIONS.remote)){if(loc.includes(k)){td=v.travelDays;break}}
+ document.getElementById('gTravel').value=td;
+}
+
+// ═══ TEMPLATES ═══
+function loadTpl(key,btn){
+ const t=TPL[key];if(!t)return;
+ if(items.length>0&&!confirm('Replace current items?'))return;
+ items=[];crewSize=t.crew||0;
+ const days=t.days;document.getElementById('gDays').value=days;
+ document.querySelectorAll('.btn-t').forEach(b=>b.classList.remove('active'));
+ if(btn)btn.classList.add('active');
+ t.items.forEach(ti=>{const found=ALL.find(a=>a.cat===ti.cat&&a.d===ti.d);
+  if(found)items.push({cat:found.cat,d:found.d,u:found.u,r:found.r,qty:ti.daily?ti.qty*days:ti.qty,daily:found.daily,isTravel:found.isTravel||false});
+ });
+ CAT_ORDER.forEach(c=>{_catOpen[c]=items.some(it=>it.cat===c)});
+ renderCatalogue();render();
+}
+
+// ═══ GLOBAL DAYS ═══
+function applyGDays(){
+ const days=parseInt(document.getElementById('gDays').value)||1;
+ const trav=parseInt(document.getElementById('gTravel').value)||0;
+ items.forEach(it=>{if(it.isTravel)it.qty=trav;else if(it.daily)it.qty=days});
+ render();
+}
+
+// ═══ SERVICE CATALOGUE ═══
+const CAT_ORDER=['Personnel','Plant and Equipment','Vessels & Functionality','Other'];
+let _catOpen={};
+function renderCatalogue(){
+ let h='';
+ CAT_ORDER.forEach(cat=>{
+  const svcs=RC[cat];if(!svcs||!svcs.length)return;
+  const selCount=svcs.filter(s=>items.some(it=>it.cat===cat&&it.d===s.d)).length;
+  const isOpen=_catOpen[cat];
+  h+='<div class="cat-sec'+(isOpen?' open':'')+'" data-cat="'+cat+'">';
+  h+='<div class="cat-hdr" onclick="toggleCat(this.parentElement)">';
+  h+='<h3>'+cat+' <span class="cat-ct'+(selCount?' has':'')+'">'+selCount+'/'+svcs.length+'</span></h3>';
+  h+='<div class="cat-acts">';
+  h+='<button onclick="event.stopPropagation();selectAllCat(\''+cat.replace(/'/g,"\\'")+'\')">All</button>';
+  h+='<button onclick="event.stopPropagation();deselectAllCat(\''+cat.replace(/'/g,"\\'")+'\')">None</button>';
+  h+='</div><span class="cat-arrow">&#9654;</span>';
+  h+='</div><div class="cat-body">';
+  svcs.forEach(svc=>{
+   const ai=ALL.findIndex(a=>a.cat===cat&&a.d===svc.d);
+   const isAct=items.some(it=>it.cat===cat&&it.d===svc.d);
+   const dot=svc.daily?(svc.isTravel?' <span class="svc-daily" style="color:var(--amber)" title="Travel day">&#9650;</span>':' <span class="svc-daily" style="color:var(--blue)" title="Daily">&#9679;</span>'):'';
+   h+='<div class="svc-row'+(isAct?' active':'')+'" data-cat="'+cat+'" data-desc="'+svc.d.replace(/"/g,'&amp;quot;')+'" data-idx="'+ai+'">';
+   h+='<input type="checkbox" class="svc-chk"'+(isAct?' checked':'')+' onchange="toggleSvc('+ai+',this.checked)">';
+   h+='<div class="svc-desc">'+svc.d+dot+'</div>';
+   h+='<div class="svc-unit">'+svc.u+'</div>';
+   h+='<div class="svc-rate">$'+svc.r.toFixed(2)+'</div>';
+   h+='</div>';
+  });
+  h+='</div></div>';
+ });
+ document.getElementById('svcCatalogue').innerHTML=h;
+}
+function syncCatalogue(){
+ document.querySelectorAll('.svc-row').forEach(row=>{
+  const cat=row.dataset.cat,desc=row.dataset.desc;
+  const isIn=items.some(it=>it.cat===cat&&it.d===desc);
+  row.classList.toggle('active',isIn);
+  const chk=row.querySelector('.svc-chk');if(chk)chk.checked=isIn;
+ });
+ document.querySelectorAll('.cat-sec').forEach(sec=>{
+  const cat=sec.dataset.cat;const badge=sec.querySelector('.cat-ct');
+  if(badge&&RC[cat]){
+   const sel=RC[cat].filter(s=>items.some(it=>it.cat===cat&&it.d===s.d)).length;
+   badge.textContent=sel+'/'+RC[cat].length;badge.classList.toggle('has',sel>0);
+  }
+ });
+}
+function toggleCat(sec){const cat=sec.dataset.cat;_catOpen[cat]=!_catOpen[cat];sec.classList.toggle('open')}
+function filterSvc(){
+ const q=(document.getElementById('svcSearch').value||'').toLowerCase().trim();
+ const catMatch={};
+ document.querySelectorAll('.svc-row').forEach(row=>{
+  const desc=(row.dataset.desc||'').toLowerCase();
+  const cat=(row.dataset.cat||'').toLowerCase();
+  const match=!q||desc.includes(q)||cat.includes(q);
+  row.classList.toggle('hidden',!match);if(match)catMatch[row.dataset.cat]=true;
+ });
+ document.querySelectorAll('.cat-sec').forEach(sec=>{
+  const cat=sec.dataset.cat;
+  if(q){sec.style.display=catMatch[cat]?'':'none';sec.classList.add('open')}
+  else{sec.style.display='';if(!_catOpen[cat])sec.classList.remove('open')}
+ });
+}
+function toggleSvc(allIdx,checked){
+ const svc=ALL[allIdx];if(!svc)return;
+ if(checked){
+  const days=parseInt(document.getElementById('gDays').value)||1;
+  const trav=parseInt(document.getElementById('gTravel').value)||0;
+  const qty=svc.isTravel?trav:(svc.daily?days:1);
+  items.push({cat:svc.cat,d:svc.d,u:svc.u,r:svc.r,qty,daily:svc.daily,isTravel:svc.isTravel||false});
+  lastFlash=items.length-1;
+ }else{
+  const idx=items.findIndex(it=>it.cat===svc.cat&&it.d===svc.d);
+  if(idx>=0)items.splice(idx,1);
+ }
+ render();
+}
+function selectAllCat(cat){
+ const days=parseInt(document.getElementById('gDays').value)||1;
+ const trav=parseInt(document.getElementById('gTravel').value)||0;
+ RC[cat].forEach(svc=>{
+  if(!items.some(it=>it.cat===cat&&it.d===svc.d)){
+   const qty=svc.isTravel?trav:(svc.daily?days:1);
+   items.push({cat,d:svc.d,u:svc.u,r:svc.r,qty,daily:svc.daily,isTravel:svc.isTravel||false});
+  }
+ });render();
+}
+function deselectAllCat(cat){
+ const rcDescs=new Set(RC[cat].map(s=>s.d));
+ items=items.filter(it=>it.cat!==cat||!rcDescs.has(it.d));render();
+}
+function addCustom(){
+ const d=document.getElementById('cDesc').value.trim();if(!d)return;
+ const u=document.getElementById('cUnit').value.trim()||'Total';
+ const r=parseFloat(document.getElementById('cRate').value)||0;
+ items.push({cat:'Other',d,u,r,qty:1,daily:false,isTravel:false});
+ lastFlash=items.length-1;render();
+ document.getElementById('cDesc').value='';document.getElementById('cUnit').value='';document.getElementById('cRate').value='';
+}
+
+// ═══ LOGISTICS MODAL ═══
+function getLocData(){const loc=document.getElementById('location').value.toLowerCase().trim();for(const[k,v] of Object.entries(LOCATIONS.remote))if(loc.includes(k))return{name:k,...v};return null}
+function getCrew(){let c=crewSize;items.forEach(it=>{const m=it.d.match(/(\d+)\s*person/i);if(m)c=Math.max(c,parseInt(m[1]))});return c||2}
+function openLogistics(){
+ const ld=getLocData();const crew=getCrew();const days=parseInt(document.getElementById('gDays').value)||1;const td=parseInt(document.getElementById('gTravel').value)||0;const nights=days+td;
+ const fl=ld?ld.flight:500,ac=ld?ld.accom:200,cr=ld?ld.car:120;
+ let h='';
+ if(ld)h+='<p style="margin-bottom:10px">Indicative rates for <strong>'+ld.name.charAt(0).toUpperCase()+ld.name.slice(1)+'</strong>'+(ld.region?' ('+ld.region+')':'')+' &middot; '+crew+' crew &middot; '+nights+' nights</p>';
+ else h+='<p style="margin-bottom:10px;color:var(--muted)">No location match. Enter values manually. Rates are base cost (15% added on apply).</p>';
+ h+='<div class="loc-card"><h4>Flights (return per person)</h4><div class="loc-grid"><div class="fg"><label>Crew</label><input type="number" id="logCrew" value="'+crew+'" min="1" oninput="calcLog()"></div><div class="fg"><label>Cost/person $</label><input type="number" id="logFlight" value="'+fl+'" step="10" oninput="calcLog()"></div><div class="fg"><label>Total</label><input type="text" id="logFlightT" readonly style="background:#f9f9f9"></div></div></div>';
+ h+='<div class="loc-card"><h4>Accommodation (per person per night)</h4><div class="loc-grid"><div class="fg"><label>Nights</label><input type="number" id="logNights" value="'+nights+'" min="0" oninput="calcLog()"></div><div class="fg"><label>Rate/night $</label><input type="number" id="logAccom" value="'+ac+'" step="10" oninput="calcLog()"></div><div class="fg"><label>Total</label><input type="text" id="logAccomT" readonly style="background:#f9f9f9"></div></div></div>';
+ h+='<div class="loc-card"><h4>Car Hire (per day, shared)</h4><div class="loc-grid"><div class="fg"><label>Days</label><input type="number" id="logCarD" value="'+(days+td)+'" min="0" oninput="calcLog()"></div><div class="fg"><label>Rate/day $</label><input type="number" id="logCar" value="'+cr+'" step="10" oninput="calcLog()"></div><div class="fg"><label>Total</label><input type="text" id="logCarT" readonly style="background:#f9f9f9"></div></div></div>';
+ h+='<div class="loc-card"><h4>Freight / Other</h4><div class="loc-grid"><div class="fg"><label>Description</label><input type="text" id="logFD" value="ROV Logistics (freight)"></div><div class="fg"><label>Cost $</label><input type="number" id="logFreight" value="0" step="50"></div><div class="fg"></div></div></div>';
+ document.getElementById('logBody').innerHTML=h;document.getElementById('logModal').classList.add('open');calcLog();
+}
+function calcLog(){
+ const c=parseInt(document.getElementById('logCrew').value)||0,f=parseFloat(document.getElementById('logFlight').value)||0;
+ const n=parseInt(document.getElementById('logNights').value)||0,a=parseFloat(document.getElementById('logAccom').value)||0;
+ const cd=parseInt(document.getElementById('logCarD').value)||0,cr=parseFloat(document.getElementById('logCar').value)||0;
+ document.getElementById('logFlightT').value='$'+(c*f).toFixed(0);
+ document.getElementById('logAccomT').value='$'+(c*n*a).toFixed(0);
+ document.getElementById('logCarT').value='$'+(cd*cr).toFixed(0);
+}
+function closeLog(){document.getElementById('logModal').classList.remove('open')}
+function applyLog(){
+ const c=parseInt(document.getElementById('logCrew').value)||0,f=parseFloat(document.getElementById('logFlight').value)||0;
+ const n=parseInt(document.getElementById('logNights').value)||0,a=parseFloat(document.getElementById('logAccom').value)||0;
+ const cd=parseInt(document.getElementById('logCarD').value)||0,cr=parseFloat(document.getElementById('logCar').value)||0;
+ const fd=document.getElementById('logFD').value||'Freight',fr=parseFloat(document.getElementById('logFreight').value)||0;
+ const mk=1.15;
+ if(f>0&&c>0)items.push({cat:'Other',d:'Flights @ cost +15% ('+c+' pax)',u:'Total',r:Math.round(c*f*mk*100)/100,qty:1,daily:false,isTravel:false});
+ if(a>0&&n>0&&c>0)items.push({cat:'Other',d:'Accommodation @ cost +15% ('+c+' pax x '+n+' nights)',u:'Total',r:Math.round(c*n*a*mk*100)/100,qty:1,daily:false,isTravel:false});
+ if(cr>0&&cd>0)items.push({cat:'Other',d:'Car Hire @ cost +15% ('+cd+' days)',u:'Total',r:Math.round(cd*cr*mk*100)/100,qty:1,daily:false,isTravel:false});
+ if(fr>0)items.push({cat:'Other',d:fd+' @ cost +15%',u:'Total',r:Math.round(fr*mk*100)/100,qty:1,daily:false,isTravel:false});
+ closeLog();render();
+}
+
+// ═══ SAVE/LOAD ═══
+function getTermsText(){return document.getElementById('terms').innerText}
+function saveState(){
+ const state={items,crewSize,fields:{}};
+ ['quoteNo','quoteDate','preparedBy','client','contact','location','mobType','proposedDate','scopeTask','gDays','gTravel'].forEach(k=>{state.fields[k]=document.getElementById(k).value});
+ state.fields.terms=getTermsText();
+ localStorage.setItem('fmQuote',JSON.stringify(state));
+ _unsaved=false;
+ document.getElementById('saveInd').textContent='Saved!';document.getElementById('saveInd').style.background='rgba(5,150,105,.3)';
+ setTimeout(()=>{document.getElementById('saveInd').textContent='Saved';document.getElementById('saveInd').style.background='rgba(255,255,255,.15)'},2000);
+ alert('Quote saved to browser storage.\n\nNote: A hard refresh (Ctrl+Shift+R) or clearing browser data will remove this save. Use PDF/Excel export for permanent copies.');
+}
+function loadState(){
+ const raw=localStorage.getItem('fmQuote');if(!raw)return alert('No saved quote found.');
+ const state=JSON.parse(raw);items=state.items||[];crewSize=state.crewSize||0;
+ const f=state.fields||{};
+ ['quoteNo','quoteDate','preparedBy','client','contact','location','mobType','proposedDate','scopeTask','gDays','gTravel'].forEach(k=>{const el=document.getElementById(k);if(el&&f[k]!==undefined)el.value=f[k]});
+ if(f.terms)document.getElementById('terms').innerText=f.terms;
+ detectLocation();
+ CAT_ORDER.forEach(c=>{_catOpen[c]=items.some(it=>it.cat===c)});
+ renderCatalogue();render();document.getElementById('saveInd').textContent='Loaded';
+}
+
+// ═══ RENDER ═══
+function fmt(n){return '$ '+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',')}
+function render(){
+ const w=document.getElementById('tblWrap'),t=document.getElementById('totals');
+ document.getElementById('itemCount').textContent=items.length+' item'+(items.length!==1?'s':'');
+ if(!items.length){
+  w.innerHTML='<div class="empty">No items yet — select services above or load a template.</div>';t.style.display='none';
+  document.getElementById('hdrTotal').style.display='none';
+  document.getElementById('floatTotal').textContent='';
+  syncCatalogue();return;
+ }
+ const co=['Personnel','Plant and Equipment','Vessels & Functionality','Other'];
+ const g={};let cc={};
+ items.forEach((it,i)=>{it._i=i;if(!g[it.cat]){g[it.cat]=[];cc[it.cat]=0};g[it.cat].push(it);cc[it.cat]++});
+ let h='<table class="lt"><thead><tr><th style="width:50px">Qty</th><th>Description</th><th style="width:80px">Unit</th><th style="width:85px;text-align:right">Rate</th><th style="width:85px;text-align:right">Total</th><th style="width:60px"></th></tr></thead><tbody>';
+ co.forEach(cat=>{if(!g[cat])return;
+  h+='<tr class="cat-row"><td colspan="6">'+cat+' <span style="font-weight:400;font-size:9px">('+cc[cat]+')</span></td></tr>';
+  let catSub=0;
+  g[cat].forEach(it=>{const tot=Math.round(it.r*it.qty*100)/100;catSub+=tot;
+   const isZero=it.r===0;
+   const fl=it._i===lastFlash?' class="flash"':'';
+   const dot=it.daily?(it.isTravel?' <span style="color:var(--amber);font-size:9px" title="Travel day item">&#9650;</span>':' <span style="color:var(--blue);font-size:9px" title="Daily item">&#9679;</span>'):'';
+   h+='<tr'+(fl||(isZero?' class="zero-warn"':''))+'><td><input class="rq" type="number" value="'+it.qty+'" min="0" step="0.5" onchange="uq('+it._i+',this.value)"></td><td>'+it.d+dot+(isZero?' <span style="color:var(--red);font-size:9px;font-weight:600">SET RATE</span>':'')+'</td><td style="font-size:10px;color:var(--muted)">'+it.u+'</td><td class="right"><input class="rr" type="number" value="'+it.r.toFixed(2)+'" step="0.01" onchange="ur('+it._i+',this.value)"></td><td class="right">'+fmt(tot)+'</td><td style="text-align:center"><button class="btn btn-d" onclick="dup('+it._i+')" title="Duplicate">&#9898;</button><button class="btn btn-d" onclick="rm('+it._i+')" title="Remove">&#10005;</button></td></tr>';
+  });
+  h+='<tr class="cat-subtotal"><td colspan="4" style="text-align:right;padding-right:12px">'+cat+' subtotal</td><td class="right">'+fmt(catSub)+'</td><td></td></tr>';
+ });
+ h+='</tbody></table>';
+ h+='<div style="padding:4px 16px;font-size:9px;color:var(--muted)"><span style="color:var(--blue)">&#9679;</span> daily &nbsp;<span style="color:var(--amber)">&#9650;</span> travel day</div>';
+ w.innerHTML=h;lastFlash=-1;
+ const sub=items.reduce((s,it)=>s+Math.round(it.r*it.qty*100)/100,0);
+ const gst=Math.round(sub*10)/100;
+ document.getElementById('subtotal').textContent=fmt(sub);
+ document.getElementById('gst').textContent=fmt(gst);
+ document.getElementById('grandTotal').textContent=fmt(sub+gst);
+ t.style.display='';
+ const ht=document.getElementById('hdrTotal');ht.style.display='';
+ document.getElementById('hdrTotalVal').textContent=fmt(sub);
+ document.getElementById('floatTotal').textContent='Total: '+fmt(sub+gst)+' (inc. GST)';
+ syncCatalogue();
+ _unsaved=true;document.getElementById('saveInd').textContent='Unsaved';document.getElementById('saveInd').style.background='rgba(217,119,6,.3)';
+}
+function uq(i,v){items[i].qty=parseFloat(v)||0;render()}
+function ur(i,v){items[i].r=parseFloat(v)||0;render()}
+function rm(i){items.splice(i,1);render()}
+function dup(i){items.splice(i+1,0,{...items[i]});lastFlash=i+1;render()}
+
+// ═══ HELPERS ═══
+function getPrep(){return document.getElementById('preparedBy').value}
+function fmtDate(){const v=document.getElementById('quoteDate').value;if(!v)return'';const d=new Date(v+'T00:00:00');return['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()]+', '+d.getDate()+' '+['January','February','March','April','May','June','July','August','September','October','November','December'][d.getMonth()]+' '+d.getFullYear()}
+function fp(n){return n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',')}
+function gv(id){return document.getElementById(id).value}
+function checkLib(name){
+ if(name==='pdf'&&(!window.jspdf||!window.jspdf.jsPDF)){alert('PDF library failed to load.\n\nThis usually happens when opening the file from OneDrive or a network folder.\n\nFix: Copy this file to your Desktop or Documents folder and open it from there.');return false}
+ if(name==='xlsx'&&!window.XLSX){alert('Excel library failed to load.\n\nCopy this file to a local folder and reopen.');return false}
+ return true;
+}
+
+// ═══ PDF ═══
+function genPDF(){
+ if(!items.length)return alert('Add items first.');
+ if(!checkLib('pdf'))return;
+ const{jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+ const W=210,H=297,mL=12,mR=12,cW=W-mL-mR;
+ doc.setFontSize(7);doc.setTextColor(100,100,100);doc.text('QA007FUS-0017',mL,14);doc.text('Revision Date 30/06/2025',mL,18);
+ try{doc.addImage(DNV_B64,'PNG',mL,22,18,22)}catch(e){}
+ try{doc.addImage(LOGO_B64,'PNG',W-mR-70,10,70,26)}catch(e){}
+ doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(60,60,60);const rx=W-mR;
+ doc.text('Tel: (08) 9437 3900',rx,42,{align:'right'});doc.text('ABN: 81 059 653 459',rx,46,{align:'right'});doc.text('13 Possner Way, Henderson WA 6166',rx,50,{align:'right'});
+ const bY=56;doc.setFillColor(0,32,96);doc.rect(mL,bY,cW,7,'F');
+ doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(255,255,255);
+ doc.text('PLEASE EMAIL PURCHASE ORDERS TO OPERATIONS@FRANMARINE.COM.AU',W/2,bY+4.8,{align:'center'});
+ let y=bY+12;
+ doc.setDrawColor(160,160,160);doc.setLineWidth(0.3);
+ doc.rect(mL,y,cW,13);
+ doc.setFontSize(16);doc.setFont('helvetica','bold');doc.setTextColor(0,0,0);
+ doc.text('QUOTATION FORM',W/2,y+9,{align:'center'});
+ y+=13;
+ const fields=[['Date',fmtDate()],['Quote No.',gv('quoteNo')],['Client',gv('client')],['Contact',gv('contact')],['Location',gv('location')],['Proposed Date',gv('proposedDate')],['Scope/Task',gv('scopeTask')],['Prepared by',getPrep()]];
+ const labelW=36;doc.setFontSize(9);
+ fields.forEach(([l,v])=>{
+  doc.setDrawColor(160,160,160);doc.setLineWidth(0.3);
+  doc.rect(mL,y,labelW,7);doc.rect(mL+labelW,y,cW-labelW,7);
+  doc.setFont('helvetica','bold');doc.setTextColor(0,0,0);doc.text(l,mL+2,y+4.8);
+  doc.setFont('helvetica','normal');doc.setTextColor(30,30,30);doc.text(v||'',mL+labelW+3,y+4.8);
+  y+=7;
+ });
+ y+=8;
+ const co=['Personnel','Plant and Equipment','Vessels & Functionality','Other'];const g={};
+ items.forEach(it=>{if(!g[it.cat])g[it.cat]=[];g[it.cat].push(it)});
+ let body=[];co.forEach(cat=>{if(!g[cat])return;
+  body.push([{content:cat,colSpan:5,styles:{fontStyle:'italic',fillColor:[214,228,240],textColor:[0,32,96],fontSize:8,cellPadding:{top:2,bottom:2,left:3,right:3}}}]);
+  g[cat].forEach(it=>{const tot=Math.round(it.r*it.qty*100)/100;const qs=it.qty%1===0?String(Math.round(it.qty)):String(it.qty);
+   body.push([{content:qs,styles:{halign:'center'}},it.d,it.u,{content:'$ '+fp(it.r),styles:{halign:'right'}},{content:tot===0?'$ \u2013':'$ '+fp(tot),styles:{halign:'right'}}])});
+ });
+ doc.autoTable({startY:y,margin:{left:mL,right:mR},head:[['Qty','Description','Unit Type','Unit (AUD)','Total']],body,theme:'grid',
+  headStyles:{fillColor:[0,32,96],textColor:[255,255,255],fontSize:8,fontStyle:'bold',cellPadding:{top:2.5,bottom:2.5,left:3,right:3}},
+  bodyStyles:{fontSize:8,cellPadding:{top:2,bottom:2,left:3,right:3},textColor:[30,30,30],lineColor:[200,200,200],lineWidth:0.15},
+  alternateRowStyles:{fillColor:[248,248,248]},
+  columnStyles:{0:{cellWidth:15,halign:'center'},1:{cellWidth:'auto'},2:{cellWidth:25},3:{cellWidth:28,halign:'right'},4:{cellWidth:28,halign:'right'}}
+ });
+ let fy=doc.lastAutoTable.finalY+2;const sub=items.reduce((s,it)=>s+Math.round(it.r*it.qty*100)/100,0);const gst=Math.round(sub*10)/100;const grand=sub+gst;
+ const tX=W-mR-58,vX=W-mR-2;
+ if(fy>H-80){doc.addPage();fy=20}
+ doc.setDrawColor(160,160,160);doc.setLineWidth(0.3);doc.line(tX-5,fy,W-mR,fy);fy+=5;
+ doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(0,0,0);
+ doc.text('Sub-Total',tX,fy);doc.text('$',tX+30,fy);doc.text(fp(sub),vX,fy,{align:'right'});fy+=5;
+ doc.text('GST',tX,fy);doc.text('$',tX+30,fy);doc.text(fp(gst),vX,fy,{align:'right'});fy+=5;
+ doc.setFont('helvetica','bold');doc.setTextColor(0,32,96);doc.text('Total AUD',tX,fy);doc.text('$',tX+30,fy);doc.text(fp(grand),vX,fy,{align:'right'});fy+=3;
+ doc.setDrawColor(0,32,96);doc.setLineWidth(0.5);doc.line(tX-5,fy,W-mR,fy);
+ fy+=8;if(fy>H-50){doc.addPage();fy=20}
+ doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(0,0,0);doc.text('Please note:',mL,fy);fy+=4;
+ doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(60,60,60);
+ doc.splitTextToSize(getTermsText(),cW-4).forEach(line=>{if(fy>H-10){doc.addPage();fy=20};doc.text(line,mL+2,fy);fy+=3.2});
+ doc.save((gv('quoteNo')||'Quote')+'_-_'+(gv('client')||'Client').replace(/\s+/g,'_')+'.pdf');
+}
+
+// ═══ EXCEL ═══
+function genXLSX(){
+ if(!items.length)return alert('Add items first.');
+ if(!checkLib('xlsx'))return;
+ const wb=XLSX.utils.book_new();
+ const rows=[];
+ rows.push(['QA007FUS-0017','','','Revision Date 30/06/2025','']);
+ rows.push(['','','','','Tel: (08) 9437 3900']);
+ rows.push(['','','','','ABN: 81 059 653 459']);
+ rows.push(['','','','','13 Possner Way, Henderson WA 6166']);
+ rows.push([]);
+ rows.push(['PLEASE EMAIL PURCHASE ORDERS TO OPERATIONS@FRANMARINE.COM.AU','','','','']);
+ rows.push([]);
+ rows.push(['QUOTATION FORM','','','','']);
+ rows.push([]);
+ const fieldData=[['Date',fmtDate()],['Quote No.',gv('quoteNo')],['Client',gv('client')],['Contact',gv('contact')],['Location',gv('location')],['Proposed Date',gv('proposedDate')],['Scope/Task',gv('scopeTask')],['Prepared by',getPrep()]];
+ const detStartR=rows.length;
+ fieldData.forEach(([l,v])=>rows.push([l,v||'','','','']));
+ rows.push([]);
+ rows.push([]);
+ const hdrRow=rows.length;
+ rows.push(['Qty','Description','Unit Type','Unit (AUD)','Total']);
+ const co=['Personnel','Plant and Equipment','Vessels & Functionality','Other'];
+ const g={};items.forEach(it=>{if(!g[it.cat])g[it.cat]=[];g[it.cat].push(it)});
+ const catRows=[];
+ co.forEach(cat=>{if(!g[cat])return;
+  catRows.push(rows.length);
+  rows.push([cat,'','','','']);
+  g[cat].forEach(it=>{const tot=Math.round(it.r*it.qty*100)/100;
+   rows.push([it.qty,it.d,it.u,it.r,tot])});
+ });
+ const sub=items.reduce((s,it)=>s+Math.round(it.r*it.qty*100)/100,0);
+ const gst=Math.round(sub*10)/100;
+ rows.push([]);
+ const subRow=rows.length;
+ rows.push(['','','','Sub-Total',sub]);
+ rows.push(['','','','GST',gst]);
+ rows.push(['','','','Total AUD',sub+gst]);
+ rows.push([]);
+ rows.push(['Please note:']);
+ getTermsText().split('\n').forEach(l=>rows.push([l]));
+ const ws=XLSX.utils.aoa_to_sheet(rows);
+ ws['!cols']=[{wch:12},{wch:45},{wch:14},{wch:16},{wch:16}];
+ ws['!merges']=[
+  {s:{r:5,c:0},e:{r:5,c:4}},
+  {s:{r:7,c:0},e:{r:7,c:4}},
+ ];
+ for(let i=0;i<fieldData.length;i++)ws['!merges'].push({s:{r:detStartR+i,c:1},e:{r:detStartR+i,c:4}});
+ catRows.forEach(r=>ws['!merges'].push({s:{r,c:0},e:{r,c:4}}));
+ const navyFill={fgColor:{rgb:"002060"}};
+ const blueFill={fgColor:{rgb:"D6E4F0"}};
+ const hdrFont={bold:true,color:{rgb:"FFFFFF"},sz:10};
+ const borderThin={top:{style:'thin',color:{rgb:'C0C0C0'}},bottom:{style:'thin',color:{rgb:'C0C0C0'}},left:{style:'thin',color:{rgb:'C0C0C0'}},right:{style:'thin',color:{rgb:'C0C0C0'}}};
+ const moneyFmt='$ #,##0.00;$ -#,##0.00;$ -';
+ try{
+  const bc=XLSX.utils.encode_cell({r:5,c:0});
+  if(ws[bc])ws[bc].s={fill:navyFill,font:{bold:true,color:{rgb:'FFFFFF'},sz:9},alignment:{horizontal:'center',vertical:'center'}};
+  const tc=XLSX.utils.encode_cell({r:7,c:0});
+  if(ws[tc])ws[tc].s={font:{bold:true,sz:18,color:{rgb:'000000'}},alignment:{horizontal:'center',vertical:'center'},border:borderThin};
+  for(let i=0;i<fieldData.length;i++){
+   const r=detStartR+i;
+   const lc=XLSX.utils.encode_cell({r,c:0});const vc=XLSX.utils.encode_cell({r,c:1});
+   if(ws[lc])ws[lc].s={font:{bold:true,sz:10},border:borderThin,alignment:{vertical:'center'}};
+   if(ws[vc])ws[vc].s={font:{sz:10},border:borderThin,alignment:{vertical:'center'}};
+  }
+  for(let c=0;c<5;c++){const cell=XLSX.utils.encode_cell({r:hdrRow,c});
+   if(ws[cell])ws[cell].s={fill:navyFill,font:hdrFont,border:borderThin,alignment:{horizontal:c===0?'center':c>=3?'right':'left',vertical:'center'}}}
+  catRows.forEach(r=>{for(let c=0;c<5;c++){const cell=XLSX.utils.encode_cell({r,c});
+   if(ws[cell])ws[cell].s={fill:blueFill,font:{bold:true,italic:true,color:{rgb:"002060"},sz:10},border:borderThin,alignment:{horizontal:'center'}}}});
+  for(let r=hdrRow+1;r<subRow;r++){
+   if(catRows.includes(r))continue;
+   for(let c=0;c<5;c++){const cell=XLSX.utils.encode_cell({r,c});
+    if(!ws[cell])continue;
+    if((c===3||c===4)&&typeof ws[cell].v==='number')ws[cell].s={numFmt:moneyFmt,border:borderThin,alignment:{horizontal:'right'}};
+    else if(c===0)ws[cell].s={border:borderThin,alignment:{horizontal:'center'}};
+    else ws[cell].s={border:borderThin};
+   }
+  }
+  for(let i=0;i<3;i++){const r=subRow+i;
+   const d=XLSX.utils.encode_cell({r,c:3});const e=XLSX.utils.encode_cell({r,c:4});
+   if(ws[d])ws[d].s={font:{bold:i===2,sz:i===2?12:10},alignment:{horizontal:'right'},border:borderThin};
+   if(ws[e])ws[e].s={numFmt:moneyFmt,font:{bold:i===2,sz:i===2?12:10},alignment:{horizontal:'right'},border:{top:i===2?{style:'double',color:{rgb:'002060'}}:borderThin.top,bottom:borderThin.bottom,left:borderThin.left,right:borderThin.right}};
+  }
+  for(let r=1;r<=3;r++){const cell=XLSX.utils.encode_cell({r,c:4});if(ws[cell])ws[cell].s={font:{sz:9,color:{rgb:'404040'}},alignment:{horizontal:'right'}}}
+  const rc=XLSX.utils.encode_cell({r:0,c:0});if(ws[rc])ws[rc].s={font:{sz:7,color:{rgb:'808080'}}};
+ }catch(e){console.log('Styling not supported in this XLSX build:',e)}
+ XLSX.utils.book_append_sheet(wb,ws,'Quote');
+ XLSX.writeFile(wb,(gv('quoteNo')||'Quote')+'_-_'+(gv('client')||'Client').replace(/\s+/g,'_')+'.xlsx');
+}
+
+// ═══ FLOATING BAR ═══
+const _origActions=document.querySelector('.actions');
+const _floatBar=document.getElementById('floatBar');
+const _fbObserver=new IntersectionObserver(([entry])=>{
+ _floatBar.classList.toggle('show',!entry.isIntersecting&&items.length>0);
+},{threshold:0});
+_fbObserver.observe(_origActions);
+
+// ═══ AUTOSAVE ═══
+setInterval(()=>{
+ if(!_unsaved||!items.length)return;
+ const state={items,crewSize,fields:{}};
+ ['quoteNo','quoteDate','preparedBy','client','contact','location','mobType','proposedDate','scopeTask','gDays','gTravel'].forEach(k=>{state.fields[k]=document.getElementById(k).value});
+ state.fields.terms=getTermsText();
+ localStorage.setItem('fmQuote',JSON.stringify(state));
+ _unsaved=false;
+ document.getElementById('saveInd').textContent='Auto-saved';document.getElementById('saveInd').style.background='rgba(5,150,105,.3)';
+ setTimeout(()=>{document.getElementById('saveInd').textContent='Saved';document.getElementById('saveInd').style.background='rgba(255,255,255,.15)'},2000);
+},60000);
+
+// ═══ UNSAVED WARNING ═══
+window.addEventListener('beforeunload',e=>{if(_unsaved&&items.length){e.preventDefault();e.returnValue=''}});
+renderCatalogue();
+
+</script></body></html>
