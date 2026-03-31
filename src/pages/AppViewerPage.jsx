@@ -88,7 +88,7 @@ export default function AppViewerPage() {
       <iframe
         ref={iframeRef}
         src={`${SANDBOX_BASE}/sandbox/${id}`}
-        sandbox="allow-scripts allow-forms allow-modals allow-popups allow-same-origin"
+        sandbox="allow-scripts allow-forms allow-modals allow-popups allow-same-origin allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
         title={app.name}
         style={{ flex: 1, width: '100%', border: 'none', background: 'white' }}
       />

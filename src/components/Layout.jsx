@@ -1,8 +1,10 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function Layout() {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -11,11 +13,13 @@ export default function Layout() {
   };
 
   const style = {};
-  if (user?.workspace?.primaryColor) {
-    style['--primary'] = user.workspace.primaryColor;
-  }
-  if (user?.workspace?.accentColor) {
-    style['--accent'] = user.workspace.accentColor;
+  const ws = user?.workspace;
+  if (theme === 'light') {
+    if (ws?.primaryColorLight) style['--primary'] = ws.primaryColorLight;
+    if (ws?.accentColorLight) style['--accent'] = ws.accentColorLight;
+  } else {
+    if (ws?.primaryColor) style['--primary'] = ws.primaryColor;
+    if (ws?.accentColor) style['--accent'] = ws.accentColor;
   }
 
   const logoSrc = user?.workspace?.logoData || null;
@@ -43,6 +47,13 @@ export default function Layout() {
         </nav>
 
         <div className="topbar-user">
+          <button
+            className="btn-theme-toggle"
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
           <span>{user?.displayName}</span>
           <button className="btn btn-ghost btn-sm" onClick={handleLogout}>
             Log out
