@@ -37,6 +37,11 @@ export default function DashboardPage() {
   const [openFolderId, setOpenFolderId] = useState(null);
   const [editingFolderName, setEditingFolderName] = useState(false);
   const [folderNameDraft, setFolderNameDraft] = useState('');
+  const [folderDragging, setFolderDragging] = useState(false);
+  const [folderDragOutside, setFolderDragOutside] = useState(false);
+  const folderDragRef = useRef({ folderId: null, appId: null, outsidePopover: false });
+  const folderTouchRef = useRef({ folderId: null, appId: null, el: null, clone: null, dragging: false, startX: 0, startY: 0 });
+  const popoverRef = useRef(null);
 
   // Jiggle / drag mode
   const [jiggleId, setJiggleId] = useState(null);
@@ -469,6 +474,101 @@ export default function DashboardPage() {
     }
   }
 
+  // ── Folder popover drag-out ────────────────────────────────────────────────
+
+  function onFolderAppDragStart(e, folderId, appId) {
+    folderDragRef.current = { folderId, appId, outsidePopover: false };
+    setFolderDragging(true);
+    setFolderDragOutside(false);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', '');
+  }
+
+  function onFolderPopoverDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    folderDragRef.current.outsidePopover = false;
+    if (folderDragging) setFolderDragOutside(false);
+  }
+
+  function onFolderOverlayDragOver(e) {
+    e.preventDefault();
+    if (!folderDragRef.current.appId) return;
+    folderDragRef.current.outsidePopover = true;
+    setFolderDragOutside(true);
+  }
+
+  function onFolderAppDragEnd() {
+    const { folderId, appId, outsidePopover } = folderDragRef.current;
+    if (outsidePopover && folderId && appId) {
+      handleRemoveFromFolder(folderId, appId);
+    }
+    folderDragRef.current = { folderId: null, appId: null, outsidePopover: false };
+    setFolderDragging(false);
+    setFolderDragOutside(false);
+  }
+
+  function onFolderAppTouchStart(e, folderId, appId) {
+    const touch = e.touches[0];
+    folderTouchRef.current = {
+      folderId, appId, el: e.currentTarget, clone: null,
+      dragging: false, startX: touch.clientX, startY: touch.clientY,
+    };
+    folderDragRef.current = { folderId, appId, outsidePopover: false };
+  }
+
+  function onFolderTouchMove(e) {
+    const ft = folderTouchRef.current;
+    if (!ft.appId) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - ft.startX;
+    const dy = touch.clientY - ft.startY;
+    if (!ft.dragging && Math.sqrt(dx * dx + dy * dy) < 10) return;
+
+    if (!ft.dragging) {
+      ft.dragging = true;
+      setFolderDragging(true);
+      const clone = ft.el.cloneNode(true);
+      clone.className = 'app-tile drag-clone';
+      const rect = ft.el.getBoundingClientRect();
+      clone.style.width = rect.width + 'px';
+      clone.style.position = 'fixed';
+      clone.style.zIndex = '300';
+      clone.style.pointerEvents = 'none';
+      document.body.appendChild(clone);
+      ft.clone = clone;
+    }
+
+    e.preventDefault();
+    if (ft.clone) {
+      const rect = ft.el.getBoundingClientRect();
+      ft.clone.style.left = (touch.clientX - rect.width / 2) + 'px';
+      ft.clone.style.top = (touch.clientY - rect.height / 2) + 'px';
+    }
+
+    if (popoverRef.current) {
+      const pr = popoverRef.current.getBoundingClientRect();
+      const outside = touch.clientX < pr.left || touch.clientX > pr.right ||
+                      touch.clientY < pr.top || touch.clientY > pr.bottom;
+      setFolderDragOutside(outside);
+      folderDragRef.current.outsidePopover = outside;
+    }
+  }
+
+  function onFolderTouchEnd() {
+    const ft = folderTouchRef.current;
+    if (ft.clone) ft.clone.remove();
+
+    if (ft.dragging && folderDragRef.current.outsidePopover && ft.folderId && ft.appId) {
+      handleRemoveFromFolder(ft.folderId, ft.appId);
+    }
+
+    folderTouchRef.current = { folderId: null, appId: null, el: null, clone: null, dragging: false, startX: 0, startY: 0 };
+    folderDragRef.current = { folderId: null, appId: null, outsidePopover: false };
+    setFolderDragging(false);
+    setFolderDragOutside(false);
+  }
+
   // ── Click handlers ────────────────────────────────────────────────────────
 
   function handleTileClick(e, item) {
@@ -731,8 +831,20 @@ export default function DashboardPage() {
 
       {/* Folder popover */}
       {openFolder && (
-        <div className="folder-popover-overlay" onClick={() => setOpenFolderId(null)}>
-          <div className="folder-popover" onClick={(e) => e.stopPropagation()}>
+        <div
+          className={`folder-popover-overlay${folderDragOutside ? ' folder-drag-outside' : ''}`}
+          onClick={() => { if (!folderDragging) setOpenFolderId(null); }}
+          onDragOver={onFolderOverlayDragOver}
+          onTouchMove={onFolderTouchMove}
+          onTouchEnd={onFolderTouchEnd}
+        >
+          {folderDragOutside && <div className="folder-drag-outside-hint">Release to remove from folder</div>}
+          <div
+            className="folder-popover"
+            ref={popoverRef}
+            onClick={(e) => e.stopPropagation()}
+            onDragOver={onFolderPopoverDragOver}
+          >
             <div className="folder-popover-header">
               {editingFolderName ? (
                 <input
@@ -759,7 +871,11 @@ export default function DashboardPage() {
                 <div
                   key={app.id}
                   className="app-tile"
-                  onClick={() => { setOpenFolderId(null); navigate(`/app/${app.id}`); }}
+                  draggable
+                  onDragStart={(e) => onFolderAppDragStart(e, openFolder.id, app.id)}
+                  onDragEnd={onFolderAppDragEnd}
+                  onTouchStart={(e) => onFolderAppTouchStart(e, openFolder.id, app.id)}
+                  onClick={() => { if (!folderDragging) { setOpenFolderId(null); navigate(`/app/${app.id}`); } }}
                   title={app.description || app.name}
                 >
                   <button
