@@ -217,7 +217,7 @@ export default function UploadPage() {
       showToast('Copied to clipboard', 'success');
       setTimeout(() => setCopied(false), 3000);
     } catch {
-      showToast('Failed to copy \u2014 select and copy manually', 'error');
+      showToast('Failed to copy — select and copy manually', 'error');
     }
   }
 
@@ -303,7 +303,7 @@ export default function UploadPage() {
               <p className="ai-locked-text">
                 <strong>Smart AI uploads</strong> can auto-convert any file to HTML.
               </p>
-              <span className="btn btn-primary btn-sm">Upgrade to Pro \u2014 $12/mo</span>
+              <span className="btn btn-primary btn-sm">Upgrade to Pro — $12/mo</span>
             </div>
           )}
 
@@ -333,7 +333,7 @@ export default function UploadPage() {
           >
             <div className="upload-zone-icon">📂</div>
             <h3>Drag &amp; drop your file here</h3>
-            <p>or click to browse \u2014 .html, .jsx, .tsx, .vue, .css, .js, .py, .zip and more</p>
+            <p>or click to browse — .html, .jsx, .tsx, .vue, .css, .js, .py, .zip and more</p>
             <p className="upload-zone-hint">You can also paste code (Ctrl+V) while this area is focused</p>
             <input
               ref={fileInputRef}
