@@ -47,7 +47,7 @@ export default function UpgradeModal({ onClose, limitMessage }) {
         </div>
 
         <div className="upgrade-modal-price">
-          <span className="upgrade-modal-amount">$5</span>
+          <span className="upgrade-modal-amount">$12</span>
           <span className="upgrade-modal-period">/month per workspace</span>
         </div>
 
@@ -57,7 +57,7 @@ export default function UpgradeModal({ onClose, limitMessage }) {
             onClick={handleUpgrade}
             disabled={loading}
           >
-            {loading ? <span className="spinner" /> : 'Upgrade to Pro — $5/mo'}
+            {loading ? <span className="spinner" /> : 'Upgrade to Pro — $12/mo'}
           </button>
         ) : (
           <p className="upgrade-modal-non-admin">

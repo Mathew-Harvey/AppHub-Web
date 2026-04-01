@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export default function Toast({ message, type = 'info', onClose, duration = 4000 }) {
   useEffect(() => {
@@ -13,25 +13,29 @@ export default function Toast({ message, type = 'info', onClose, duration = 4000
   );
 }
 
-// Hook for managing toasts
 export function useToast() {
-  const [toast, setToast] = useState(null);
+  const [toasts, setToasts] = useState([]);
 
-  function showToast(message, type = 'info') {
-    setToast({ message, type, key: Date.now() });
-  }
+  const showToast = useCallback((message, type = 'info') => {
+    const id = Date.now() + Math.random();
+    setToasts(prev => [...prev.slice(-2), { message, type, id }]);
+  }, []);
 
-  function clearToast() {
-    setToast(null);
-  }
+  const removeToast = useCallback((id) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
 
-  const ToastElement = toast ? (
-    <Toast
-      key={toast.key}
-      message={toast.message}
-      type={toast.type}
-      onClose={clearToast}
-    />
+  const ToastElement = toasts.length > 0 ? (
+    <div className="toast-stack">
+      {toasts.map((t, i) => (
+        <Toast
+          key={t.id}
+          message={t.message}
+          type={t.type}
+          onClose={() => removeToast(t.id)}
+        />
+      ))}
+    </div>
   ) : null;
 
   return { showToast, ToastElement };

@@ -21,6 +21,11 @@ export default function AppViewerPage() {
   const [conversionInfo, setConversionInfo] = useState(null);
   const updateFileRef = useRef(null);
 
+  const [showEdit, setShowEdit] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [saving, setSaving] = useState(false);
+
   useEffect(() => { loadApp(); }, [id]);
   useEffect(() => {
     if (searchParams.get('update') === 'true' && app) setShowUpdate(true);
@@ -70,6 +75,27 @@ export default function AppViewerPage() {
 
   const canManage = app.uploadedByEmail === user?.email || user?.role === 'admin';
 
+  function openEdit() {
+    setEditName(app.name);
+    setEditDescription(app.description || '');
+    setShowEdit(true);
+  }
+
+  async function handleSaveEdit() {
+    if (!editName.trim()) return;
+    setSaving(true);
+    try {
+      const data = await api.updateApp(id, { name: editName.trim(), description: editDescription.trim() });
+      setApp({ ...app, ...data.app });
+      setShowEdit(false);
+      showToast('App details updated', 'success');
+    } catch (err) {
+      showToast(err.error || 'Failed to update', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <div className="app-viewer">
       <div className="app-viewer-header">
@@ -80,15 +106,39 @@ export default function AppViewerPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span className="app-viewer-builder">Built by {app.uploadedBy}</span>
           {canManage && (
-            <button className="btn btn-ghost btn-sm" onClick={() => setShowUpdate(true)}>Update</button>
+            <>
+              <button className="btn btn-ghost btn-sm" onClick={openEdit}>Edit</button>
+              <button className="btn btn-ghost btn-sm" onClick={() => setShowUpdate(true)}>Update File</button>
+            </>
           )}
         </div>
       </div>
 
+      {showEdit && (
+        <div className="app-edit-panel">
+          <div className="app-edit-grid">
+            <div className="form-group">
+              <label className="label">App Name</label>
+              <input className="input" value={editName} onChange={(e) => setEditName(e.target.value)} maxLength={100} />
+            </div>
+            <div className="form-group">
+              <label className="label">Description</label>
+              <input className="input" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} placeholder="Optional" maxLength={500} />
+            </div>
+          </div>
+          <div className="app-edit-actions">
+            <button className="btn btn-primary btn-sm" onClick={handleSaveEdit} disabled={saving || !editName.trim()}>
+              {saving ? <span className="spinner" /> : 'Save'}
+            </button>
+            <button className="btn btn-ghost btn-sm" onClick={() => setShowEdit(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
+
       <iframe
         ref={iframeRef}
         src={`${SANDBOX_BASE}/sandbox/${id}`}
-        sandbox="allow-scripts allow-forms allow-modals allow-popups allow-same-origin allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
+        sandbox="allow-scripts allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
         title={app.name}
         style={{ flex: 1, width: '100%', border: 'none', background: 'white' }}
       />

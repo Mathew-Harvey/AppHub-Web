@@ -195,7 +195,6 @@ export default function UploadPage() {
 
       await api.uploadApp(formData);
       setUploadSuccess(true);
-      setTimeout(() => navigate('/'), 2500);
     } catch (err) {
       if (isPlanLimitError(err)) {
         setUpgradeMessage(err.message);
@@ -261,6 +260,9 @@ export default function UploadPage() {
         <div className="upload-success-icon">{icon}</div>
         <h2>{name}</h2>
         <p>Your app is live. Your team can use it now.</p>
+        <button className="btn btn-primary" onClick={() => navigate('/')} style={{ marginTop: 16 }}>
+          Go to Dashboard
+        </button>
       </div>
     );
   }
@@ -301,7 +303,7 @@ export default function UploadPage() {
               <p className="ai-locked-text">
                 <strong>Smart AI uploads</strong> can auto-convert any file to HTML.
               </p>
-              <span className="btn btn-primary btn-sm">Upgrade to Pro — $5/mo</span>
+              <span className="btn btn-primary btn-sm">Upgrade to Pro — $12/mo</span>
             </div>
           )}
 
