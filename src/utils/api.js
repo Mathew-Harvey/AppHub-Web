@@ -18,7 +18,9 @@ async function request(url, options = {}) {
   const data = await res.json();
 
   if (!res.ok) {
-    throw { status: res.status, ...data };
+    const err = new Error(data.error || data.message || 'Request failed');
+    Object.assign(err, { status: res.status, ...data });
+    throw err;
   }
 
   return data;
@@ -81,4 +83,7 @@ export const api = {
 
   // File converter
   convertToHtml: (formData, signal) => request('/convert', { method: 'POST', body: formData, signal }),
+
+  // Sandbox
+  getSandboxToken: () => request('/auth/sandbox-token'),
 };

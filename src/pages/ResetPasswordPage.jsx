@@ -41,6 +41,10 @@ export default function ResetPasswordPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    if (password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+      setError('Password must be at least 8 characters with one uppercase letter and one number');
+      return;
+    }
     if (password !== confirm) {
       setError('Passwords do not match');
       return;
@@ -70,7 +74,7 @@ export default function ResetPasswordPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="At least 8 characters"
+              placeholder="Min 8 chars, one uppercase, one number"
               required
               minLength={8}
               autoFocus

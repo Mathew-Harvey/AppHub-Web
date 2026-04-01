@@ -14,6 +14,7 @@ export default function AppViewerPage() {
 
   const [app, setApp] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sandboxToken, setSandboxToken] = useState(null);
   const [showUpdate, setShowUpdate] = useState(false);
   const [updateFile, setUpdateFile] = useState(null);
   const [updateDragOver, setUpdateDragOver] = useState(false);
@@ -27,6 +28,9 @@ export default function AppViewerPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => { loadApp(); }, [id]);
+  useEffect(() => {
+    api.getSandboxToken().then(data => setSandboxToken(data.token)).catch(() => {});
+  }, []);
   useEffect(() => {
     if (searchParams.get('update') === 'true' && app) setShowUpdate(true);
   }, [searchParams, app]);
@@ -137,7 +141,7 @@ export default function AppViewerPage() {
 
       <iframe
         ref={iframeRef}
-        src={`${SANDBOX_BASE}/sandbox/${id}`}
+        src={sandboxToken ? `${SANDBOX_BASE}/sandbox/${id}?token=${sandboxToken}` : ''}
         sandbox="allow-scripts allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
         title={app.name}
         style={{ flex: 1, width: '100%', border: 'none', background: 'white' }}

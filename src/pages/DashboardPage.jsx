@@ -35,6 +35,7 @@ export default function DashboardPage() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [demoCollapsed, setDemoCollapsed] = useState(false);
   const [demoDismissing, setDemoDismissing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [openFolderId, setOpenFolderId] = useState(null);
   const [editingFolderName, setEditingFolderName] = useState(false);
@@ -122,6 +123,23 @@ export default function DashboardPage() {
     ...folders.map(f => ({ type: 'folder', id: f.id, sortOrder: f.sortOrder, data: f })),
     ...ungroupedUserApps.map(a => ({ type: 'app', id: a.id, sortOrder: a.sortOrder, data: a })),
   ].sort((a, b) => a.sortOrder - b.sortOrder);
+
+  const filteredGridItems = searchQuery.trim()
+    ? gridItems.filter(item => {
+        const q = searchQuery.toLowerCase();
+        if (item.type === 'folder') {
+          return item.data.name.toLowerCase().includes(q) ||
+            item.data.apps.some(a => a.name.toLowerCase().includes(q));
+        }
+        return item.data.name.toLowerCase().includes(q) ||
+          (item.data.description || '').toLowerCase().includes(q) ||
+          (item.data.uploadedBy || '').toLowerCase().includes(q);
+      })
+    : gridItems;
+
+  const filteredDemoApps = searchQuery.trim()
+    ? ungroupedDemoApps.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : ungroupedDemoApps;
 
   const openFolder = folders.find(f => f.id === openFolderId) || null;
   const isAdmin = user?.role === 'admin';
@@ -637,6 +655,22 @@ export default function DashboardPage() {
         <button className="btn btn-primary btn-sm" onClick={() => navigate('/upload')}>+ Upload App</button>
       </div>
 
+      {apps.length > 5 && (
+        <div className="search-bar">
+          <span className="search-bar-icon">🔍</span>
+          <input
+            className="search-bar-input"
+            type="text"
+            placeholder="Search apps..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button className="search-bar-clear" onClick={() => setSearchQuery('')}>✕</button>
+          )}
+        </div>
+      )}
+
       {stats && (
         <div className="stats-bar">
           <span title="Demo apps don't count towards your limit">
@@ -677,9 +711,9 @@ export default function DashboardPage() {
       })()}
 
       {/* Main grid: folders interleaved with ungrouped user apps */}
-      {gridItems.length > 0 && (
+      {filteredGridItems.length > 0 && (
         <div className="app-grid">
-          {gridItems.map((item, idx) => {
+          {filteredGridItems.map((item, idx) => {
             if (item.type === 'folder') {
               const folder = item.data;
               const isJiggling = jiggleId === folder.id;
@@ -757,7 +791,7 @@ export default function DashboardPage() {
                 {confirmDeleteId === app.id && (
                   <div className="tile-confirm-delete" onClick={(e) => e.stopPropagation()}>
                     <p>Delete {app.name}?</p>
-                    <p className="tile-confirm-sub">This can&apos;t be undone.</p>
+                    <p className="tile-confirm-sub">{isAdmin ? "This can\u0027t be undone." : 'Admin approval required.'}</p>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button className="btn btn-danger btn-sm" onClick={() => handleDelete(app)}>Delete</button>
                       <button className="btn btn-ghost btn-sm" onClick={() => setConfirmDeleteId(null)}>Cancel</button>
@@ -777,8 +811,16 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {searchQuery && filteredGridItems.length === 0 && filteredDemoApps.length === 0 && (
+        <div className="empty-state" style={{ padding: '40px 0' }}>
+          <div className="empty-state-icon">🔍</div>
+          <h3>No apps match "{searchQuery}"</h3>
+          <button className="btn btn-ghost btn-sm" onClick={() => setSearchQuery('')}>Clear search</button>
+        </div>
+      )}
+
       {/* Demo apps section */}
-      {ungroupedDemoApps.length > 0 && (
+      {filteredDemoApps.length > 0 && (
         <div className={`demo-section${demoDismissing ? ' demo-section-dismissing' : ''}`}>
           <div className="demo-section-header" onClick={() => setDemoCollapsed(!demoCollapsed)}>
             <span className="demo-section-title">Demo Apps — explore what&apos;s possible</span>
@@ -791,7 +833,7 @@ export default function DashboardPage() {
           </div>
           {!demoCollapsed && (
             <div className="app-grid demo-grid">
-              {ungroupedDemoApps.map(app => (
+              {filteredDemoApps.map(app => (
                 <div
                   key={app.id}
                   className="app-tile demo-app-tile"
