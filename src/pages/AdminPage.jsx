@@ -4,20 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { api } from '../utils/api';
 import { useToast } from '../components/Toast';
 import UpgradeModal, { isPlanLimitError } from '../components/UpgradeModal';
-
-function timeAgo(dateString) {
-  if (!dateString) return 'Never';
-  const seconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
-  if (seconds < 60) return 'just now';
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days === 1) return 'yesterday';
-  if (days < 30) return `${days} days ago`;
-  return `${Math.floor(days / 30)}mo ago`;
-}
+import { timeAgo } from '../utils/timeAgo';
 
 export default function AdminPage() {
   const { user, refreshUser } = useAuth();
@@ -203,7 +190,7 @@ export default function AdminPage() {
                   {subscription.planName}
                 </span>
                 {subscription.plan === 'pro' && (
-                  <span className="subscription-price-tag">$5/month</span>
+                  <span className="subscription-price-tag">$12/month</span>
                 )}
               </div>
             </div>
@@ -267,7 +254,7 @@ export default function AdminPage() {
                   Unlock unlimited apps, unlimited members, and Smart AI uploads.
                 </p>
                 <button className="btn btn-primary" onClick={handleCheckout} disabled={checkoutLoading}>
-                  {checkoutLoading ? <span className="spinner" /> : 'Upgrade to Pro — $5/mo'}
+                  {checkoutLoading ? <span className="spinner" /> : 'Upgrade to Pro — $12/mo'}
                 </button>
               </div>
             ) : (
