@@ -200,7 +200,7 @@ export default function AdminPage() {
                 <div className="usage-label">
                   <span>Apps</span>
                   <span className="usage-count">
-                    {subscription.usage.apps}{subscription.maxApps != null ? ` / ${subscription.maxApps}` : ''}{subscription.maxApps == null && ' — Unlimited'}
+                    {subscription.usage.apps}{subscription.maxApps != null ? ` / ${subscription.maxApps}` : ''}{subscription.maxApps == null && ' \u2014 Unlimited'}
                   </span>
                 </div>
                 {subscription.maxApps != null && (
@@ -217,7 +217,7 @@ export default function AdminPage() {
                 <div className="usage-label">
                   <span>Members</span>
                   <span className="usage-count">
-                    {subscription.usage.members}{subscription.maxMembers != null ? ` / ${subscription.maxMembers}` : ''}{subscription.maxMembers == null && ' — Unlimited'}
+                    {subscription.usage.members}{subscription.maxMembers != null ? ` / ${subscription.maxMembers}` : ''}{subscription.maxMembers == null && ' \u2014 Unlimited'}
                   </span>
                 </div>
                 {subscription.maxMembers != null && (
@@ -254,7 +254,7 @@ export default function AdminPage() {
                   Unlock unlimited apps, unlimited members, and Smart AI uploads.
                 </p>
                 <button className="btn btn-primary" onClick={handleCheckout} disabled={checkoutLoading}>
-                  {checkoutLoading ? <span className="spinner" /> : 'Upgrade to Pro — $12/mo'}
+                  {checkoutLoading ? <span className="spinner" /> : 'Upgrade to Pro \u2014 $12/mo'}
                 </button>
               </div>
             ) : (
@@ -275,7 +275,7 @@ export default function AdminPage() {
               <div className="member-info">
                 <span className="member-name">{app.icon} {app.name}</span>
                 <span className="member-email">
-                  Uploaded by {app.uploadedBy}{app.requestedBy ? ` · Requested by ${app.requestedBy}` : ''}
+                  Uploaded by {app.uploadedBy}{app.requestedBy ? ` \u00b7 Requested by ${app.requestedBy}` : ''}
                 </span>
               </div>
               <div className="member-actions">
@@ -293,7 +293,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Whitelist — the complete picture of who has access */}
+      {/* Whitelist \u2014 the complete picture of who has access */}
       <div className="admin-section">
         <h3>Whitelist ({activeMembers.length} active{pendingInvites.length > 0 ? `, ${pendingInvites.length} pending` : ''})</h3>
 
@@ -321,7 +321,7 @@ export default function AdminPage() {
               </div>
               <span className="member-email">{member.email}</span>
               <span className="member-meta">
-                Last login: {timeAgo(member.lastLoginAt)} · Joined {timeAgo(member.createdAt)}
+                Last login: {timeAgo(member.lastLoginAt)} \u00b7 Joined {timeAgo(member.createdAt)}
               </span>
             </div>
             <div className="member-actions">
