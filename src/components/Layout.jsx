@@ -48,6 +48,9 @@ export default function Layout() {
           <NavLink to="/upload" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             Upload
           </NavLink>
+          <NavLink to="/converter" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            Converter
+          </NavLink>
           <NavLink to="/about" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             About
           </NavLink>
