@@ -19,6 +19,12 @@ export default function RegisterPage() {
     setError('');
     setLoading(true);
 
+    if (password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+      setError('Password must be at least 8 characters with one uppercase letter and one number');
+      setLoading(false);
+      return;
+    }
+
     try {
       const body = { email, password, displayName };
       if (inviteCode) {
@@ -96,7 +102,7 @@ export default function RegisterPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="At least 8 characters"
+              placeholder="Min 8 chars, one uppercase, one number"
               required
               minLength={8}
             />

@@ -90,8 +90,8 @@ export default function LoginPage() {
       setError('Please enter your name');
       return;
     }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters');
+    if (password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+      setError('Password must be at least 8 characters with one uppercase letter and one number');
       return;
     }
     if (password !== confirmPassword) {
@@ -308,7 +308,7 @@ export default function LoginPage() {
                   type="password"
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setError(''); }}
-                  placeholder="At least 8 characters"
+                  placeholder="Min 8 chars, one uppercase, one number"
                   required
                   minLength={8}
                 />

@@ -13,9 +13,7 @@ export default function AdminPage() {
   const { showToast, ToastElement } = useToast();
   const logoInputRef = useRef(null);
 
-  useEffect(() => {
-    if (user && user.role !== 'admin') navigate('/');
-  }, [user]);
+  const isPageAdmin = user?.role === 'admin';
 
   useEffect(() => {
     if (searchParams.get('upgraded') === 'true') {
@@ -41,6 +39,12 @@ export default function AdminPage() {
   const [portalLoading, setPortalLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+
   const [wsName, setWsName] = useState('');
   const [primaryColor, setPrimaryColor] = useState('#1a1a2e');
   const [accentColor, setAccentColor] = useState('#e94560');
@@ -51,24 +55,54 @@ export default function AdminPage() {
 
   async function loadAll() {
     try {
+      const isAdmin = user?.role === 'admin';
       const [wsData, memData, invData, pendingData, subData] = await Promise.all([
-        api.getWorkspace(), api.getMembers(), api.getInvitations(), api.getPendingDeletions(),
-        api.getSubscriptionStatus().catch(() => null)
+        isAdmin ? api.getWorkspace() : Promise.resolve(null),
+        isAdmin ? api.getMembers() : Promise.resolve({ members: [] }),
+        isAdmin ? api.getInvitations() : Promise.resolve({ invitations: [] }),
+        isAdmin ? api.getPendingDeletions() : Promise.resolve({ apps: [] }),
+        isAdmin ? api.getSubscriptionStatus().catch(() => null) : Promise.resolve(null)
       ]);
-      setWorkspace(wsData.workspace);
-      setWsName(wsData.workspace.name);
-      setPrimaryColor(wsData.workspace.primaryColor || '#1a1a2e');
-      setAccentColor(wsData.workspace.accentColor || '#e94560');
-      setPrimaryColorLight(wsData.workspace.primaryColorLight || '#ffffff');
-      setAccentColorLight(wsData.workspace.accentColorLight || '#d63851');
+      if (wsData) {
+        setWorkspace(wsData.workspace);
+        setWsName(wsData.workspace.name);
+        setPrimaryColor(wsData.workspace.primaryColor || '#1a1a2e');
+        setAccentColor(wsData.workspace.accentColor || '#e94560');
+        setPrimaryColorLight(wsData.workspace.primaryColorLight || '#ffffff');
+        setAccentColorLight(wsData.workspace.accentColorLight || '#d63851');
+      }
       setMembers(memData.members);
       setInvitations(invData.invitations);
       setPendingDeletions(pendingData.apps);
       if (subData) setSubscription(subData);
     } catch (err) {
-      showToast('Failed to load admin data', 'error');
+      showToast('Failed to load settings', 'error');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleChangePassword(e) {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess(false);
+    if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      setPasswordError('Password must be at least 8 characters with one uppercase letter and one number');
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setPasswordError('Passwords do not match');
+      return;
+    }
+    try {
+      await api.changePassword({ currentPassword, newPassword });
+      setPasswordSuccess(true);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmNewPassword('');
+      showToast('Password changed successfully', 'success');
+    } catch (err) {
+      setPasswordError(err.error || 'Failed to change password');
     }
   }
 
@@ -176,11 +210,11 @@ export default function AdminPage() {
   return (
     <div>
       <div className="page-header">
-        <h1>Workspace Settings</h1>
+        <h1>Settings</h1>
       </div>
 
       {/* Subscription */}
-      {subscription && (
+      {isPageAdmin && subscription && (
         <div className="admin-section">
           <h3>Subscription</h3>
           <div className="card subscription-card">
@@ -267,7 +301,7 @@ export default function AdminPage() {
       )}
 
       {/* Pending Deletions */}
-      {pendingDeletions.length > 0 && (
+      {isPageAdmin && pendingDeletions.length > 0 && (
         <div className="admin-section">
           <h3>Pending Deletions ({pendingDeletions.length})</h3>
           {pendingDeletions.map((app) => (
@@ -293,8 +327,32 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Whitelist \u2014 the complete picture of who has access */}
+      {/* Change Password */}
       <div className="admin-section">
+        <h3>Change Password</h3>
+        <div className="card">
+          <form onSubmit={handleChangePassword}>
+            <div className="form-group">
+              <label className="label">Current Password</label>
+              <input className="input" type="password" value={currentPassword} onChange={(e) => { setCurrentPassword(e.target.value); setPasswordError(''); setPasswordSuccess(false); }} required />
+            </div>
+            <div className="form-group">
+              <label className="label">New Password</label>
+              <input className="input" type="password" value={newPassword} onChange={(e) => { setNewPassword(e.target.value); setPasswordError(''); setPasswordSuccess(false); }} placeholder="Min 8 chars, one uppercase, one number" required />
+            </div>
+            <div className="form-group">
+              <label className="label">Confirm New Password</label>
+              <input className="input" type="password" value={confirmNewPassword} onChange={(e) => { setConfirmNewPassword(e.target.value); setPasswordError(''); setPasswordSuccess(false); }} required />
+            </div>
+            {passwordError && <p className="error-text">{passwordError}</p>}
+            {passwordSuccess && <p style={{ color: 'var(--success)', fontSize: 13, marginTop: 6 }}>Password changed successfully.</p>}
+            <button type="submit" className="btn btn-primary" style={{ marginTop: 8 }}>Change Password</button>
+          </form>
+        </div>
+      </div>
+
+      {/* Whitelist \u2014 the complete picture of who has access */}
+      {isPageAdmin && (<div className="admin-section">
         <h3>Whitelist ({activeMembers.length} active{pendingInvites.length > 0 ? `, ${pendingInvites.length} pending` : ''})</h3>
 
         {/* Invite */}
@@ -384,10 +442,10 @@ export default function AdminPage() {
             ))}
           </div>
         )}
-      </div>
+      </div>)}
 
       {/* Branding */}
-      <div className="admin-section">
+      {isPageAdmin && (<div className="admin-section">
         <h3>Branding</h3>
         <div className="card">
           <form onSubmit={saveBranding}>
@@ -444,7 +502,7 @@ export default function AdminPage() {
             <button type="submit" className="btn btn-primary">Save branding</button>
           </form>
         </div>
-      </div>
+      </div>)}
 
       {showUpgradeModal && (
         <UpgradeModal

@@ -1,3 +1,4 @@
+import { Component } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import Layout from './components/Layout';
@@ -10,6 +11,46 @@ import UploadPage from './pages/UploadPage';
 import AppViewerPage from './pages/AppViewerPage';
 import AdminPage from './pages/AdminPage';
 import AboutPage from './pages/AboutPage';
+
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, info) {
+    console.error('App error:', error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="auth-page">
+          <div className="auth-card card" style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
+            <h1>Something went wrong</h1>
+            <p className="subtitle">An unexpected error occurred.</p>
+            <button
+              className="btn btn-primary btn-full"
+              onClick={() => {
+                this.setState({ hasError: false });
+                window.location.href = '/';
+              }}
+              style={{ marginTop: 16 }}
+            >
+              Reload App
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -27,6 +68,7 @@ function GuestRoute({ children }) {
 
 export default function App() {
   return (
+    <ErrorBoundary>
     <Routes>
       <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
       <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
@@ -54,5 +96,6 @@ export default function App() {
         </div>
       } />
     </Routes>
+    </ErrorBoundary>
   );
 }
