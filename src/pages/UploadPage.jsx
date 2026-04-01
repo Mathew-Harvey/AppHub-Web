@@ -1,10 +1,13 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/Toast';
 import IconPicker from '../components/IconPicker';
 import UpgradeModal, { isPlanLimitError } from '../components/UpgradeModal';
+
+const PASTE_EXTENSIONS = ['.jsx', '.tsx', '.vue', '.svelte', '.html', '.css', '.js', '.ts'];
+const DEFAULT_PASTE_FILENAME = 'pasted-code.jsx';
 
 const INSPIRATION = [
   { icon: '💰', name: 'Quote calculator', desc: 'Enter line items, get a total with GST.', prompt: 'Build me an HTML quote calculator where I can add line items with description, quantity, and unit price, then see a subtotal plus GST.' },
@@ -47,15 +50,20 @@ function AiSpinner() {
   );
 }
 
+function textToFile(text, filename) {
+  return new File([new Blob([text], { type: 'text/plain' })], filename);
+}
+
 export default function UploadPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { showToast, ToastElement } = useToast();
   const fileInputRef = useRef(null);
+  const dropzoneRef = useRef(null);
 
   const [dragOver, setDragOver] = useState(false);
   const [file, setFile] = useState(null);
-  const [rawFile, setRawFile] = useState(null); // original non-HTML file for AI conversion
+  const [rawFile, setRawFile] = useState(null);
   const [conversionInfo, setConversionInfo] = useState(null);
   const [copied, setCopied] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
@@ -71,6 +79,10 @@ export default function UploadPage() {
 
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState('');
+
+  const [showPasteModal, setShowPasteModal] = useState(false);
+  const [pasteCode, setPasteCode] = useState('');
+  const [pasteFilename, setPasteFilename] = useState(DEFAULT_PASTE_FILENAME);
 
   const isPro = user?.workspace?.plan === 'pro';
 
@@ -104,25 +116,28 @@ export default function UploadPage() {
       } else {
         setFile(null);
         setRawFile(f);
-        setConversionInfo(check);
-        // Auto-populate name from filename
         const baseName = f.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
         if (!name) setName(baseName.charAt(0).toUpperCase() + baseName.slice(1));
+
+        if (isPro) {
+          doAiConvert(f);
+        } else {
+          setConversionInfo(check);
+        }
       }
     } catch (err) {
       showToast('Error checking file', 'error');
     }
   }
 
-  async function handleAiConvert() {
-    if (!rawFile) return;
+  async function doAiConvert(fileToConvert) {
+    if (!fileToConvert) return;
     setConverting(true);
     try {
       const formData = new FormData();
-      formData.append('appFile', rawFile);
+      formData.append('appFile', fileToConvert);
       const { jobId } = await api.startConvert(formData);
 
-      // Poll for result
       const poll = async () => {
         const result = await api.pollConvert(jobId);
         if (result.status === 'processing') {
@@ -134,9 +149,9 @@ export default function UploadPage() {
           showToast(result.error || 'Conversion failed', 'error');
           return;
         }
-        // Done
         const htmlBlob = new Blob([result.html], { type: 'text/html' });
-        const htmlFile = new File([htmlBlob], name.replace(/\s+/g, '-').toLowerCase() + '.html', { type: 'text/html' });
+        const outputName = fileToConvert.name.replace(/\.[^.]+$/, '') + '.html';
+        const htmlFile = new File([htmlBlob], outputName, { type: 'text/html' });
         setFile(htmlFile);
         setConversionInfo(null);
         setRawFile(null);
@@ -155,6 +170,11 @@ export default function UploadPage() {
         showToast(err.error || 'Conversion failed', 'error');
       }
     }
+  }
+
+  function handleAiConvert() {
+    if (!rawFile) return;
+    doAiConvert(rawFile);
   }
 
   async function handleUpload(e) {
@@ -202,6 +222,39 @@ export default function UploadPage() {
     }
   }
 
+  // Paste: Ctrl+V on drop zone
+  const handlePaste = useCallback((e) => {
+    const text = e.clipboardData?.getData('text/plain');
+    if (!text?.trim()) return;
+    e.preventDefault();
+    const file = textToFile(text, DEFAULT_PASTE_FILENAME);
+    processFile(file);
+  }, []);
+
+  useEffect(() => {
+    const zone = dropzoneRef.current;
+    if (!zone) return;
+    zone.addEventListener('paste', handlePaste);
+    return () => zone.removeEventListener('paste', handlePaste);
+  }, [handlePaste]);
+
+  // Paste modal
+  function handlePasteModalSubmit() {
+    if (!pasteCode.trim()) return;
+    const filename = pasteFilename.trim() || DEFAULT_PASTE_FILENAME;
+    const file = textToFile(pasteCode, filename);
+    processFile(file);
+    showToast(`Code added as ${filename}`, 'success');
+    setShowPasteModal(false);
+    setPasteCode('');
+    setPasteFilename(DEFAULT_PASTE_FILENAME);
+  }
+
+  function handleExtensionClick(ext) {
+    const base = pasteFilename.replace(/\.[^.]+$/, '') || 'pasted-code';
+    setPasteFilename(base + ext);
+  }
+
   if (uploadSuccess) {
     return (
       <div className="upload-success">
@@ -222,7 +275,7 @@ export default function UploadPage() {
         <h1>Upload App</h1>
       </div>
 
-      {/* Conversion prompt (shown when wrong file type) */}
+      {/* Conversion prompt (shown for free users when file needs converting) */}
       {conversionInfo && (
         <div className="conversion-prompt">
           <h3>{conversionInfo.detected || 'Unsupported file type'}</h3>
@@ -268,6 +321,8 @@ export default function UploadPage() {
       {!file && !conversionInfo && (
         <>
           <div
+            ref={dropzoneRef}
+            tabIndex={0}
             className={`upload-zone ${dragOver ? 'dragover' : ''}`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -275,8 +330,9 @@ export default function UploadPage() {
             onClick={() => fileInputRef.current?.click()}
           >
             <div className="upload-zone-icon">📂</div>
-            <h3>Drag &amp; drop your HTML file here</h3>
-            <p>or click to browse — accepts .html files up to 5MB</p>
+            <h3>Drag &amp; drop your file here</h3>
+            <p>or click to browse — .html, .jsx, .tsx, .vue, .css, .js, .py, .zip and more</p>
+            <p className="upload-zone-hint">You can also paste code (Ctrl+V) while this area is focused</p>
             <input
               ref={fileInputRef}
               type="file"
@@ -285,6 +341,14 @@ export default function UploadPage() {
               style={{ display: 'none' }}
             />
           </div>
+
+          <button
+            className="btn btn-ghost btn-full"
+            onClick={(e) => { e.stopPropagation(); setShowPasteModal(true); }}
+            style={{ marginBottom: 8 }}
+          >
+            📋 Paste Code
+          </button>
 
           <div className="inspiration">
             <h4 className="inspiration-title">Not sure what to build?</h4>
@@ -368,6 +432,58 @@ export default function UploadPage() {
             {uploading ? <span className="spinner" /> : 'Upload & Publish'}
           </button>
         </form>
+      )}
+
+      {/* Paste Code modal */}
+      {showPasteModal && (
+        <div className="modal-overlay" onClick={() => setShowPasteModal(false)}>
+          <div className="modal paste-modal" onClick={e => e.stopPropagation()}>
+            <div className="paste-modal-header">
+              <h3>Paste Code</h3>
+              <button className="paste-modal-close" onClick={() => setShowPasteModal(false)}>×</button>
+            </div>
+
+            <label className="label">Filename</label>
+            <div className="paste-filename-row">
+              <input
+                className="input paste-filename-input"
+                value={pasteFilename}
+                onChange={e => setPasteFilename(e.target.value)}
+                placeholder={DEFAULT_PASTE_FILENAME}
+              />
+            </div>
+            <div className="paste-ext-chips">
+              {PASTE_EXTENSIONS.map(ext => (
+                <button
+                  key={ext}
+                  className={`paste-ext-chip ${pasteFilename.endsWith(ext) ? 'active' : ''}`}
+                  onClick={() => handleExtensionClick(ext)}
+                >
+                  {ext}
+                </button>
+              ))}
+            </div>
+
+            <label className="label" style={{ marginTop: 16 }}>Code</label>
+            <textarea
+              className="input paste-textarea"
+              value={pasteCode}
+              onChange={e => setPasteCode(e.target.value)}
+              placeholder="Paste or type your code here..."
+              rows={12}
+              autoFocus
+            />
+
+            <button
+              className="btn btn-primary btn-full"
+              onClick={handlePasteModalSubmit}
+              disabled={!pasteCode.trim()}
+              style={{ marginTop: 16 }}
+            >
+              Upload Code
+            </button>
+          </div>
+        </div>
       )}
 
       {showUpgradeModal && (

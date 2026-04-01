@@ -130,7 +130,9 @@ export default function LoginPage() {
         {/* ── Step: Email ──────────────────────────────────────────── */}
         {step === 'email' && (
           <>
-            <h1>Welcome to AppHub</h1>
+            <div className="login-logo">
+              <img src="/apphubLogo.png" alt="AppHub" />
+            </div>
             <p className="subtitle">Enter your email to get started</p>
 
             <form onSubmit={handleEmailContinue}>

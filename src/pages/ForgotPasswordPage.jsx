@@ -41,6 +41,9 @@ export default function ForgotPasswordPage() {
   return (
     <div className="auth-page">
       <div className="auth-card card">
+        <div className="login-logo">
+          <img src="/apphubLogo.png" alt="AppHub" />
+        </div>
         <h1>Reset password</h1>
         <p className="subtitle">Enter your email and we'll help you get back in.</p>
 

@@ -26,13 +26,13 @@ export default function Layout() {
     if (ws?.accentColor) style['--accent'] = ws.accentColor;
   }
 
-  const logoSrc = user?.workspace?.logoData || null;
+  const logoSrc = user?.workspace?.logoData || '/apphubLogo.png';
 
   return (
     <div className="layout" style={style}>
       <header className="topbar">
         <div className="topbar-brand">
-          {logoSrc && <img src={logoSrc} alt="" />}
+          <img src={logoSrc} alt="" className="topbar-logo" />
           <h2>{user?.workspace?.name || 'AppHub'}</h2>
           {ws && (
             <span className={`plan-badge ${ws.plan === 'pro' ? 'plan-badge-pro' : 'plan-badge-free'}`}>
@@ -47,9 +47,6 @@ export default function Layout() {
           </NavLink>
           <NavLink to="/upload" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             Upload
-          </NavLink>
-          <NavLink to="/converter" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-            Converter
           </NavLink>
           <NavLink to="/about" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             About

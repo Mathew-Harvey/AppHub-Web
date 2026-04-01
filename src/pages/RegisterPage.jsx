@@ -37,6 +37,9 @@ export default function RegisterPage() {
   return (
     <div className="auth-page">
       <div className="auth-card card">
+        <div className="login-logo">
+          <img src="/apphubLogo.png" alt="AppHub" />
+        </div>
         <h1>{inviteCode ? 'Join your team' : 'Create your workspace'}</h1>
         <p className="subtitle">
           {inviteCode

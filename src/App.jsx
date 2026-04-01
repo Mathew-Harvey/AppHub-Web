@@ -10,7 +10,6 @@ import UploadPage from './pages/UploadPage';
 import AppViewerPage from './pages/AppViewerPage';
 import AdminPage from './pages/AdminPage';
 import AboutPage from './pages/AboutPage';
-import ConverterPage from './pages/ConverterPage';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -38,7 +37,7 @@ export default function App() {
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/upload" element={<UploadPage />} />
-        <Route path="/converter" element={<ConverterPage />} />
+        <Route path="/converter" element={<Navigate to="/upload" replace />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/settings" element={<AdminPage />} />
       </Route>
