@@ -41,7 +41,18 @@ export default function App() {
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/settings" element={<AdminPage />} />
       </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={
+        <div className="auth-page">
+          <div className="auth-card card" style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
+            <h1>Page not found</h1>
+            <p className="subtitle">The page you're looking for doesn't exist.</p>
+            <button className="btn btn-primary btn-full" onClick={() => window.location.href = '/'} style={{ marginTop: 16 }}>
+              Go to Dashboard
+            </button>
+          </div>
+        </div>
+      } />
     </Routes>
   );
 }

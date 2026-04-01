@@ -1,44 +1,46 @@
-import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '../contexts/ThemeContext';
 
 export default function AboutPage() {
   const navigate = useNavigate();
-  const { theme, toggleTheme } = useTheme();
-  const iframeRef = useRef(null);
-
-  function handleThemeToggle() {
-    toggleTheme();
-    setTimeout(() => {
-      iframeRef.current?.contentWindow?.postMessage({ type: 'apphub-theme-sync' }, '*');
-    }, 50);
-  }
 
   return (
-    <div className="app-viewer">
-      <div className="app-viewer-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button className="btn btn-ghost btn-sm" onClick={() => navigate('/')}>
-            ← Back
-          </button>
-          <h3>About AppHub</h3>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button
-            className="btn-theme-toggle"
-            onClick={handleThemeToggle}
-            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            {theme === 'dark' ? '☀️' : '🌙'}
-          </button>
+    <div className="about-page">
+      <div className="page-header">
+        <h1>About AppHub</h1>
+      </div>
+
+      <div className="card" style={{ marginBottom: 24 }}>
+        <h3 style={{ marginBottom: 12 }}>What is AppHub?</h3>
+        <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 16 }}>
+          AppHub is a team portal for sharing internal tools, calculators, dashboards, and utilities —
+          all built as simple HTML apps. Build something useful with any AI tool (Claude, ChatGPT, Cursor, etc.),
+          then upload the HTML file to share it instantly with your team.
+        </p>
+        <h3 style={{ marginBottom: 12 }}>How it works</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+          <p><strong>1. Build</strong> — Use any AI tool to create a single-file HTML app (calculator, form, dashboard, etc.)</p>
+          <p><strong>2. Upload</strong> — Drag and drop your HTML file, or paste code directly. Non-HTML files are auto-converted for Pro users.</p>
+          <p><strong>3. Share</strong> — Your team can access the app instantly. Organize with folders, control visibility per app.</p>
         </div>
       </div>
-      <iframe
-        ref={iframeRef}
-        src="/about.html"
-        title="About AppHub"
-        style={{ flex: 1, width: '100%', border: 'none', background: 'var(--bg)' }}
-      />
+
+      <div className="card" style={{ marginBottom: 24 }}>
+        <h3 style={{ marginBottom: 12 }}>Supported file types</h3>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: 12 }}>
+          Upload directly: <strong>.html</strong>
+        </p>
+        <p style={{ color: 'var(--text-secondary)' }}>
+          Auto-convert (Pro): <strong>.jsx, .tsx, .vue, .svelte, .js, .ts, .css, .py, .json, .md, .zip</strong>
+        </p>
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginBottom: 12 }}>Keyboard shortcuts</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, color: 'var(--text-secondary)', fontSize: 14 }}>
+          <p><kbd style={{ background: 'var(--surface-solid)', padding: '2px 8px', borderRadius: 4, border: '1px solid var(--border)', fontSize: 12 }}>Ctrl+V</kbd> — Paste code directly into the upload zone</p>
+          <p><kbd style={{ background: 'var(--surface-solid)', padding: '2px 8px', borderRadius: 4, border: '1px solid var(--border)', fontSize: 12 }}>Long press</kbd> — Enter edit mode to rearrange or delete apps</p>
+        </div>
+      </div>
     </div>
   );
 }
