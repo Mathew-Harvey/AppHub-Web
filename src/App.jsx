@@ -75,10 +75,10 @@ export default function App() {
       <Route path="/forgot-password" element={<GuestRoute><ForgotPasswordPage /></GuestRoute>} />
       <Route path="/reset-password" element={<GuestRoute><ResetPasswordPage /></GuestRoute>} />
       <Route path="/app/:id" element={<ProtectedRoute><AppViewerPage /></ProtectedRoute>} />
-      <Route path="/about" element={<ProtectedRoute><AboutPage /></ProtectedRoute>} />
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/upload" element={<UploadPage />} />
+        <Route path="/about" element={<AboutPage />} />
         <Route path="/converter" element={<Navigate to="/upload" replace />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/settings" element={<AdminPage />} />

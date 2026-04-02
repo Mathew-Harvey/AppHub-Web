@@ -9,6 +9,43 @@ import UpgradeModal, { isPlanLimitError } from '../components/UpgradeModal';
 const PASTE_EXTENSIONS = ['.jsx', '.tsx', '.vue', '.svelte', '.html', '.css', '.js', '.ts'];
 const DEFAULT_PASTE_FILENAME = 'pasted-code.jsx';
 
+function detectFileExtension(code) {
+  const trimmed = code.trim();
+  const lower = trimmed.toLowerCase();
+
+  if (/^<!doctype\s+html/i.test(trimmed) || /^<html[\s>]/i.test(trimmed)) return '.html';
+  if (/<html[\s>]/i.test(trimmed) && /<\/html>/i.test(trimmed)) return '.html';
+  if (/^<head[\s>]/i.test(trimmed) || /^<body[\s>]/i.test(trimmed)) return '.html';
+  if (/^<(div|span|h[1-6]|p|form|table|section|article|main|nav|header|footer|ul|ol|link|meta|style|script|button|input|label|select|textarea|img|a)\b/i.test(trimmed)
+      && !/(className|import\s|export\s)/.test(trimmed.slice(0, 500))) return '.html';
+
+  if (/^<template[\s>]/i.test(trimmed) && /<\/template>/i.test(trimmed)) return '.vue';
+
+  if (/\{#(if|each|await)\s/.test(trimmed) || /\{:(else|then|catch)\}/.test(trimmed)) return '.svelte';
+
+  if (/^import\s+React\b/.test(trimmed) || /from\s+['"]react['"]/.test(trimmed)) {
+    return /:\s*(React\.FC|JSX\.Element|Props)/.test(trimmed) || /<[A-Z]\w+</.test(trimmed) ? '.tsx' : '.jsx';
+  }
+  if (/className\s*=/.test(trimmed) && /<[A-Z]/.test(trimmed)) return '.jsx';
+  if (/export\s+default\s+function\s+\w+/.test(trimmed) && /</.test(trimmed) && /return\s*\(?\s*</.test(trimmed)) return '.jsx';
+
+  if (lower.startsWith('{') || lower.startsWith('[')) {
+    try { JSON.parse(trimmed); return '.json'; } catch {}
+  }
+
+  if (/^(def |class |import |from .+ import |print\(|if __name__)/.test(trimmed)) return '.py';
+
+  if (/^---\n/.test(trimmed) || /^#{1,6}\s/.test(trimmed)) return '.md';
+
+  if (/^(@import|@media|@keyframes|@font-face|\*\s*\{|body\s*\{|html\s*\{|\.[a-z][\w-]*\s*\{|#[a-z][\w-]*\s*\{)/.test(trimmed)) return '.css';
+
+  if (/^import\s/.test(trimmed) || /^export\s/.test(trimmed) || /^(const|let|var|function|async\s+function)\s/.test(trimmed)) {
+    return /:\s*(string|number|boolean|any|void|never|unknown)\b/.test(trimmed) || /interface\s+\w+/.test(trimmed) || /type\s+\w+\s*=/.test(trimmed) ? '.ts' : '.js';
+  }
+
+  return '.jsx';
+}
+
 const INSPIRATION = [
   { icon: '💰', name: 'Quote calculator', desc: 'Enter line items, get a total with GST.', prompt: 'Build me an HTML quote calculator where I can add line items with description, quantity, and unit price, then see a subtotal plus GST.' },
   { icon: '📋', name: 'Checklist generator', desc: 'Create printable checklists for any process.', prompt: 'Build me an HTML checklist maker where I type a title and checklist items, then print a clean formatted checklist.' },
@@ -83,6 +120,7 @@ export default function UploadPage() {
   const [showPasteModal, setShowPasteModal] = useState(false);
   const [pasteCode, setPasteCode] = useState('');
   const [pasteFilename, setPasteFilename] = useState(DEFAULT_PASTE_FILENAME);
+  const [filenameManuallyEdited, setFilenameManuallyEdited] = useState(false);
 
   const isPro = user?.workspace?.plan === 'pro';
 
@@ -226,7 +264,9 @@ export default function UploadPage() {
     const text = e.clipboardData?.getData('text/plain');
     if (!text?.trim()) return;
     e.preventDefault();
-    const file = textToFile(text, DEFAULT_PASTE_FILENAME);
+    const ext = detectFileExtension(text);
+    const filename = 'pasted-code' + ext;
+    const file = textToFile(text, filename);
     processFile(file);
   }, []);
 
@@ -237,7 +277,15 @@ export default function UploadPage() {
     return () => zone.removeEventListener('paste', handlePaste);
   }, [handlePaste]);
 
-  // Paste modal
+  function handlePasteCodeChange(code) {
+    setPasteCode(code);
+    if (!filenameManuallyEdited && code.trim()) {
+      const ext = detectFileExtension(code);
+      const base = pasteFilename.replace(/\.[^.]+$/, '') || 'pasted-code';
+      setPasteFilename(base + ext);
+    }
+  }
+
   function handlePasteModalSubmit() {
     if (!pasteCode.trim()) return;
     const filename = pasteFilename.trim() || DEFAULT_PASTE_FILENAME;
@@ -247,11 +295,13 @@ export default function UploadPage() {
     setShowPasteModal(false);
     setPasteCode('');
     setPasteFilename(DEFAULT_PASTE_FILENAME);
+    setFilenameManuallyEdited(false);
   }
 
   function handleExtensionClick(ext) {
     const base = pasteFilename.replace(/\.[^.]+$/, '') || 'pasted-code';
     setPasteFilename(base + ext);
+    setFilenameManuallyEdited(true);
   }
 
   if (uploadSuccess) {
@@ -346,7 +396,7 @@ export default function UploadPage() {
 
           <button
             className="btn btn-ghost btn-full"
-            onClick={(e) => { e.stopPropagation(); setShowPasteModal(true); }}
+            onClick={(e) => { e.stopPropagation(); setFilenameManuallyEdited(false); setShowPasteModal(true); }}
             style={{ marginBottom: 8 }}
           >
             📋 Paste Code
@@ -450,7 +500,7 @@ export default function UploadPage() {
               <input
                 className="input paste-filename-input"
                 value={pasteFilename}
-                onChange={e => setPasteFilename(e.target.value)}
+                onChange={e => { setPasteFilename(e.target.value); setFilenameManuallyEdited(true); }}
                 placeholder={DEFAULT_PASTE_FILENAME}
               />
             </div>
@@ -470,7 +520,7 @@ export default function UploadPage() {
             <textarea
               className="input paste-textarea"
               value={pasteCode}
-              onChange={e => setPasteCode(e.target.value)}
+              onChange={e => handlePasteCodeChange(e.target.value)}
               placeholder="Paste or type your code here..."
               rows={12}
               autoFocus
