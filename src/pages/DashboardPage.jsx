@@ -35,7 +35,7 @@ export default function DashboardPage() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState('');
   const [showInviteModal, setShowInviteModal] = useState(false);
-  const [demoCollapsed, setDemoCollapsed] = useState(false);
+  const [demoCollapsed, setDemoCollapsed] = useState({});
   const [demoDismissing, setDemoDismissing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -142,6 +142,18 @@ export default function DashboardPage() {
   const filteredDemoApps = searchQuery.trim()
     ? ungroupedDemoApps.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase()))
     : ungroupedDemoApps;
+
+  const demoCategories = filteredDemoApps.reduce((acc, app) => {
+    const cat = app.demoCategory || 'Demo Apps';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(app);
+    return acc;
+  }, {});
+  const demoCategoryOrder = ['Demo Tools', 'Demo Games', 'Demo Apps'];
+  const sortedDemoCategories = Object.keys(demoCategories).sort(
+    (a, b) => (demoCategoryOrder.indexOf(a) === -1 ? 99 : demoCategoryOrder.indexOf(a))
+           - (demoCategoryOrder.indexOf(b) === -1 ? 99 : demoCategoryOrder.indexOf(b))
+  );
 
   const openFolder = folders.find(f => f.id === openFolderId) || null;
   const isAdmin = user?.role === 'admin';
@@ -820,42 +832,66 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Demo apps section */}
+      {/* Demo apps sections grouped by category */}
       {filteredDemoApps.length > 0 && (
-        <div className={`demo-section${demoDismissing ? ' demo-section-dismissing' : ''}`}>
-          <div className="demo-section-header" onClick={() => setDemoCollapsed(!demoCollapsed)}>
-            <span className="demo-section-title">Demo Apps — explore what&apos;s possible</span>
-            <div className="demo-section-actions">
-              <button className="demo-dismiss-all" onClick={(e) => { e.stopPropagation(); handleDismissDemos(); }}>
-                Dismiss all
-              </button>
-              <span className="demo-section-toggle">{demoCollapsed ? '▸' : '▾'}</span>
-            </div>
-          </div>
-          {!demoCollapsed && (
-            <div className="app-grid demo-grid">
-              {filteredDemoApps.map(app => (
-                <div
-                  key={app.id}
-                  className="app-tile demo-app-tile"
-                  onClick={() => navigate(`/app/${app.id}`)}
-                  title={app.description || app.name}
-                >
-                  <span className="demo-badge">DEMO</span>
-                  <button
-                    className="demo-dismiss-btn"
-                    onClick={(e) => { e.stopPropagation(); handleDelete(app); }}
-                    title="Dismiss demo"
-                  >
-                    ✕
-                  </button>
-                  <div className="app-tile-icon">{app.icon}</div>
-                  <span className="app-tile-name">{app.name}</span>
-                  <span className="app-tile-author">{app.uploadedBy}</span>
-                </div>
-              ))}
+        <div className={`demo-sections-wrapper${demoDismissing ? ' demo-section-dismissing' : ''}`}>
+          {sortedDemoCategories.length > 1 && (
+            <div className="demo-section-header" style={{ marginBottom: 0 }}>
+              <span className="demo-section-title">Demo Apps — explore what&apos;s possible</span>
+              <div className="demo-section-actions">
+                <button className="demo-dismiss-all" onClick={handleDismissDemos}>
+                  Dismiss all
+                </button>
+              </div>
             </div>
           )}
+          {sortedDemoCategories.map(cat => {
+            const catApps = demoCategories[cat];
+            const isCollapsed = demoCollapsed[cat] || false;
+            const isSingleCategory = sortedDemoCategories.length === 1;
+            return (
+              <div key={cat} className="demo-section">
+                <div className="demo-section-header" onClick={() => setDemoCollapsed(prev => ({ ...prev, [cat]: !isCollapsed }))}>
+                  <span className="demo-section-title">
+                    {isSingleCategory ? 'Demo Apps — explore what\u2019s possible' : cat}
+                    <span className="demo-section-count"> ({catApps.length})</span>
+                  </span>
+                  <div className="demo-section-actions">
+                    {isSingleCategory && (
+                      <button className="demo-dismiss-all" onClick={(e) => { e.stopPropagation(); handleDismissDemos(); }}>
+                        Dismiss all
+                      </button>
+                    )}
+                    <span className="demo-section-toggle">{isCollapsed ? '▸' : '▾'}</span>
+                  </div>
+                </div>
+                {!isCollapsed && (
+                  <div className="app-grid demo-grid">
+                    {catApps.map(app => (
+                      <div
+                        key={app.id}
+                        className="app-tile demo-app-tile"
+                        onClick={() => navigate(`/app/${app.id}`)}
+                        title={app.description || app.name}
+                      >
+                        <span className="demo-badge">DEMO</span>
+                        <button
+                          className="demo-dismiss-btn"
+                          onClick={(e) => { e.stopPropagation(); handleDelete(app); }}
+                          title="Dismiss demo"
+                        >
+                          ✕
+                        </button>
+                        <div className="app-tile-icon">{app.icon}</div>
+                        <span className="app-tile-name">{app.name}</span>
+                        <span className="app-tile-author">{app.uploadedBy}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 

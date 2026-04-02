@@ -74,17 +74,34 @@ const AI_SPINNER_LINES = [
 
 function AiSpinner() {
   const [lineIdx, setLineIdx] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const jokeInterval = setInterval(() => {
       setLineIdx(i => (i + 1) % AI_SPINNER_LINES.length);
     }, 2800);
-    return () => clearInterval(interval);
+    const timerInterval = setInterval(() => {
+      setElapsed(s => s + 1);
+    }, 1000);
+    return () => { clearInterval(jokeInterval); clearInterval(timerInterval); };
   }, []);
+
+  const mins = Math.floor(elapsed / 60);
+  const secs = elapsed % 60;
+  const timeStr = mins > 0
+    ? `${mins}m ${secs.toString().padStart(2, '0')}s`
+    : `${secs}s`;
 
   return (
     <div className="ai-spinner">
-      <div className="spinner" style={{ width: 28, height: 28, borderWidth: 3 }} />
+      <div className="spinner" style={{ width: 32, height: 32, borderWidth: 3 }} />
+      <p className="ai-spinner-heading">AI is converting your file</p>
+      <p className="ai-spinner-subtitle">
+        This usually takes <strong>5–10 minutes</strong> depending on file size.
+        <br />
+        You can leave this tab open — we'll have it ready when it's done.
+      </p>
+      <p className="ai-spinner-timer">{timeStr} elapsed</p>
       <p className="ai-spinner-line" key={lineIdx}>{AI_SPINNER_LINES[lineIdx]}</p>
     </div>
   );

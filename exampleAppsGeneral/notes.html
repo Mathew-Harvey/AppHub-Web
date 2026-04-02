@@ -1815,9 +1815,6 @@
   $("#fabBtn").onclick = () => openEditor(null);
   $("#modalSave").onclick = saveNote;
   $("#modalCancel").onclick = closeEditor;
-  $("#modalOverlay").onclick = (e) => {
-    if (e.target === $("#modalOverlay")) closeEditor();
-  };
 
   $("#searchInput").addEventListener("input", render);
   $("#sortSelect").addEventListener("change", render);

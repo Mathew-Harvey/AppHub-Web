@@ -1262,9 +1262,32 @@ input, textarea, select {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 100px 24px;
+  padding: 80px 24px;
   text-align: center;
-  gap: 24px;
+  gap: 10px;
+}
+
+.ai-spinner-heading {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  margin-top: 8px;
+}
+
+.ai-spinner-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 380px;
+}
+
+.ai-spinner-timer {
+  font-size: 13px;
+  color: var(--text-tertiary, var(--text-secondary));
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono, monospace);
+  opacity: 0.7;
+  margin-top: 4px;
 }
 
 .ai-spinner-line {
@@ -1273,6 +1296,7 @@ input, textarea, select {
   font-weight: 500;
   min-height: 24px;
   animation: fadeIn 0.4s ease;
+  margin-top: 8px;
 }
 
 /* ─── Upgrade prompt ─────────────────────────────────────────────────────── */
@@ -2087,11 +2111,21 @@ input, textarea, select {
   z-index: 1;
 }
 
-.demo-section {
+.demo-sections-wrapper {
   margin-top: 32px;
   padding-top: 24px;
   border-top: 1px solid var(--border);
   transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.demo-section {
+  margin-top: 16px;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.demo-section-count {
+  color: var(--text-muted);
+  font-weight: 400;
 }
 
 .demo-section-dismissing {

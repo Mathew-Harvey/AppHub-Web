@@ -38,6 +38,52 @@ canvas{display:block;margin:auto;image-rendering:pixelated;touch-action:none}
 }
 .screen button:hover{background:#0ff;color:#000}
 .controls-info{font-size:12px;color:#446;margin-top:22px;line-height:2}
+
+@media(max-width:600px){
+    .screen{padding:22px 18px;min-width:0;width:90vw;max-width:340px}
+    .screen h1{font-size:30px;letter-spacing:2px}
+    .screen p{font-size:14px}
+    .screen button{padding:12px 28px;font-size:16px}
+    .controls-info{font-size:10px;line-height:1.8}
+}
+#mobileControls{
+    display:none;position:fixed;bottom:0;left:0;right:0;
+    flex-direction:column;align-items:center;gap:6px;
+    padding:8px 6px;
+    padding-bottom:max(8px,env(safe-area-inset-bottom));
+    background:rgba(5,5,15,0.96);
+    border-top:1px solid rgba(0,255,255,0.12);
+    z-index:5;touch-action:manipulation;
+    -webkit-user-select:none;user-select:none;
+}
+.ctrl-row{display:flex;gap:7px;justify-content:center;width:100%;max-width:400px}
+.ctrl-spacer{width:10px;flex-shrink:0}
+.ctrl-btn{
+    flex:1;max-width:62px;height:50px;
+    background:rgba(0,255,255,0.06);
+    border:1.5px solid rgba(0,255,255,0.25);
+    color:#0ff;font-family:'Courier New',monospace;
+    font-size:22px;font-weight:bold;
+    border-radius:10px;cursor:pointer;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+}
+.ctrl-btn:active{background:rgba(0,255,255,0.25);border-color:#0ff}
+.ctrl-btn.accent{background:rgba(213,0,249,0.06);border-color:rgba(213,0,249,0.3);color:#d500f9}
+.ctrl-btn.accent:active{background:rgba(213,0,249,0.25);border-color:#d500f9}
+.ctrl-btn.drop{background:rgba(255,234,0,0.06);border-color:rgba(255,234,0,0.25);color:#ffea00}
+.ctrl-btn.drop:active{background:rgba(255,234,0,0.25);border-color:#ffea00}
+.ctrl-btn.util{height:36px;font-size:11px;letter-spacing:1px;max-width:100px}
+#mobilePauseFloat{
+    position:fixed;top:6px;right:6px;z-index:20;
+    width:38px;height:38px;border-radius:50%;
+    background:rgba(5,5,15,0.85);border:1.5px solid rgba(0,255,255,0.25);
+    color:#0ff;font-size:18px;font-family:'Courier New',monospace;
+    cursor:pointer;touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+    display:none;align-items:center;justify-content:center;
+}
+#mobilePauseFloat:active{background:rgba(0,255,255,0.2);border-color:#0ff}
 </style>
 </head>
 <body>
@@ -48,10 +94,11 @@ canvas{display:block;margin:auto;image-rendering:pixelated;touch-action:none}
         <p>Modern Classic</p>
         <button id="startBtn">START GAME</button>
         <div class="controls-info">
-            ← → Move &nbsp;&nbsp; ↑ / X Rotate CW &nbsp;&nbsp; Z Rotate CCW<br>
+            <span class="desktop-hint">← → Move &nbsp;&nbsp; ↑ / X Rotate CW &nbsp;&nbsp; Z Rotate CCW<br>
             ↓ Soft Drop &nbsp;&nbsp; SPACE Hard Drop &nbsp;&nbsp; C Hold<br>
-            P Pause &nbsp;&nbsp; M Toggle Music<br>
-            <span style="color:#335">Mobile: Swipe to move/drop · Tap to rotate</span>
+            P Pause &nbsp;&nbsp; M Toggle Music</span>
+            <span class="mobile-hint" style="display:none;color:#8af">Use the on-screen buttons below to play<br>
+            Or swipe on the board to move &amp; drop</span>
         </div>
     </div>
     <div id="gameOverScreen" class="screen">
@@ -70,6 +117,24 @@ canvas{display:block;margin:auto;image-rendering:pixelated;touch-action:none}
     </div>
 </div>
 
+<div id="mobileControls">
+    <div class="ctrl-row">
+        <button class="ctrl-btn" id="btnLeft" aria-label="Move Left">◀</button>
+        <button class="ctrl-btn" id="btnDown" aria-label="Soft Drop">▼</button>
+        <button class="ctrl-btn" id="btnRight" aria-label="Move Right">▶</button>
+        <div class="ctrl-spacer"></div>
+        <button class="ctrl-btn accent" id="btnRotCCW" aria-label="Rotate CCW">↺</button>
+        <button class="ctrl-btn accent" id="btnRotCW" aria-label="Rotate CW">↻</button>
+        <button class="ctrl-btn drop" id="btnHardDrop" aria-label="Hard Drop">▲</button>
+    </div>
+    <div class="ctrl-row">
+        <button class="ctrl-btn util" id="btnHold">HOLD</button>
+        <button class="ctrl-btn util" id="btnPause">PAUSE</button>
+        <button class="ctrl-btn util" id="btnMusic">♪</button>
+    </div>
+</div>
+<button id="mobilePauseFloat" aria-label="Pause">⏸</button>
+
 <script>
 (function() {
 'use strict';
@@ -79,31 +144,93 @@ canvas{display:block;margin:auto;image-rendering:pixelated;touch-action:none}
 // ════════════════════════════════════════════
 const COLS = 10;
 const ROWS = 20;
-const B = 28;
+let B = 28;
 
-const BOARD_X = 175;
-const BOARD_Y = 55;
-const BOARD_W = COLS * B;
-const BOARD_H = ROWS * B;
+let BOARD_X = 175;
+let BOARD_Y = 55;
+let BOARD_W = COLS * B;
+let BOARD_H = ROWS * B;
 
-const HOLD_X = 22;
-const HOLD_Y = 100;
-const HOLD_W = 130;
-const HOLD_H = 100;
+let HOLD_X = 22;
+let HOLD_Y = 100;
+let HOLD_W = 130;
+let HOLD_H = 100;
 
-const NEXT_X = BOARD_X + BOARD_W + 22;
-const NEXT_Y = 100;
-const NEXT_W = 130;
-const NEXT_SLOT_H = 80;
+let NEXT_X = BOARD_X + BOARD_W + 22;
+let NEXT_Y = 100;
+let NEXT_W = 130;
+let NEXT_SLOT_H = 80;
 
-const SCORE_X = NEXT_X;
-const SCORE_Y = NEXT_Y + NEXT_SLOT_H * 3 + 40;
+let SCORE_X = NEXT_X;
+let SCORE_Y = NEXT_Y + NEXT_SLOT_H * 3 + 40;
 
-const STAT_X = 22;
-const STAT_Y = 260;
+let STAT_X = 22;
+let STAT_Y = 260;
 
-const CANVAS_W = NEXT_X + NEXT_W + 22;
-const CANVAS_H = BOARD_Y + BOARD_H + 35;
+let CANVAS_W = NEXT_X + NEXT_W + 22;
+let CANVAS_H = BOARD_Y + BOARD_H + 35;
+
+let isMobile = false;
+let isMobilePortrait = false;
+let showStats = true;
+
+function calculateLayout() {
+    const sw = window.innerWidth;
+    const sh = window.innerHeight;
+    const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const smallScreen = Math.min(sw, sh) < 768;
+    const portrait = sh > sw;
+
+    isMobile = hasTouch && smallScreen;
+    isMobilePortrait = isMobile && portrait;
+
+    if (isMobilePortrait) {
+        B = 22;
+        showStats = false;
+
+        HOLD_W = 66; HOLD_H = 58;
+        NEXT_W = 66; NEXT_SLOT_H = 56;
+
+        HOLD_X = 4; HOLD_Y = 46;
+        BOARD_X = HOLD_X + HOLD_W + 4;
+        BOARD_Y = 38;
+        BOARD_W = COLS * B;
+        BOARD_H = ROWS * B;
+
+        NEXT_X = BOARD_X + BOARD_W + 4;
+        NEXT_Y = 46;
+
+        SCORE_X = NEXT_X;
+        SCORE_Y = NEXT_Y + NEXT_SLOT_H * 3 + 10;
+
+        STAT_X = HOLD_X;
+        STAT_Y = HOLD_Y + HOLD_H + 10;
+
+        CANVAS_W = NEXT_X + NEXT_W + 4;
+        CANVAS_H = BOARD_Y + BOARD_H + 22;
+    } else {
+        B = 28;
+        showStats = true;
+
+        BOARD_X = 175; BOARD_Y = 55;
+        BOARD_W = COLS * B;
+        BOARD_H = ROWS * B;
+
+        HOLD_X = 22; HOLD_Y = 100;
+        HOLD_W = 130; HOLD_H = 100;
+
+        NEXT_X = BOARD_X + BOARD_W + 22;
+        NEXT_Y = 100; NEXT_W = 130; NEXT_SLOT_H = 80;
+
+        SCORE_X = NEXT_X;
+        SCORE_Y = NEXT_Y + NEXT_SLOT_H * 3 + 40;
+
+        STAT_X = 22; STAT_Y = 260;
+
+        CANVAS_W = NEXT_X + NEXT_W + 22;
+        CANVAS_H = BOARD_Y + BOARD_H + 35;
+    }
+}
 
 const DAS_DELAY = 170;
 const DAS_REPEAT = 33;
@@ -458,7 +585,8 @@ let level = 1;
 let totalLines = 0;
 let combo = -1;
 let b2bCount = 0;
-let highScore = parseInt(localStorage.getItem('tetrisHighV2')) || 0;
+let highScore = 0;
+try { highScore = parseInt(localStorage.getItem('tetrisHighV2')) || 0; } catch(e) {}
 
 let gameState = 'menu';
 let dropTimer = 0;
@@ -512,18 +640,54 @@ let boardGlowDir = 1;
 function setupCanvas() {
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
+    calculateLayout();
     canvas.width = CANVAS_W;
     canvas.height = CANVAS_H;
     scaleCanvas();
 }
 
 function scaleCanvas() {
+    const prevPortrait = isMobilePortrait;
+    calculateLayout();
+    canvas.width = CANVAS_W;
+    canvas.height = CANVAS_H;
+
+    if (isMobilePortrait !== prevPortrait) {
+        particles = [];
+        trailCells = [];
+        trailAlpha = 0;
+    }
+
+    const ctrlEl = document.getElementById('mobileControls');
+    const pauseFloat = document.getElementById('mobilePauseFloat');
+    if (ctrlEl) ctrlEl.style.display = isMobilePortrait ? 'flex' : 'none';
+    if (pauseFloat) pauseFloat.style.display = (isMobile && !isMobilePortrait) ? 'flex' : 'none';
+
+    let ctrlH = (isMobilePortrait && ctrlEl) ? ctrlEl.offsetHeight : 0;
+    if (isMobilePortrait && ctrlH < 20) ctrlH = 110;
+    const availH = window.innerHeight - ctrlH;
     const scaleX = window.innerWidth / CANVAS_W;
-    const scaleY = window.innerHeight / CANVAS_H;
-    const scale = Math.min(scaleX, scaleY, 1.5);
+    const scaleY = availH / CANVAS_H;
+    const maxScale = isMobile ? 2.5 : 1.5;
+    const scale = Math.min(scaleX, scaleY, maxScale);
     canvas.style.width = (CANVAS_W * scale) + 'px';
     canvas.style.height = (CANVAS_H * scale) + 'px';
+
+    if (isMobilePortrait) {
+        document.body.style.alignItems = 'flex-start';
+        document.body.style.paddingTop = '2px';
+    } else {
+        document.body.style.alignItems = 'center';
+        document.body.style.paddingTop = '0';
+    }
+
+    var dh = document.querySelector('.desktop-hint');
+    var mh = document.querySelector('.mobile-hint');
+    if (dh) dh.style.display = isMobile ? 'none' : 'inline';
+    if (mh) mh.style.display = isMobile ? 'inline' : 'none';
 }
+
+setupCanvas();
 
 // ════════════════════════════════════════════
 // BAG RANDOMIZER & PIECE SPAWNING
@@ -1427,20 +1591,23 @@ function drawHoldBox() {
     ctx.lineWidth = 2;
     ctx.strokeRect(HOLD_X, HOLD_Y, HOLD_W, HOLD_H);
 
+    const labelSize = isMobilePortrait ? 9 : 12;
     ctx.fillStyle = '#8af';
-    ctx.font = 'bold 12px "Courier New"';
+    ctx.font = 'bold ' + labelSize + 'px "Courier New"';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
-    ctx.fillText('HOLD', HOLD_X + HOLD_W / 2, HOLD_Y - 4);
+    ctx.fillText('HOLD', HOLD_X + HOLD_W / 2, HOLD_Y - 3);
 
     if (heldType) {
         drawMiniPiece(heldType, HOLD_X + HOLD_W / 2, HOLD_Y + HOLD_H / 2, holdUsed ? 0.35 : 1);
     }
 }
 
+function getMiniSize() { return isMobilePortrait ? 11 : 16; }
+
 function drawMiniPiece(type, cx, cy, alpha) {
     const matrix = SRS[type][0];
-    const size = 16;
+    const size = getMiniSize();
     const w = matrix[0].length * size;
     const h = matrix.length * size;
     const ox = cx - w / 2;
@@ -1460,11 +1627,12 @@ function drawMiniPiece(type, cx, cy, alpha) {
 // DRAWING: NEXT QUEUE
 // ════════════════════════════════════════════
 function drawNextQueue() {
+    const labelSize = isMobilePortrait ? 9 : 12;
     ctx.fillStyle = '#8af';
-    ctx.font = 'bold 12px "Courier New"';
+    ctx.font = 'bold ' + labelSize + 'px "Courier New"';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
-    ctx.fillText('NEXT', NEXT_X + NEXT_W / 2, NEXT_Y - 4);
+    ctx.fillText('NEXT', NEXT_X + NEXT_W / 2, NEXT_Y - 3);
 
     for (let i = 0; i < 3; i++) {
         const y = NEXT_Y + i * NEXT_SLOT_H;
@@ -1483,7 +1651,8 @@ function drawNextQueue() {
 
 function drawMiniPieceScaled(type, cx, cy, scale) {
     const matrix = SRS[type][0];
-    const size = Math.floor(16 * scale);
+    const baseSize = getMiniSize();
+    const size = Math.floor(baseSize * scale);
     const w = matrix[0].length * size;
     const h = matrix.length * size;
     const ox = cx - w / 2;
@@ -1505,37 +1674,50 @@ function drawScorePanel() {
     let y = SCORE_Y;
     const w = NEXT_W;
 
-    drawLabelBox(x, y, w, 44, 'SCORE', padNum(score, 8));
-    y += 56;
-    drawLabelBox(x, y, w, 36, 'LEVEL', padNum(level, 3));
-    y += 48;
-    drawLabelBox(x, y, w, 36, 'LINES', padNum(totalLines, 4));
-    y += 52;
+    if (isMobilePortrait) {
+        drawLabelBox(x, y, w, 34, 'SCORE', padNum(score, 6));
+        y += 40;
+        drawLabelBox(x, y, w, 28, 'LV', padNum(level, 2));
+        y += 34;
+        drawLabelBox(x, y, w, 28, 'LINES', padNum(totalLines, 3));
+        y += 34;
+    } else {
+        drawLabelBox(x, y, w, 44, 'SCORE', padNum(score, 8));
+        y += 56;
+        drawLabelBox(x, y, w, 36, 'LEVEL', padNum(level, 3));
+        y += 48;
+        drawLabelBox(x, y, w, 36, 'LINES', padNum(totalLines, 4));
+        y += 52;
+    }
 
+    const smallF = isMobilePortrait ? 9 : 13;
+    const tinyF = isMobilePortrait ? 8 : 11;
     if (combo > 0) {
         ctx.fillStyle = '#ffea00';
-        ctx.font = 'bold 13px "Courier New"';
+        ctx.font = 'bold ' + smallF + 'px "Courier New"';
         ctx.textAlign = 'center';
         ctx.fillText('COMBO x' + combo, x + w / 2, y);
-        y += 18;
+        y += isMobilePortrait ? 14 : 18;
     }
     if (b2bCount > 1) {
         ctx.fillStyle = '#0ff';
-        ctx.font = 'bold 11px "Courier New"';
+        ctx.font = 'bold ' + tinyF + 'px "Courier New"';
         ctx.textAlign = 'center';
         ctx.fillText('B2B x' + (b2bCount - 1), x + w / 2, y);
-        y += 18;
+        y += isMobilePortrait ? 14 : 18;
     }
 
-    y += 8;
-    ctx.fillStyle = '#445';
-    ctx.font = '10px "Courier New"';
-    ctx.textAlign = 'center';
-    ctx.fillText('HIGH SCORE', x + w / 2, y);
-    y += 16;
-    ctx.fillStyle = '#0ff';
-    ctx.font = 'bold 16px "Courier New"';
-    ctx.fillText(padNum(Math.max(highScore, score), 8), x + w / 2, y);
+    if (!isMobilePortrait) {
+        y += 8;
+        ctx.fillStyle = '#445';
+        ctx.font = '10px "Courier New"';
+        ctx.textAlign = 'center';
+        ctx.fillText('HIGH SCORE', x + w / 2, y);
+        y += 16;
+        ctx.fillStyle = '#0ff';
+        ctx.font = 'bold 16px "Courier New"';
+        ctx.fillText(padNum(Math.max(highScore, score), 8), x + w / 2, y);
+    }
 }
 
 function drawLabelBox(x, y, w, h, label, value) {
@@ -1545,16 +1727,18 @@ function drawLabelBox(x, y, w, h, label, value) {
     ctx.lineWidth = 1;
     ctx.strokeRect(x, y, w, h);
 
+    const lf = isMobilePortrait ? 7 : 10;
+    const vf = isMobilePortrait ? 11 : 16;
     ctx.fillStyle = '#668';
-    ctx.font = '10px "Courier New"';
+    ctx.font = lf + 'px "Courier New"';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillText(label, x + w / 2, y + 3);
+    ctx.fillText(label, x + w / 2, y + 2);
 
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 16px "Courier New"';
+    ctx.font = 'bold ' + vf + 'px "Courier New"';
     ctx.textBaseline = 'bottom';
-    ctx.fillText(value, x + w / 2, y + h - 3);
+    ctx.fillText(value, x + w / 2, y + h - 2);
 }
 
 // ════════════════════════════════════════════
@@ -1624,13 +1808,14 @@ function drawStats() {
 // DRAWING: TITLE
 // ════════════════════════════════════════════
 function drawTitle() {
+    const titleSize = isMobilePortrait ? 16 : 24;
     ctx.fillStyle = getLevelBorderColor();
-    ctx.font = 'bold 24px "Courier New"';
+    ctx.font = 'bold ' + titleSize + 'px "Courier New"';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     ctx.shadowColor = getLevelGlowColor();
     ctx.shadowBlur = 15;
-    ctx.fillText('TETRIS', BOARD_X + BOARD_W / 2, 12);
+    ctx.fillText('TETRIS', BOARD_X + BOARD_W / 2, isMobilePortrait ? 8 : 12);
     ctx.shadowBlur = 0;
 }
 
@@ -1895,7 +2080,7 @@ function doGameOver() {
 
     if (score > highScore) {
         highScore = score;
-        localStorage.setItem('tetrisHighV2', highScore);
+        try { localStorage.setItem('tetrisHighV2', highScore); } catch(e) {}
     }
 
     startGameOverAnim();
@@ -2029,7 +2214,7 @@ function drawFrame() {
     drawHoldBox();
     drawNextQueue();
     drawScorePanel();
-    drawStats();
+    if (showStats) drawStats();
     drawTitle();
     drawMusicIndicator();
     drawSpeedIndicator();
@@ -2049,6 +2234,7 @@ function drawBoardGlowEffect() {
 }
 
 function drawSpeedIndicator() {
+    if (isMobilePortrait) return;
     const interval = getDropInterval();
     const speed = (1000 / interval).toFixed(1);
     ctx.fillStyle = '#334';
@@ -2115,13 +2301,13 @@ function drawBlockGradient(x, y, type, alpha) {
 // DRAWING: CONTROLS HINT (bottom of board)
 // ════════════════════════════════════════════
 function drawControlsHint() {
-    if (gameState !== 'playing') return;
+    if (gameState !== 'playing' || isMobile) return;
     const y = CANVAS_H - 6;
     ctx.fillStyle = '#223';
     ctx.font = '9px "Courier New"';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
-    ctx.fillText('P:Pause  M:Music  C:Hold  Z/↑:Rotate  SPACE:Drop', CANVAS_W / 2, y);
+    ctx.fillText('P:Pause  M:Music  C:Hold  Z/\u2191:Rotate  SPACE:Drop', CANVAS_W / 2, y);
 }
 
 // ════════════════════════════════════════════
@@ -2193,11 +2379,13 @@ function drawLevelProgress() {
     ctx.fillStyle = 'hsl(' + hue + ',70%,50%)';
     ctx.fillRect(x, y, w * progress, h);
 
-    ctx.fillStyle = '#446';
-    ctx.font = '8px "Courier New"';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.fillText(linesInLevel + '/10 to Lv.' + (level + 1), x + w / 2, y + 6);
+    if (!isMobilePortrait) {
+        ctx.fillStyle = '#446';
+        ctx.font = '8px "Courier New"';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText(linesInLevel + '/10 to Lv.' + (level + 1), x + w / 2, y + 6);
+    }
 }
 
 // ════════════════════════════════════════════
@@ -2209,9 +2397,10 @@ function drawGameOverFade() {
     ctx.fillStyle = 'rgba(0,0,0,' + (progress * 0.5) + ')';
     ctx.fillRect(BOARD_X, BOARD_Y, BOARD_W, BOARD_H);
     if (progress > 0.3) {
+        const goSize = isMobilePortrait ? 22 : 32;
         ctx.globalAlpha = (progress - 0.3) / 0.7;
         ctx.fillStyle = '#f44';
-        ctx.font = 'bold 32px "Courier New"';
+        ctx.font = 'bold ' + goSize + 'px "Courier New"';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.shadowColor = '#f44';
@@ -2228,7 +2417,7 @@ function drawPausedFrame() {
     drawHoldBox();
     drawNextQueue();
     drawScorePanel();
-    drawStats();
+    if (showStats) drawStats();
     drawTitle();
 }
 
@@ -2303,6 +2492,7 @@ function drawMenuBackground() {
 }
 
 function drawMusicIndicator() {
+    if (isMobilePortrait) return;
     ctx.fillStyle = musicEnabled ? '#0a6' : '#444';
     ctx.font = '10px "Courier New"';
     ctx.textAlign = 'right';
@@ -2324,16 +2514,90 @@ document.getElementById('resumeBtn').addEventListener('click', function() {
 });
 
 // ════════════════════════════════════════════
+// MOBILE TOUCH BUTTON CONTROLS
+// ════════════════════════════════════════════
+function setupMobileControls() {
+    let mRepeatTimer = null;
+    let mRepeatInterval = null;
+
+    function startMRepeat(fn) {
+        stopMRepeat();
+        fn();
+        mRepeatTimer = setTimeout(function() {
+            mRepeatInterval = setInterval(fn, DAS_REPEAT);
+        }, DAS_DELAY);
+    }
+    function stopMRepeat() {
+        clearTimeout(mRepeatTimer);
+        clearInterval(mRepeatInterval);
+        mRepeatTimer = null;
+        mRepeatInterval = null;
+    }
+
+    function addBtn(id, onDown, onUp) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            initAudio();
+            resumeAudio();
+            onDown();
+        }, { passive: false });
+        el.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            if (onUp) onUp();
+        }, { passive: false });
+        el.addEventListener('touchcancel', function() {
+            if (onUp) onUp();
+        }, { passive: false });
+    }
+
+    addBtn('btnLeft',
+        function() { if (gameState === 'playing') startMRepeat(function() { movePiece(-1); }); },
+        function() { stopMRepeat(); }
+    );
+    addBtn('btnRight',
+        function() { if (gameState === 'playing') startMRepeat(function() { movePiece(1); }); },
+        function() { stopMRepeat(); }
+    );
+    addBtn('btnDown',
+        function() { if (gameState === 'playing') { softDropping = true; softDrop(); } },
+        function() { softDropping = false; }
+    );
+    addBtn('btnRotCW', function() { if (gameState === 'playing') tryRotate(1); });
+    addBtn('btnRotCCW', function() { if (gameState === 'playing') tryRotate(-1); });
+    addBtn('btnHardDrop', function() { if (gameState === 'playing') hardDrop(); });
+    addBtn('btnHold', function() { if (gameState === 'playing') holdPiece(); });
+    addBtn('btnPause', function() {
+        if (gameState === 'playing' || gameState === 'paused') togglePause();
+    });
+    addBtn('btnMusic', function() { toggleMusic(); });
+
+    var pauseFloat = document.getElementById('mobilePauseFloat');
+    if (pauseFloat) {
+        pauseFloat.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            if (gameState === 'playing' || gameState === 'paused') togglePause();
+        }, { passive: false });
+        pauseFloat.addEventListener('click', function() {
+            if (gameState === 'playing' || gameState === 'paused') togglePause();
+        });
+    }
+}
+
+// ════════════════════════════════════════════
 // WINDOW RESIZE
 // ════════════════════════════════════════════
-window.addEventListener('resize', scaleCanvas);
+window.addEventListener('resize', function() {
+    scaleCanvas();
+});
 
 // ════════════════════════════════════════════
 // INITIALIZATION
 // ════════════════════════════════════════════
-setupCanvas();
 resetBoard();
 initMenuDrops();
+setupMobileControls();
 prevTime = performance.now();
 requestAnimationFrame(gameLoop);
 

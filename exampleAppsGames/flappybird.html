@@ -42,9 +42,9 @@ window.addEventListener("resize", fitCanvas);
 // ── Constants ────────────────────────────────────────────────
 const GROUND_HEIGHT = 56;
 const GROUND_Y = H - GROUND_HEIGHT;
-const GRAVITY = 0.32;
-const FLAP_STRENGTH = -6.2;
-const VELOCITY_CAP = 12;
+const GRAVITY = 0.18;
+const FLAP_STRENGTH = -4.6;
+const VELOCITY_CAP = 8;
 const PIPE_WIDTH = 52;
 const PIPE_RIM_WIDTH = 60;
 const PIPE_RIM_HEIGHT = 24;
@@ -1698,7 +1698,7 @@ function triggerDeath() {
     triggerScreenShake(1, 15);
     screenFlashAlpha = 0.8;
 
-    bird.vy = -5;
+    bird.vy = -3.5;
 }
 
 function triggerGameOver() {
