@@ -202,7 +202,8 @@ export default function AdminPage() {
     return <div style={{ textAlign: 'center', padding: 64 }}><div className="spinner" /></div>;
   }
 
-  const logoSrc = workspace?.logoData || null;
+  const apiHost = import.meta.env.VITE_API_URL || '';
+  const logoSrc = workspace?.logoUrl ? `${apiHost}${workspace.logoUrl}` : null;
   const activeMembers = members.filter(m => m.isActive);
   const removedMembers = members.filter(m => !m.isActive);
   const pendingInvites = invitations.filter(i => !i.accepted);

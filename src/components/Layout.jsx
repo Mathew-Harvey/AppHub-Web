@@ -26,7 +26,8 @@ export default function Layout() {
     if (ws?.accentColor) style['--accent'] = ws.accentColor;
   }
 
-  const logoSrc = user?.workspace?.logoData || '/apphubLogo.png';
+  const apiHost = import.meta.env.VITE_API_URL || '';
+  const logoSrc = user?.workspace?.logoUrl ? `${apiHost}${user.workspace.logoUrl}` : '/apphubLogo.png';
 
   return (
     <div className="layout" style={style}>
