@@ -4,12 +4,16 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import EasterEgg from './EasterEgg';
 import InviteModal from './InviteModal';
+import OnboardingOverlay from './OnboardingOverlay';
 
 export default function Layout() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [showInvite, setShowInvite] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    return !localStorage.getItem('apphub-onboarding-done');
+  });
 
   const handleLogout = async () => {
     await logout();
@@ -43,16 +47,16 @@ export default function Layout() {
         </div>
 
         <nav className="topbar-nav">
-          <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} end>
+          <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} end data-onboarding="nav-apps">
             Apps
           </NavLink>
-          <NavLink to="/upload" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <NavLink to="/upload" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} data-onboarding="nav-upload">
             Upload
           </NavLink>
           <NavLink to="/about" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             About
           </NavLink>
-          <NavLink to="/settings" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+          <NavLink to="/settings" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} data-onboarding="nav-settings">
             Settings
           </NavLink>
         </nav>
@@ -62,6 +66,7 @@ export default function Layout() {
             className="btn-invite-topbar"
             onClick={() => setShowInvite(true)}
             title="Invite someone to this workspace"
+            data-onboarding="invite-btn"
           >
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="6" cy="5" r="3" />
@@ -90,6 +95,12 @@ export default function Layout() {
       </main>
       <EasterEgg />
       {showInvite && <InviteModal onClose={() => setShowInvite(false)} />}
+      {showOnboarding && (
+        <OnboardingOverlay onComplete={() => {
+          setShowOnboarding(false);
+          localStorage.setItem('apphub-onboarding-done', 'true');
+        }} />
+      )}
     </div>
   );
 }
