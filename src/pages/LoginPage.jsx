@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../utils/api';
 
+const apiHost = import.meta.env.VITE_API_URL || '';
+
 export default function LoginPage() {
   const { login, acceptInvite } = useAuth();
 
@@ -235,9 +237,9 @@ export default function LoginPage() {
                   className="invite-workspace-option"
                   onClick={() => handleSelectInvite(inv)}
                 >
-                  {inv.workspaceLogoData ? (
+                  {inv.workspaceLogoUrl ? (
                     <img
-                      src={inv.workspaceLogoData}
+                      src={`${apiHost}${inv.workspaceLogoUrl}`}
                       alt=""
                       className="invite-workspace-logo"
                     />
@@ -263,9 +265,9 @@ export default function LoginPage() {
         {/* ── Step: Invite accept (onboarding form) ────────────────── */}
         {step === 'invite' && invite && (
           <>
-            {invite.workspaceLogoData && (
+            {invite.workspaceLogoUrl && (
               <div className="invite-welcome-logo">
-                <img src={invite.workspaceLogoData} alt={invite.workspaceName} />
+                <img src={`${apiHost}${invite.workspaceLogoUrl}`} alt={invite.workspaceName} />
               </div>
             )}
 

@@ -5,18 +5,15 @@ import { api } from '../utils/api';
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
-  const [resetLink, setResetLink] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const data = await api.requestReset(email);
-      if (data.resetLink) setResetLink(data.resetLink);
+      await api.requestReset(email);
       setSubmitted(true);
     } catch (err) {
       setError(err.error || 'Something went wrong');
@@ -25,33 +22,18 @@ export default function ForgotPasswordPage() {
     }
   };
 
-  async function copyResetLink() {
-    try {
-      await navigator.clipboard.writeText(resetLink);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 3000);
-    } catch {}
-  }
-
   if (submitted) {
     return (
       <div className="auth-page">
-        <div className="auth-card card">
-          <h1>Check with your admin</h1>
+        <div className="auth-card card" style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>📧</div>
+          <h1>Check your email</h1>
           <p className="subtitle">
-            If an account exists for {email}, your workspace admin can generate a reset link for you from the Admin panel. Contact them to get back in.
+            If an account exists for <strong>{email}</strong>, we've sent a password reset link. Check your inbox (and spam folder).
           </p>
-          {resetLink && (
-            <div style={{ marginTop: 16, padding: 12, background: 'var(--surface-solid)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
-              <label className="label">Reset link</label>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <input className="input" readOnly value={resetLink} style={{ fontSize: 12 }} onClick={(e) => e.target.select()} />
-                <button className="btn btn-secondary btn-sm" onClick={copyResetLink} type="button">
-                  {copied ? 'Copied' : 'Copy'}
-                </button>
-              </div>
-            </div>
-          )}
+          <p className="subtitle" style={{ marginTop: 12, fontSize: 13 }}>
+            The link expires in 1 hour.
+          </p>
           <div className="form-footer">
             <Link to="/login">Back to sign in</Link>
           </div>
