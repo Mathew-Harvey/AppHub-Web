@@ -3,13 +3,6 @@ import { api } from '../utils/api';
 
 const AuthContext = createContext(null);
 
-function applyDevOverrides(user) {
-  if (import.meta.env.DEV && user?.workspace) {
-    user.workspace.plan = 'pro';
-  }
-  return user;
-}
-
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,7 +17,7 @@ export function AuthProvider({ children }) {
       if (!sessionStorage.getItem('baselineAppIds')) {
         snapshotKnownApps();
       }
-      setUser(applyDevOverrides(data.user));
+      setUser(data.user);
     } catch {
       setUser(null);
     } finally {
@@ -40,21 +33,21 @@ export function AuthProvider({ children }) {
   async function login(email, password) {
     const data = await api.login({ email, password });
     snapshotKnownApps();
-    setUser(applyDevOverrides(data.user));
+    setUser(data.user);
     return data;
   }
 
   async function register(body) {
     const data = await api.register(body);
     snapshotKnownApps();
-    setUser(applyDevOverrides(data.user));
+    setUser(data.user);
     return data;
   }
 
   async function acceptInvite(body) {
     const data = await api.acceptInvite(body);
     snapshotKnownApps();
-    setUser(applyDevOverrides(data.user));
+    setUser(data.user);
     return data;
   }
 
@@ -67,7 +60,7 @@ export function AuthProvider({ children }) {
   async function refreshUser() {
     try {
       const data = await api.me();
-      setUser(applyDevOverrides(data.user));
+      setUser(data.user);
     } catch {
       setUser(null);
     }

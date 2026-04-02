@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { api } from '../utils/api';
+import { copyToClipboard } from '../utils/clipboard';
 import { useToast } from '../components/Toast';
 
 const ACCEPTED_TYPES = '.zip,.jsx,.tsx,.vue,.svelte,.html,.htm,.css,.js,.ts,.json,.md,.py';
@@ -227,7 +228,7 @@ export default function ConverterPage() {
   async function copyHtml() {
     if (!result?.html) return;
     try {
-      await navigator.clipboard.writeText(result.html);
+      await copyToClipboard(result.html);
       showToast('HTML copied to clipboard', 'success');
     } catch {
       showToast('Failed to copy', 'error');

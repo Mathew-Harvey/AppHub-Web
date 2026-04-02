@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/Toast';
-import UpgradeModal, { isPlanLimitError } from '../components/UpgradeModal';
+import { usePlan, isPlanLimitError } from '../hooks/usePlan';
+import UpgradeModal from '../components/UpgradeModal';
 import InviteModal from '../components/InviteModal';
 
 function timeAgo(dateString) {
@@ -23,6 +24,7 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const { showToast, ToastElement } = useToast();
   const navigate = useNavigate();
+  const { isPro, maxApps } = usePlan();
 
   const [apps, setApps] = useState([]);
   const [folders, setFolders] = useState([]);
@@ -687,22 +689,21 @@ export default function DashboardPage() {
       )}
 
       {(() => {
-        const limits = user?.workspace?.planLimits;
-        if (!limits || limits.plan === 'pro') return null;
-        const nearLimit = limits.maxApps && userAppCount >= limits.maxApps - 2 && userAppCount < limits.maxApps;
-        const atLimit = limits.maxApps && userAppCount >= limits.maxApps;
+        if (isPro || !maxApps) return null;
+        const nearLimit = userAppCount >= maxApps - 2 && userAppCount < maxApps;
+        const atLimit = userAppCount >= maxApps;
         if (atLimit) return (
           <div className="limit-banner limit-banner-error">
-            You&apos;ve reached the free plan limit of {limits.maxApps} apps.{' '}
-            <button className="limit-banner-link" onClick={() => { setUpgradeMessage(`Free plan allows up to ${limits.maxApps} apps. Upgrade to Pro for unlimited apps.`); setShowUpgradeModal(true); }}>
+            You&apos;ve reached the free plan limit of {maxApps} apps.{' '}
+            <button className="limit-banner-link" onClick={() => { setUpgradeMessage(`Free plan allows up to ${maxApps} apps. Upgrade to Pro for unlimited apps.`); setShowUpgradeModal(true); }}>
               Upgrade to Pro
             </button>
           </div>
         );
         if (nearLimit) return (
           <div className="limit-banner limit-banner-warning">
-            You&apos;re approaching your free plan limit ({userAppCount} / {limits.maxApps} apps).{' '}
-            <button className="limit-banner-link" onClick={() => { setUpgradeMessage(`Free plan allows up to ${limits.maxApps} apps. Upgrade to Pro for unlimited apps.`); setShowUpgradeModal(true); }}>
+            You&apos;re approaching your free plan limit ({userAppCount} / {maxApps} apps).{' '}
+            <button className="limit-banner-link" onClick={() => { setUpgradeMessage(`Free plan allows up to ${maxApps} apps. Upgrade to Pro for unlimited apps.`); setShowUpgradeModal(true); }}>
               Upgrade to Pro
             </button>
           </div>

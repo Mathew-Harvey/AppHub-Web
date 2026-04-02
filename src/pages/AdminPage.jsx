@@ -2,8 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../utils/api';
+import { copyToClipboard } from '../utils/clipboard';
 import { useToast } from '../components/Toast';
-import UpgradeModal, { isPlanLimitError } from '../components/UpgradeModal';
+import { usePlan, isPlanLimitError } from '../hooks/usePlan';
+import UpgradeModal from '../components/UpgradeModal';
 import { timeAgo } from '../utils/timeAgo';
 
 export default function AdminPage() {
@@ -14,7 +16,7 @@ export default function AdminPage() {
   const logoInputRef = useRef(null);
 
   const isPageAdmin = user?.role === 'admin';
-  const isPro = user?.workspace?.plan && user.workspace.plan !== 'free';
+  const { isPro } = usePlan();
 
   useEffect(() => {
     if (searchParams.get('upgraded') === 'true') {
@@ -173,7 +175,7 @@ export default function AdminPage() {
   }
 
   async function copyLink(text) {
-    try { await navigator.clipboard.writeText(text); showToast('Copied!', 'success'); }
+    try { await copyToClipboard(text); showToast('Copied!', 'success'); }
     catch { showToast('Failed to copy', 'error'); }
   }
 

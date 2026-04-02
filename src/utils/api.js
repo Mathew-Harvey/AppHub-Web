@@ -18,6 +18,10 @@ async function request(url, options = {}) {
   const data = await res.json();
 
   if (!res.ok) {
+    if (import.meta.env.DEV && (data.error === 'plan_limit' || data.error === 'upgrade_required')) {
+      console.warn('[DEV] Plan limit bypassed:', data.error, data.message || '');
+      return data;
+    }
     const err = new Error(data.error || data.message || 'Request failed');
     Object.assign(err, { status: res.status, ...data });
     throw err;

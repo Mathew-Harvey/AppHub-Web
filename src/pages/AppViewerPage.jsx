@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { api, SANDBOX_BASE } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/Toast';
+import CodeErrorsModal from '../components/CodeErrorsModal';
 
 export default function AppViewerPage() {
   const { id } = useParams();
@@ -27,6 +28,11 @@ export default function AppViewerPage() {
   const [editDescription, setEditDescription] = useState('');
   const [saving, setSaving] = useState(false);
 
+  const [showCodeErrors, setShowCodeErrors] = useState(false);
+  const [codeErrors, setCodeErrors] = useState([]);
+  const [codeErrorsMessage, setCodeErrorsMessage] = useState('');
+  const [iframeError, setIframeError] = useState(false);
+
   useEffect(() => { loadApp(); }, [id]);
   useEffect(() => {
     api.getSandboxToken().then(data => setSandboxToken(data.token)).catch(() => {});
@@ -34,6 +40,17 @@ export default function AppViewerPage() {
   useEffect(() => {
     if (searchParams.get('update') === 'true' && app) setShowUpdate(true);
   }, [searchParams, app]);
+
+  const handleIframeMessage = useCallback((e) => {
+    if (e.data?.type === 'sandbox-error' || e.data?.type === 'app-crash') {
+      setIframeError(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('message', handleIframeMessage);
+    return () => window.removeEventListener('message', handleIframeMessage);
+  }, [handleIframeMessage]);
 
   async function loadApp() {
     try {
@@ -66,10 +83,20 @@ export default function AppViewerPage() {
       setApp({ ...app, ...data.app });
       setShowUpdate(false);
       setUpdateFile(null);
-      showToast('App updated', 'success');
+      setIframeError(false);
+
+      if (data.autoFixed && data.fixedErrors?.length) {
+        showToast(`Fixed ${data.fixedErrors.length} error${data.fixedErrors.length !== 1 ? 's' : ''} in your code with AI`, 'success');
+      } else {
+        showToast('App updated', 'success');
+      }
       if (iframeRef.current) iframeRef.current.src = iframeRef.current.src;
     } catch (err) {
-      if (err.conversionPrompt) { setConversionInfo(err); setUpdateFile(null); }
+      if (err.error === 'code_errors' && err.errors?.length) {
+        setCodeErrors(err.errors);
+        setCodeErrorsMessage(err.message || '');
+        setShowCodeErrors(true);
+      } else if (err.conversionPrompt) { setConversionInfo(err); setUpdateFile(null); }
       else showToast(err.error || 'Update failed', 'error');
     } finally { setUpdating(false); }
   }
@@ -139,13 +166,30 @@ export default function AppViewerPage() {
         </div>
       )}
 
-      <iframe
-        ref={iframeRef}
-        src={sandboxToken ? `${SANDBOX_BASE}/sandbox/${id}?token=${sandboxToken}` : ''}
-        sandbox="allow-scripts allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
-        title={app.name}
-        style={{ flex: 1, width: '100%', border: 'none', background: 'white' }}
-      />
+      <div style={{ flex: 1, position: 'relative', display: 'flex' }}>
+        <iframe
+          ref={iframeRef}
+          src={sandboxToken ? `${SANDBOX_BASE}/sandbox/${id}?token=${sandboxToken}` : ''}
+          sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
+          title={app.name}
+          style={{ flex: 1, width: '100%', border: 'none', background: 'white' }}
+        />
+        {iframeError && (
+          <div className="iframe-error-overlay">
+            <div className="iframe-error-content">
+              <div className="iframe-error-icon">&#x26A0;&#xFE0F;</div>
+              <h3>This app encountered an error</h3>
+              <p>Something went wrong while running the app.</p>
+              <button className="btn btn-secondary btn-sm" onClick={() => {
+                setIframeError(false);
+                if (iframeRef.current) iframeRef.current.src = iframeRef.current.src;
+              }}>
+                Reload App
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {showUpdate && (
         <div className="modal-overlay" onClick={() => { setShowUpdate(false); setUpdateFile(null); setConversionInfo(null); }}>
@@ -197,6 +241,14 @@ export default function AppViewerPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {showCodeErrors && (
+        <CodeErrorsModal
+          errors={codeErrors}
+          message={codeErrorsMessage}
+          onClose={() => setShowCodeErrors(false)}
+        />
       )}
 
       {ToastElement}

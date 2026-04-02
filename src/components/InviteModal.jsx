@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../utils/api';
+import { copyToClipboard } from '../utils/clipboard';
 import { useAuth } from '../contexts/AuthContext';
-import UpgradeModal, { isPlanLimitError } from './UpgradeModal';
+import { isPlanLimitError } from '../hooks/usePlan';
+import UpgradeModal from './UpgradeModal';
 
 export default function InviteModal({ onClose }) {
   const { user } = useAuth();
@@ -58,7 +60,7 @@ export default function InviteModal({ onClose }) {
 
   async function handleCopy() {
     try {
-      await navigator.clipboard.writeText(lastLink);
+      await copyToClipboard(lastLink);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch { /* clipboard not available */ }

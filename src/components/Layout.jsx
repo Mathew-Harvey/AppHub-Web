@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { usePlan } from '../hooks/usePlan';
 import EasterEgg from './EasterEgg';
 import InviteModal from './InviteModal';
 import OnboardingOverlay from './OnboardingOverlay';
@@ -20,9 +21,10 @@ export default function Layout() {
     navigate('/login');
   };
 
+  const { isPaid } = usePlan();
+
   const style = {};
   const ws = user?.workspace;
-  const isPaid = ws?.plan && ws.plan !== 'free';
 
   if (isPaid) {
     if (theme === 'light') {
@@ -44,8 +46,8 @@ export default function Layout() {
           <img src={logoSrc} alt="" className="topbar-logo" />
           <h2>{isPaid && ws?.name ? ws.name : 'AppHub'}</h2>
           {ws && (
-            <span className={`plan-badge ${ws.plan === 'pro' ? 'plan-badge-pro' : 'plan-badge-free'}`}>
-              {ws.plan === 'pro' ? 'PRO' : 'FREE'}
+            <span className={`plan-badge ${isPaid ? 'plan-badge-pro' : 'plan-badge-free'}`}>
+              {isPaid ? 'PRO' : 'FREE'}
             </span>
           )}
         </div>

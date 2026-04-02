@@ -69,6 +69,3 @@ export default function UpgradeModal({ onClose, limitMessage }) {
   );
 }
 
-export function isPlanLimitError(err) {
-  return err?.error === 'plan_limit' || err?.error === 'upgrade_required';
-}

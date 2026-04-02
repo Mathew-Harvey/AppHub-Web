@@ -1,10 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
+import { copyToClipboard } from '../utils/clipboard';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../components/Toast';
+import { usePlan, isPlanLimitError } from '../hooks/usePlan';
 import IconPicker from '../components/IconPicker';
-import UpgradeModal, { isPlanLimitError } from '../components/UpgradeModal';
+import UpgradeModal from '../components/UpgradeModal';
+import CodeErrorsModal from '../components/CodeErrorsModal';
 
 const PASTE_EXTENSIONS = ['.jsx', '.tsx', '.vue', '.svelte', '.html', '.css', '.js', '.ts'];
 const DEFAULT_PASTE_FILENAME = 'pasted-code.jsx';
@@ -87,6 +90,32 @@ function AiSpinner() {
   );
 }
 
+function AutoFixedBanner({ errors }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div className="auto-fixed-banner">
+      <div className="auto-fixed-header">
+        <span className="auto-fixed-icon">&#x2728;</span>
+        <span>We found and fixed {errors.length} error{errors.length !== 1 ? 's' : ''} in your code with AI</span>
+        <button className="btn btn-ghost btn-sm" onClick={() => setExpanded(!expanded)}>
+          {expanded ? 'Hide' : 'Details'}
+        </button>
+      </div>
+      {expanded && (
+        <div className="auto-fixed-details">
+          {errors.map((err, i) => (
+            <div key={i} className="auto-fixed-item">
+              <span className="code-error-badge">{err.type === 'syntax_error' ? 'Syntax' : 'Fixed'}</span>
+              <span className="auto-fixed-message">{err.message}</span>
+              {err.line != null && <span className="code-error-line">Line {err.line}</span>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function textToFile(text, filename) {
   return new File([new Blob([text], { type: 'text/plain' })], filename);
 }
@@ -117,12 +146,18 @@ export default function UploadPage() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState('');
 
+  const [showCodeErrors, setShowCodeErrors] = useState(false);
+  const [codeErrors, setCodeErrors] = useState([]);
+  const [codeErrorsMessage, setCodeErrorsMessage] = useState('');
+
+  const [autoFixedErrors, setAutoFixedErrors] = useState(null);
+
   const [showPasteModal, setShowPasteModal] = useState(false);
   const [pasteCode, setPasteCode] = useState('');
   const [pasteFilename, setPasteFilename] = useState(DEFAULT_PASTE_FILENAME);
   const [filenameManuallyEdited, setFilenameManuallyEdited] = useState(false);
 
-  const isPro = user?.workspace?.plan === 'pro';
+  const { isPro } = usePlan();
 
   useEffect(() => {
     api.getMembers().then(d => setMembers(d.members)).catch(() => {});
@@ -231,10 +266,18 @@ export default function UploadPage() {
         formData.append('sharedWith', JSON.stringify(sharedWith));
       }
 
-      await api.uploadApp(formData);
+      const result = await api.uploadApp(formData);
+
+      if (result.autoFixed && result.fixedErrors?.length) {
+        setAutoFixedErrors(result.fixedErrors);
+      }
       setUploadSuccess(true);
     } catch (err) {
-      if (isPlanLimitError(err)) {
+      if (err.error === 'code_errors' && err.errors?.length) {
+        setCodeErrors(err.errors);
+        setCodeErrorsMessage(err.message || '');
+        setShowCodeErrors(true);
+      } else if (isPlanLimitError(err)) {
         setUpgradeMessage(err.message);
         setShowUpgradeModal(true);
       } else if (err.conversionPrompt) {
@@ -250,7 +293,7 @@ export default function UploadPage() {
 
   async function copyPrompt(text) {
     try {
-      await navigator.clipboard.writeText(text);
+      await copyToClipboard(text);
       setCopied(true);
       showToast('Copied to clipboard', 'success');
       setTimeout(() => setCopied(false), 3000);
@@ -310,6 +353,11 @@ export default function UploadPage() {
         <div className="upload-success-icon">{icon}</div>
         <h2>{name}</h2>
         <p>Your app is live. Your team can use it now.</p>
+
+        {autoFixedErrors && autoFixedErrors.length > 0 && (
+          <AutoFixedBanner errors={autoFixedErrors} />
+        )}
+
         <button className="btn btn-primary" onClick={() => navigate('/')} style={{ marginTop: 16 }}>
           Go to Dashboard
         </button>
@@ -536,6 +584,14 @@ export default function UploadPage() {
             </button>
           </div>
         </div>
+      )}
+
+      {showCodeErrors && (
+        <CodeErrorsModal
+          errors={codeErrors}
+          message={codeErrorsMessage}
+          onClose={() => setShowCodeErrors(false)}
+        />
       )}
 
       {showUpgradeModal && (
