@@ -14,6 +14,7 @@ export default function AdminPage() {
   const logoInputRef = useRef(null);
 
   const isPageAdmin = user?.role === 'admin';
+  const isPro = user?.workspace?.plan && user.workspace.plan !== 'free';
 
   useEffect(() => {
     if (searchParams.get('upgraded') === 'true') {
@@ -448,61 +449,74 @@ export default function AdminPage() {
       {/* Branding */}
       {isPageAdmin && (<div className="admin-section">
         <h3>Branding</h3>
-        <div className="card">
-          <form onSubmit={saveBranding}>
-            <div className="form-group">
-              <label className="label">Workspace Name</label>
-              <input className="input" value={wsName} onChange={(e) => setWsName(e.target.value)} />
-            </div>
-
-            <div className="form-group">
-              <label className="label">Logo</label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                {logoSrc && <img src={logoSrc} alt="Logo" style={{ height: 40, borderRadius: 4 }} />}
-                <button type="button" className="btn btn-secondary btn-sm" onClick={() => logoInputRef.current?.click()}>
-                  {logoSrc ? 'Change logo' : 'Upload logo'}
-                </button>
-                <input ref={logoInputRef} type="file" accept="image/*" onChange={uploadLogo} style={{ display: 'none' }} />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label className="label">Primary Color</label>
-              <div className="color-row">
-                <input type="color" className="color-swatch" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} />
-                <input className="input" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} style={{ maxWidth: 120 }} />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label className="label">Accent Color</label>
-              <div className="color-row">
-                <input type="color" className="color-swatch" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} />
-                <input className="input" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} style={{ maxWidth: 120 }} />
-              </div>
-            </div>
-
-            <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
-              <label className="label" style={{ marginBottom: 12 }}>Light mode colors</label>
+        {isPro ? (
+          <div className="card">
+            <form onSubmit={saveBranding}>
               <div className="form-group">
-                <label className="label">Primary Color (light)</label>
-                <div className="color-row">
-                  <input type="color" className="color-swatch" value={primaryColorLight} onChange={(e) => setPrimaryColorLight(e.target.value)} />
-                  <input className="input" value={primaryColorLight} onChange={(e) => setPrimaryColorLight(e.target.value)} style={{ maxWidth: 120 }} />
+                <label className="label">Workspace Name</label>
+                <input className="input" value={wsName} onChange={(e) => setWsName(e.target.value)} />
+              </div>
+
+              <div className="form-group">
+                <label className="label">Logo</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  {logoSrc && <img src={logoSrc} alt="Logo" style={{ height: 40, borderRadius: 4 }} />}
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => logoInputRef.current?.click()}>
+                    {logoSrc ? 'Change logo' : 'Upload logo'}
+                  </button>
+                  <input ref={logoInputRef} type="file" accept="image/*" onChange={uploadLogo} style={{ display: 'none' }} />
                 </div>
               </div>
+
               <div className="form-group">
-                <label className="label">Accent Color (light)</label>
+                <label className="label">Primary Color</label>
                 <div className="color-row">
-                  <input type="color" className="color-swatch" value={accentColorLight} onChange={(e) => setAccentColorLight(e.target.value)} />
-                  <input className="input" value={accentColorLight} onChange={(e) => setAccentColorLight(e.target.value)} style={{ maxWidth: 120 }} />
+                  <input type="color" className="color-swatch" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} />
+                  <input className="input" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} style={{ maxWidth: 120 }} />
                 </div>
               </div>
-            </div>
 
-            <button type="submit" className="btn btn-primary">Save branding</button>
-          </form>
-        </div>
+              <div className="form-group">
+                <label className="label">Accent Color</label>
+                <div className="color-row">
+                  <input type="color" className="color-swatch" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} />
+                  <input className="input" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} style={{ maxWidth: 120 }} />
+                </div>
+              </div>
+
+              <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+                <label className="label" style={{ marginBottom: 12 }}>Light mode colors</label>
+                <div className="form-group">
+                  <label className="label">Primary Color (light)</label>
+                  <div className="color-row">
+                    <input type="color" className="color-swatch" value={primaryColorLight} onChange={(e) => setPrimaryColorLight(e.target.value)} />
+                    <input className="input" value={primaryColorLight} onChange={(e) => setPrimaryColorLight(e.target.value)} style={{ maxWidth: 120 }} />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="label">Accent Color (light)</label>
+                  <div className="color-row">
+                    <input type="color" className="color-swatch" value={accentColorLight} onChange={(e) => setAccentColorLight(e.target.value)} />
+                    <input className="input" value={accentColorLight} onChange={(e) => setAccentColorLight(e.target.value)} style={{ maxWidth: 120 }} />
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" className="btn btn-primary">Save branding</button>
+            </form>
+          </div>
+        ) : (
+          <div className="ai-locked-prompt" onClick={() => { setUpgradeMessage('Custom branding requires a paid subscription.'); setShowUpgradeModal(true); }}>
+            <div className="ai-locked-header">
+              <span className="ai-locked-icon">&#x1F3A8;</span>
+              <span className="plan-badge plan-badge-pro plan-badge-sm">PRO</span>
+            </div>
+            <p className="ai-locked-text">
+              <strong>Custom branding</strong> lets you upload your own logo, set your workspace name, and customise colors.
+            </p>
+            <span className="btn btn-primary btn-sm">Upgrade to Pro &mdash; $12/mo</span>
+          </div>
+        )}
       </div>)}
 
       {showUpgradeModal && (

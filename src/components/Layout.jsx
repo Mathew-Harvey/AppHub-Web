@@ -22,23 +22,27 @@ export default function Layout() {
 
   const style = {};
   const ws = user?.workspace;
-  if (theme === 'light') {
-    if (ws?.primaryColorLight) style['--primary'] = ws.primaryColorLight;
-    if (ws?.accentColorLight) style['--accent'] = ws.accentColorLight;
-  } else {
-    if (ws?.primaryColor) style['--primary'] = ws.primaryColor;
-    if (ws?.accentColor) style['--accent'] = ws.accentColor;
+  const isPaid = ws?.plan && ws.plan !== 'free';
+
+  if (isPaid) {
+    if (theme === 'light') {
+      if (ws?.primaryColorLight) style['--primary'] = ws.primaryColorLight;
+      if (ws?.accentColorLight) style['--accent'] = ws.accentColorLight;
+    } else {
+      if (ws?.primaryColor) style['--primary'] = ws.primaryColor;
+      if (ws?.accentColor) style['--accent'] = ws.accentColor;
+    }
   }
 
   const apiHost = import.meta.env.VITE_API_URL || '';
-  const logoSrc = user?.workspace?.logoUrl ? `${apiHost}${user.workspace.logoUrl}` : '/apphubLogo.png';
+  const logoSrc = isPaid && ws?.logoUrl ? `${apiHost}${ws.logoUrl}` : '/apphubLogo.png';
 
   return (
     <div className="layout" style={style}>
       <header className="topbar">
         <div className="topbar-brand">
           <img src={logoSrc} alt="" className="topbar-logo" />
-          <h2>{user?.workspace?.name || 'AppHub'}</h2>
+          <h2>{isPaid && ws?.name ? ws.name : 'AppHub'}</h2>
           {ws && (
             <span className={`plan-badge ${ws.plan === 'pro' ? 'plan-badge-pro' : 'plan-badge-free'}`}>
               {ws.plan === 'pro' ? 'PRO' : 'FREE'}
