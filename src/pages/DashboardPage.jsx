@@ -35,8 +35,8 @@ export default function DashboardPage() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState('');
   const [showInviteModal, setShowInviteModal] = useState(false);
-  const [demoCollapsed, setDemoCollapsed] = useState({});
   const [demoDismissing, setDemoDismissing] = useState(false);
+  const [openDemoCat, setOpenDemoCat] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const [openFolderId, setOpenFolderId] = useState(null);
@@ -849,66 +849,42 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Demo apps sections grouped by category */}
+      {/* Demo apps as folder tiles */}
       {filteredDemoApps.length > 0 && (
-        <div className={`demo-sections-wrapper${demoDismissing ? ' demo-section-dismissing' : ''}`}>
-          {sortedDemoCategories.length > 1 && (
-            <div className="demo-section-header" style={{ marginBottom: 0 }}>
-              <span className="demo-section-title">Demo Apps — explore what&apos;s possible</span>
-              <div className="demo-section-actions">
-                <button className="demo-dismiss-all" onClick={handleDismissDemos}>
-                  Dismiss all
-                </button>
-              </div>
-            </div>
-          )}
-          {sortedDemoCategories.map(cat => {
-            const catApps = demoCategories[cat];
-            const isCollapsed = demoCollapsed[cat] || false;
-            const isSingleCategory = sortedDemoCategories.length === 1;
-            return (
-              <div key={cat} className="demo-section">
-                <div className="demo-section-header" onClick={() => setDemoCollapsed(prev => ({ ...prev, [cat]: !isCollapsed }))}>
-                  <span className="demo-section-title">
-                    {isSingleCategory ? 'Demo Apps — explore what\u2019s possible' : cat}
-                    <span className="demo-section-count"> ({catApps.length})</span>
-                  </span>
-                  <div className="demo-section-actions">
-                    {isSingleCategory && (
-                      <button className="demo-dismiss-all" onClick={(e) => { e.stopPropagation(); handleDismissDemos(); }}>
-                        Dismiss all
-                      </button>
-                    )}
-                    <span className="demo-section-toggle">{isCollapsed ? '▸' : '▾'}</span>
+        <div className={`demo-folders-section${demoDismissing ? ' demo-section-dismissing' : ''}`}>
+          <div className="demo-folders-header">
+            <span className="demo-section-title">Demos — explore what&apos;s possible</span>
+            <button className="demo-dismiss-all" onClick={handleDismissDemos}>
+              Dismiss all
+            </button>
+          </div>
+          <div className="app-grid demo-grid">
+            {sortedDemoCategories.map(cat => {
+              const catApps = demoCategories[cat];
+              return (
+                <div
+                  key={cat}
+                  className="app-tile folder-tile demo-folder-tile"
+                  onClick={() => setOpenDemoCat(cat)}
+                  title={`${cat} — ${catApps.length} apps`}
+                >
+                  <span className="demo-badge">DEMO</span>
+                  <div className="folder-tile-icon">
+                    <div className="folder-preview-grid">
+                      {catApps.slice(0, 4).map(app => (
+                        <span key={app.id} className="folder-preview-item">{app.icon}</span>
+                      ))}
+                      {catApps.length < 4 && Array.from({ length: 4 - Math.min(4, catApps.length) }).map((_, i) => (
+                        <span key={`empty-${i}`} className="folder-preview-item folder-preview-empty" />
+                      ))}
+                    </div>
                   </div>
+                  <span className="app-tile-name">{cat}</span>
+                  <span className="app-tile-author">{catApps.length} apps</span>
                 </div>
-                {!isCollapsed && (
-                  <div className="app-grid demo-grid">
-                    {catApps.map(app => (
-                      <div
-                        key={app.id}
-                        className="app-tile demo-app-tile"
-                        onClick={() => navigate(`/app/${app.id}`)}
-                        title={app.description || app.name}
-                      >
-                        <span className="demo-badge">DEMO</span>
-                        <button
-                          className="demo-dismiss-btn"
-                          onClick={(e) => { e.stopPropagation(); handleDelete(app); }}
-                          title="Dismiss demo"
-                        >
-                          ✕
-                        </button>
-                        <div className="app-tile-icon">{app.icon}</div>
-                        <span className="app-tile-name">{app.name}</span>
-                        <span className="app-tile-author">{app.uploadedBy}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -987,6 +963,48 @@ export default function DashboardPage() {
                     ✕
                   </button>
                   {app.isDemo && <span className="demo-badge">DEMO</span>}
+                  <div className="app-tile-icon">{app.icon}</div>
+                  <span className="app-tile-name">{app.name}</span>
+                  <span className="app-tile-author">{app.uploadedBy}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Demo folder popover */}
+      {openDemoCat && demoCategories[openDemoCat] && (
+        <div
+          className="folder-popover-overlay"
+          onClick={() => setOpenDemoCat(null)}
+        >
+          <div
+            className="folder-popover"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="folder-popover-header">
+              <h3 className="folder-popover-name">
+                {openDemoCat === 'Demo Games' ? '🎮' : '🧩'} {openDemoCat}
+              </h3>
+              <button className="folder-popover-close" onClick={() => setOpenDemoCat(null)}>✕</button>
+            </div>
+            <div className="folder-popover-grid">
+              {demoCategories[openDemoCat].map(app => (
+                <div
+                  key={app.id}
+                  className="app-tile demo-app-tile"
+                  onClick={() => { setOpenDemoCat(null); navigate(`/app/${app.id}`); }}
+                  title={app.description || app.name}
+                >
+                  <span className="demo-badge">DEMO</span>
+                  <button
+                    className="demo-dismiss-btn"
+                    onClick={(e) => { e.stopPropagation(); handleDelete(app); }}
+                    title="Dismiss demo"
+                  >
+                    ✕
+                  </button>
                   <div className="app-tile-icon">{app.icon}</div>
                   <span className="app-tile-name">{app.name}</span>
                   <span className="app-tile-author">{app.uploadedBy}</span>
