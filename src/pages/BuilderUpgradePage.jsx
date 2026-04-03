@@ -50,7 +50,7 @@ export default function BuilderUpgradePage() {
             <span className="builder-upgrade-plan-detail">500K tokens/month</span>
           </div>
           <div className="builder-upgrade-plan highlighted">
-            <strong>Power User</strong>
+            <strong>Pro</strong>
             <span className="builder-upgrade-plan-price">$79/mo</span>
             <span className="builder-upgrade-plan-detail">Unlimited builds</span>
           </div>
@@ -62,7 +62,7 @@ export default function BuilderUpgradePage() {
             onClick={handleUpgrade}
             disabled={loading}
           >
-            {loading ? <span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> : 'Upgrade Now →'}
+            {loading ? <span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> : 'Get Started'}
           </button>
         ) : (
           <p className="builder-upgrade-non-admin">

@@ -66,7 +66,7 @@ export default function TokenUsageMeter({ usage, compact = false }) {
       <div className="token-meter-footer">
         {isOver ? (
           <a href="/settings" className="token-meter-upgrade">
-            Upgrade to Power User for unlimited builds
+            Upgrade to Pro for unlimited builds
           </a>
         ) : (
           <span className="token-meter-sub">Resets {timeUntil(usage.resetAt)}</span>

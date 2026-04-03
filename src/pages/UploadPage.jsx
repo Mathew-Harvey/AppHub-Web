@@ -174,7 +174,7 @@ export default function UploadPage() {
   const [pasteFilename, setPasteFilename] = useState(DEFAULT_PASTE_FILENAME);
   const [filenameManuallyEdited, setFilenameManuallyEdited] = useState(false);
 
-  const { isPro } = usePlan();
+  const { isPaid } = usePlan();
 
   useEffect(() => {
     api.getMembers().then(d => setMembers(d.members)).catch(() => {});
@@ -209,7 +209,7 @@ export default function UploadPage() {
         const baseName = f.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
         if (!name) setName(baseName.charAt(0).toUpperCase() + baseName.slice(1));
 
-        if (isPro) {
+        if (isPaid) {
           doAiConvert(f);
         } else {
           setConversionInfo(check);
@@ -398,27 +398,27 @@ export default function UploadPage() {
           <h3>{conversionInfo.detected || 'Unsupported file type'}</h3>
           <p>
             AppHub needs a single <strong>.html</strong> file.
-            {isPro
+            {isPaid
               ? ' We can auto-convert this for you, or copy the prompt below to do it yourself.'
               : ' Copy the prompt below and paste it into your AI tool to convert it.'}
           </p>
 
-          {isPro && (
+          {isPaid && (
             <button className="btn btn-primary" style={{ marginBottom: 16 }} onClick={handleAiConvert}>
               Auto-convert with AI
             </button>
           )}
 
-          {!isPro && (
-            <div className="ai-locked-prompt" onClick={() => { setUpgradeMessage('Smart AI uploads require a Pro subscription.'); setShowUpgradeModal(true); }}>
+          {!isPaid && (
+            <div className="ai-locked-prompt" onClick={() => { setUpgradeMessage('Smart AI uploads require a paid subscription.'); setShowUpgradeModal(true); }}>
               <div className="ai-locked-header">
                 <span className="ai-locked-icon">&#x1F512;</span>
-                <span className="plan-badge plan-badge-pro plan-badge-sm">PRO</span>
+                <span className="plan-badge plan-badge-pro plan-badge-sm">PAID</span>
               </div>
               <p className="ai-locked-text">
                 <strong>Smart AI uploads</strong> can auto-convert any file to HTML.
               </p>
-              <span className="btn btn-primary btn-sm">Upgrade to Pro — $12/mo</span>
+              <span className="btn btn-primary btn-sm">Get Started</span>
             </div>
           )}
 

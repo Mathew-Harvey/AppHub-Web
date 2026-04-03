@@ -2,12 +2,18 @@ import { useState } from 'react';
 import { api } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 
-const PRO_FEATURES = [
-  'Unlimited hosted apps',
-  'Unlimited team members',
+const PAID_FEATURES = [
+  'Up to unlimited hosted apps',
+  'Up to unlimited team members',
   'Smart AI uploads',
-  '50 AI conversions/month',
+  'AI conversions included',
   'Priority support',
+];
+
+const PLANS = [
+  { name: 'Team', price: '$12', detail: '50 apps, 15 members, 20 AI conversions/mo' },
+  { name: 'Business', price: '$29', detail: 'Unlimited apps & members, 500K builder tokens' },
+  { name: 'Pro', price: '$79', detail: 'Everything unlimited' },
 ];
 
 export default function UpgradeModal({ onClose, limitMessage }) {
@@ -31,14 +37,14 @@ export default function UpgradeModal({ onClose, limitMessage }) {
         <button className="upgrade-modal-close" onClick={onClose}>&times;</button>
 
         <div className="upgrade-modal-icon">&#x1F680;</div>
-        <h2 className="upgrade-modal-title">Upgrade to Pro</h2>
+        <h2 className="upgrade-modal-title">Upgrade your workspace</h2>
 
         {limitMessage && (
           <p className="upgrade-modal-limit">{limitMessage}</p>
         )}
 
         <div className="upgrade-modal-features">
-          {PRO_FEATURES.map((f) => (
+          {PAID_FEATURES.map((f) => (
             <div key={f} className="upgrade-modal-feature">
               <span className="upgrade-modal-check">&#x2713;</span>
               <span>{f}</span>
@@ -46,9 +52,21 @@ export default function UpgradeModal({ onClose, limitMessage }) {
           ))}
         </div>
 
-        <div className="upgrade-modal-price">
-          <span className="upgrade-modal-amount">$12</span>
-          <span className="upgrade-modal-period">/month per workspace</span>
+        <div className="upgrade-modal-plans" style={{ display: 'flex', gap: 12, margin: '16px 0', justifyContent: 'center' }}>
+          {PLANS.map((p) => (
+            <div key={p.name} style={{
+              textAlign: 'center',
+              padding: '10px 14px',
+              borderRadius: 8,
+              border: '1px solid var(--border)',
+              flex: 1,
+              minWidth: 0,
+            }}>
+              <div style={{ fontWeight: 600, fontSize: 14 }}>{p.name}</div>
+              <div style={{ fontSize: 20, fontWeight: 700 }}>{p.price}<span style={{ fontSize: 12, fontWeight: 400, opacity: 0.7 }}>/mo</span></div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{p.detail}</div>
+            </div>
+          ))}
         </div>
 
         {isAdmin ? (
@@ -57,7 +75,7 @@ export default function UpgradeModal({ onClose, limitMessage }) {
             onClick={handleUpgrade}
             disabled={loading}
           >
-            {loading ? <span className="spinner" /> : 'Upgrade to Pro — $12/mo'}
+            {loading ? <span className="spinner" /> : 'Get Started'}
           </button>
         ) : (
           <p className="upgrade-modal-non-admin">

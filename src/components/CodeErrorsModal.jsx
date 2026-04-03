@@ -48,7 +48,7 @@ export default function CodeErrorsModal({ errors, message, onClose }) {
             <span className="code-errors-cta-label">Auto-fix with AI</span>
           </div>
           <p className="code-errors-cta-text">
-            Upgrade to Pro and we'll automatically fix code errors with AI during upload.
+            Upgrade and we'll automatically fix code errors with AI during upload.
           </p>
 
           {isAdmin ? (
@@ -57,7 +57,7 @@ export default function CodeErrorsModal({ errors, message, onClose }) {
               onClick={handleUpgrade}
               disabled={loading}
             >
-              {loading ? <span className="spinner" /> : 'Upgrade to Pro — $12/mo'}
+              {loading ? <span className="spinner" /> : 'Get Started'}
             </button>
           ) : (
             <p className="code-errors-cta-non-admin">

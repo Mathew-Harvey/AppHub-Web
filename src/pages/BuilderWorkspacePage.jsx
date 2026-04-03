@@ -356,7 +356,7 @@ export default function BuilderWorkspacePage() {
 
               {isOverBudget && (
                 <p className="builder-over-budget">
-                  Token budget exceeded. <a href="/settings">Upgrade to Power User</a> for unlimited builds.
+                  Token budget exceeded. <a href="/settings">Upgrade to Pro</a> for unlimited builds.
                 </p>
               )}
             </>

@@ -24,7 +24,7 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const { showToast, ToastElement } = useToast();
   const navigate = useNavigate();
-  const { isPro, maxApps } = usePlan();
+  const { isPaid, maxApps } = usePlan();
 
   const [apps, setApps] = useState([]);
   const [folders, setFolders] = useState([]);
@@ -718,22 +718,22 @@ export default function DashboardPage() {
       )}
 
       {(() => {
-        if (isPro || !maxApps) return null;
+        if (isPaid || !maxApps) return null;
         const nearLimit = userAppCount >= maxApps - 2 && userAppCount < maxApps;
         const atLimit = userAppCount >= maxApps;
         if (atLimit) return (
           <div className="limit-banner limit-banner-error">
             You&apos;ve reached the free plan limit of {maxApps} apps.{' '}
-            <button className="limit-banner-link" onClick={() => { setUpgradeMessage(`Free plan allows up to ${maxApps} apps. Upgrade to Pro for unlimited apps.`); setShowUpgradeModal(true); }}>
-              Upgrade to Pro
+            <button className="limit-banner-link" onClick={() => { setUpgradeMessage(`Free plan allows up to ${maxApps} apps. Upgrade for more.`); setShowUpgradeModal(true); }}>
+              Upgrade
             </button>
           </div>
         );
         if (nearLimit) return (
           <div className="limit-banner limit-banner-warning">
             You&apos;re approaching your free plan limit ({userAppCount} / {maxApps} apps).{' '}
-            <button className="limit-banner-link" onClick={() => { setUpgradeMessage(`Free plan allows up to ${maxApps} apps. Upgrade to Pro for unlimited apps.`); setShowUpgradeModal(true); }}>
-              Upgrade to Pro
+            <button className="limit-banner-link" onClick={() => { setUpgradeMessage(`Free plan allows up to ${maxApps} apps. Upgrade for more.`); setShowUpgradeModal(true); }}>
+              Upgrade
             </button>
           </div>
         );

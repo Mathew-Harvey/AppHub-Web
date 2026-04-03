@@ -85,6 +85,7 @@ export const api = {
   getSubscriptionStatus: () => request('/subscription/status'),
   createCheckout: () => request('/subscription/checkout', { method: 'POST' }),
   createPortal: () => request('/subscription/portal', { method: 'POST' }),
+  verifyStripeSession: (sessionId) => request(`/subscription/verify-session?session_id=${encodeURIComponent(sessionId)}`),
 
   // File converter
   convertToHtml: (formData, signal) => request('/convert', { method: 'POST', body: formData, signal }),

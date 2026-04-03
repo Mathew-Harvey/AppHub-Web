@@ -16,11 +16,11 @@ export default function AdminPage() {
   const logoInputRef = useRef(null);
 
   const isPageAdmin = user?.role === 'admin';
-  const { isPro } = usePlan();
+  const { isPaid } = usePlan();
 
   useEffect(() => {
     if (searchParams.get('upgraded') === 'true') {
-      showToast('Welcome to Pro! Your workspace has been upgraded.', 'success');
+      showToast('Your workspace has been upgraded!', 'success');
       refreshUser();
       setSearchParams({}, { replace: true });
     } else if (searchParams.get('cancelled') === 'true') {
@@ -224,12 +224,9 @@ export default function AdminPage() {
           <div className="card subscription-card">
             <div className="subscription-header">
               <div>
-                <span className={`plan-badge plan-badge-lg ${subscription.plan === 'pro' ? 'plan-badge-pro' : 'plan-badge-free'}`}>
+                <span className={`plan-badge plan-badge-lg ${subscription.plan !== 'free' ? 'plan-badge-pro' : 'plan-badge-free'}`}>
                   {subscription.planName}
                 </span>
-                {subscription.plan === 'pro' && (
-                  <span className="subscription-price-tag">$12/month</span>
-                )}
               </div>
             </div>
 
@@ -292,7 +289,7 @@ export default function AdminPage() {
                   Unlock unlimited apps, unlimited members, and Smart AI uploads.
                 </p>
                 <button className="btn btn-primary" onClick={handleCheckout} disabled={checkoutLoading}>
-                  {checkoutLoading ? <span className="spinner" /> : 'Upgrade to Pro \u2014 $12/mo'}
+                  {checkoutLoading ? <span className="spinner" /> : 'Get Started'}
                 </button>
               </div>
             ) : (
@@ -451,7 +448,7 @@ export default function AdminPage() {
       {/* Branding */}
       {isPageAdmin && (<div className="admin-section">
         <h3>Branding</h3>
-        {isPro ? (
+        {isPaid ? (
           <div className="card">
             <form onSubmit={saveBranding}>
               <div className="form-group">
@@ -516,7 +513,7 @@ export default function AdminPage() {
             <p className="ai-locked-text">
               <strong>Custom branding</strong> lets you upload your own logo, set your workspace name, and customise colors.
             </p>
-            <span className="btn btn-primary btn-sm">Upgrade to Pro &mdash; $12/mo</span>
+            <span className="btn btn-primary btn-sm">Get Started</span>
           </div>
         )}
       </div>)}
