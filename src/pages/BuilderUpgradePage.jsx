@@ -45,7 +45,7 @@ export default function BuilderUpgradePage() {
 
         <div className="builder-upgrade-plans">
           <div className="builder-upgrade-plan">
-            <strong>Business</strong>
+            <strong>Creator</strong>
             <span className="builder-upgrade-plan-price">$29/mo</span>
             <span className="builder-upgrade-plan-detail">500K tokens/month</span>
           </div>
@@ -65,9 +65,10 @@ export default function BuilderUpgradePage() {
             {loading ? <span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> : 'Get Started'}
           </button>
         ) : (
-          <p className="builder-upgrade-non-admin">
-            Ask your workspace admin to upgrade to access the AI App Builder.
-          </p>
+          <div className="builder-upgrade-non-admin">
+            <p style={{ fontWeight: 600, marginBottom: 6 }}>Available for workspace admins on Creator or Pro plans</p>
+            <p>As an invited member, you have free-tier access. Ask your workspace admin to upgrade for AI App Builder access.</p>
+          </div>
         )}
 
         <Link to="/" className="builder-upgrade-back">&larr; Back to Dashboard</Link>
