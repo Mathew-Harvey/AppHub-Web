@@ -59,6 +59,7 @@ export const api = {
   approveDeletion: (id) => request(`/apps/${id}/approve-deletion`, { method: 'POST' }),
   rejectDeletion: (id) => request(`/apps/${id}/reject-deletion`, { method: 'POST' }),
   dismissDemos: () => request('/apps/dismiss-demos', { method: 'POST' }),
+  restoreDemos: () => request('/apps/restore-demos', { method: 'POST' }),
 
   // Folders
   listFolders: () => request('/folders'),

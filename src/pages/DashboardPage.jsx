@@ -144,12 +144,12 @@ export default function DashboardPage() {
     : ungroupedDemoApps;
 
   const demoCategories = filteredDemoApps.reduce((acc, app) => {
-    const cat = app.demoCategory || 'Demo Apps';
+    const cat = app.demoCategory === 'Demo Tools' ? 'Demo Apps' : (app.demoCategory || 'Demo Apps');
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(app);
     return acc;
   }, {});
-  const demoCategoryOrder = ['Demo Tools', 'Demo Games', 'Demo Apps'];
+  const demoCategoryOrder = ['Demo Apps', 'Demo Games'];
   const sortedDemoCategories = Object.keys(demoCategories).sort(
     (a, b) => (demoCategoryOrder.indexOf(a) === -1 ? 99 : demoCategoryOrder.indexOf(a))
            - (demoCategoryOrder.indexOf(b) === -1 ? 99 : demoCategoryOrder.indexOf(b))
@@ -306,6 +306,16 @@ export default function DashboardPage() {
       setApps(prevApps);
       setDemoDismissing(false);
       showToast(err.error || 'Failed to dismiss demos', 'error');
+    }
+  }
+
+  async function handleRestoreDemos() {
+    try {
+      await api.restoreDemos();
+      showToast('Demo apps restored', 'success');
+      loadData();
+    } catch (err) {
+      showToast(err.error || 'Failed to restore demos', 'error');
     }
   }
 
@@ -644,6 +654,7 @@ export default function DashboardPage() {
         <h3>No apps yet</h3>
         <p>Upload your first HTML app and it&apos;ll appear here. Build something useful with Claude, ChatGPT, or any AI tool — then drag the HTML file here to share it with your team.</p>
         <button className="btn btn-primary" onClick={() => navigate('/upload')}>Upload your first app</button>
+        <button className="btn btn-ghost btn-sm" style={{ marginTop: 8 }} onClick={handleRestoreDemos}>Restore demo apps</button>
       </div>
     );
   }
@@ -697,6 +708,12 @@ export default function DashboardPage() {
           <span>{stats.newThisWeek} new this week</span>
           <span className="stats-dot" />
           <button className="stats-invite-link" onClick={() => setShowInviteModal(true)}>+ Invite</button>
+          {stats.demoApps === 0 && (
+            <>
+              <span className="stats-dot" />
+              <button className="stats-invite-link" onClick={handleRestoreDemos}>Restore demos</button>
+            </>
+          )}
         </div>
       )}
 
