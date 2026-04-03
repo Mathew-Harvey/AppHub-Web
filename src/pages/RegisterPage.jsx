@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../utils/api';
 
-const PLAN_LABELS = { team: 'Team', business: 'Business', power: 'Pro', pro: 'Pro' };
+const PLAN_LABELS = { team: 'Team', business: 'Creator', power: 'Pro', pro: 'Pro' };
 
 export default function RegisterPage() {
   const { register } = useAuth();

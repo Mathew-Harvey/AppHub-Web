@@ -50,7 +50,7 @@ export default function Layout() {
     prevCompletionsRef.current = completions;
   }, [completions, location.pathname]);
 
-  const { isPaid, hasAppBuilder } = usePlan();
+  const { isPaid, hasAppBuilder, isInvitedMember, workspaceHasPaidPlan } = usePlan();
 
   const style = {};
   const ws = user?.workspace;
@@ -76,7 +76,7 @@ export default function Layout() {
           <h2>{isPaid && ws?.name ? ws.name : 'AppHub'}</h2>
           {ws && (
             <span className={`plan-badge ${isPaid ? 'plan-badge-pro' : 'plan-badge-free'}`}>
-              {isPaid ? 'PRO' : 'FREE'}
+              {isInvitedMember ? 'MEMBER' : (isPaid ? 'PRO' : 'FREE')}
             </span>
           )}
         </div>

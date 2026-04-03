@@ -12,7 +12,7 @@ const PAID_FEATURES = [
 
 const PLANS = [
   { name: 'Team', price: '$12', detail: '50 apps, 15 members, 20 AI conversions/mo' },
-  { name: 'Business', price: '$29', detail: 'Unlimited apps & members, 500K builder tokens' },
+  { name: 'Creator', price: '$29', detail: 'Unlimited apps & members, 500K builder tokens' },
   { name: 'Pro', price: '$79', detail: 'Everything unlimited' },
 ];
 
@@ -78,9 +78,10 @@ export default function UpgradeModal({ onClose, limitMessage }) {
             {loading ? <span className="spinner" /> : 'Get Started'}
           </button>
         ) : (
-          <p className="upgrade-modal-non-admin">
-            Ask your workspace admin to upgrade.
-          </p>
+          <div className="upgrade-modal-non-admin">
+            <p style={{ fontWeight: 600, marginBottom: 6 }}>You're on the free member tier</p>
+            <p>As an invited member, you can view all workspace apps but have free-tier creation limits. Ask your workspace admin to upgrade the workspace for full features.</p>
+          </div>
         )}
       </div>
     </div>
