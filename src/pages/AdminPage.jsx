@@ -9,7 +9,7 @@ import UpgradeModal from '../components/UpgradeModal';
 import { timeAgo } from '../utils/timeAgo';
 
 export default function AdminPage() {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, updateUserWorkspace } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { showToast, ToastElement } = useToast();
@@ -124,10 +124,10 @@ export default function AdminPage() {
     const formData = new FormData();
     formData.append('logo', file);
     try {
-      await api.uploadLogo(formData);
-      await refreshUser();
+      const data = await api.uploadLogo(formData);
+      setWorkspace(data.workspace);
+      updateUserWorkspace(data.workspace);
       showToast('Logo updated', 'success');
-      loadAll();
     } catch (err) { showToast(err.error || 'Logo upload failed', 'error'); }
   }
 

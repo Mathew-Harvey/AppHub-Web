@@ -66,8 +66,12 @@ export function AuthProvider({ children }) {
     }
   }
 
+  function updateUserWorkspace(workspace) {
+    setUser(prev => prev ? { ...prev, workspace } : prev);
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, acceptInvite, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, acceptInvite, logout, refreshUser, updateUserWorkspace }}>
       {children}
     </AuthContext.Provider>
   );
