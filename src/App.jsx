@@ -11,6 +11,11 @@ import UploadPage from './pages/UploadPage';
 import AppViewerPage from './pages/AppViewerPage';
 import AdminPage from './pages/AdminPage';
 import AboutPage from './pages/AboutPage';
+import EUAPage from './pages/EUAPage';
+import BuilderSessionsPage from './pages/BuilderSessionsPage';
+import BuilderNewPage from './pages/BuilderNewPage';
+import BuilderWorkspacePage from './pages/BuilderWorkspacePage';
+import BuilderUpgradePage from './pages/BuilderUpgradePage';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -79,7 +84,12 @@ export default function App() {
         <Route path="/" element={<DashboardPage />} />
         <Route path="/upload" element={<UploadPage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/eua" element={<EUAPage />} />
         <Route path="/converter" element={<Navigate to="/upload" replace />} />
+        <Route path="/builder" element={<BuilderSessionsPage />} />
+        <Route path="/builder/new" element={<BuilderNewPage />} />
+        <Route path="/builder/upgrade" element={<BuilderUpgradePage />} />
+        <Route path="/builder/:sessionId" element={<BuilderWorkspacePage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/settings" element={<AdminPage />} />
       </Route>

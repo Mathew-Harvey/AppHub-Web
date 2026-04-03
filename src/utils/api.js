@@ -90,4 +90,15 @@ export const api = {
 
   // Sandbox
   getSandboxToken: () => request('/auth/sandbox-token'),
+
+  // AI Builder
+  builderUsage: () => request('/builder/usage'),
+  builderSessions: () => request('/builder/sessions'),
+  builderCreateSession: (body) => request('/builder/sessions', { method: 'POST', body: JSON.stringify(body) }),
+  builderGetSession: (id) => request(`/builder/sessions/${id}`),
+  builderGenerate: (id) => request(`/builder/sessions/${id}/generate`, { method: 'POST' }),
+  builderRevise: (id, feedback) => request(`/builder/sessions/${id}/revise`, { method: 'POST', body: JSON.stringify({ feedback }) }),
+  builderPollJob: (sessionId, jobId) => request(`/builder/sessions/${sessionId}/jobs/${jobId}`),
+  builderPublish: (id, body) => request(`/builder/sessions/${id}/publish`, { method: 'POST', body: JSON.stringify(body) }),
+  builderDeleteSession: (id) => request(`/builder/sessions/${id}`, { method: 'DELETE' }),
 };

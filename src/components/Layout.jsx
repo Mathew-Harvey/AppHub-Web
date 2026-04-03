@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { usePlan } from '../hooks/usePlan';
 import EasterEgg from './EasterEgg';
 import InviteModal from './InviteModal';
 import OnboardingOverlay from './OnboardingOverlay';
+import EUAModal, { hasAcceptedEUA } from './EUAModal';
 
 export default function Layout() {
   const { user, logout } = useAuth();
@@ -15,13 +16,14 @@ export default function Layout() {
   const [showOnboarding, setShowOnboarding] = useState(() => {
     return !localStorage.getItem('apphub-onboarding-done');
   });
+  const [showEUA, setShowEUA] = useState(() => !hasAcceptedEUA());
 
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
 
-  const { isPaid } = usePlan();
+  const { isPaid, hasAppBuilder } = usePlan();
 
   const style = {};
   const ws = user?.workspace;
@@ -58,6 +60,13 @@ export default function Layout() {
           </NavLink>
           <NavLink to="/upload" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} data-onboarding="nav-upload">
             Upload
+          </NavLink>
+          <NavLink
+            to={hasAppBuilder ? '/builder' : '/builder/upgrade'}
+            className={({ isActive }) => `nav-link nav-link-builder ${isActive ? 'active' : ''}`}
+          >
+            <span className="nav-builder-icon">{hasAppBuilder ? '✨' : '🔒'}</span>
+            AI Builder
           </NavLink>
           <NavLink to="/about" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             About
@@ -99,9 +108,17 @@ export default function Layout() {
       <main className="main-content">
         <Outlet />
       </main>
+
+      <footer className="app-footer">
+        <span>&copy; {new Date().getFullYear()} App Hub</span>
+        <span className="app-footer-sep">&middot;</span>
+        <Link to="/eua" className="app-footer-link">End User Licence Agreement</Link>
+      </footer>
+
       <EasterEgg />
       {showInvite && <InviteModal onClose={() => setShowInvite(false)} />}
-      {showOnboarding && (
+      {showEUA && <EUAModal onAccept={() => setShowEUA(false)} />}
+      {showOnboarding && !showEUA && (
         <OnboardingOverlay onComplete={() => {
           setShowOnboarding(false);
           localStorage.setItem('apphub-onboarding-done', 'true');

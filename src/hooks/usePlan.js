@@ -14,8 +14,9 @@ export function usePlan() {
   const limits = ws?.planLimits;
   const maxApps = DEV_MODE ? null : (limits?.maxApps ?? null);
   const maxMembers = DEV_MODE ? null : (limits?.maxMembers ?? null);
+  const hasAppBuilder = DEV_MODE ? true : (limits?.appBuilder === true);
 
-  return { plan, isPaid, isPro, maxApps, maxMembers };
+  return { plan, isPaid, isPro, maxApps, maxMembers, hasAppBuilder };
 }
 
 export function isPlanLimitError(err) {
