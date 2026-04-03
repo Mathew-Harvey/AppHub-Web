@@ -3683,6 +3683,22 @@ input, textarea, select {
   line-height: 1;
 }
 
+.nav-builder-building {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  display: inline-block;
+  margin-left: 2px;
+  animation: builder-pulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 6px rgba(52, 199, 89, 0.5);
+}
+
+@keyframes builder-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
 /* ─── Token usage meter ──────────────────────────────────────────────────── */
 
 .token-meter {
@@ -4470,6 +4486,33 @@ input, textarea, select {
   font-size: 13px;
   color: var(--danger);
   text-align: center;
+}
+
+.builder-working-info {
+  padding: 20px;
+}
+
+.builder-working-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.builder-working-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--success);
+  animation: builder-pulse 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.builder-working-hint {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
 }
 
 /* Review notes */

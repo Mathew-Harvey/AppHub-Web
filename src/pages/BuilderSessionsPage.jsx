@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useToast } from '../components/Toast';
-import TokenUsageMeter, { useBuilderUsage } from '../components/TokenUsageMeter';
+import TokenUsageMeter from '../components/TokenUsageMeter';
+import { useBuilderJobs } from '../contexts/BuilderContext';
 import { timeAgo } from '../utils/timeAgo';
 
 const APP_TYPE_ICONS = {
@@ -20,13 +21,35 @@ const STATUS_CONFIG = {
 export default function BuilderSessionsPage() {
   const navigate = useNavigate();
   const { showToast, ToastElement } = useToast();
-  const { usage } = useBuilderUsage();
+  const { activeJobs, completions, dismissCompletion, usage } = useBuilderJobs();
 
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
+  const prevCompletionsRef = useRef(completions);
 
   useEffect(() => { loadSessions(); }, []);
+
+  // When a background job completes, refresh the list and show a toast
+  useEffect(() => {
+    const prev = prevCompletionsRef.current;
+    const newCompletions = Object.keys(completions).filter(id => !prev[id]);
+
+    if (newCompletions.length > 0) {
+      loadSessions();
+      newCompletions.forEach(sid => {
+        const c = completions[sid];
+        if (c.status === 'done') {
+          showToast(`"${c.sessionName}" is ready!`, 'success');
+        } else {
+          showToast(`"${c.sessionName}" failed: ${c.error || 'unknown error'}`, 'error');
+        }
+        dismissCompletion(sid);
+      });
+    }
+
+    prevCompletionsRef.current = completions;
+  }, [completions]);
 
   async function loadSessions() {
     try {
@@ -52,6 +75,11 @@ export default function BuilderSessionsPage() {
     } finally {
       setDeletingId(null);
     }
+  }
+
+  function getEffectiveStatus(session) {
+    if (activeJobs[session.id]) return 'generating';
+    return session.status;
   }
 
   return (
@@ -87,7 +115,8 @@ export default function BuilderSessionsPage() {
       ) : (
         <div className="builder-sessions-grid">
           {sessions.map(s => {
-            const statusCfg = STATUS_CONFIG[s.status] || STATUS_CONFIG.draft;
+            const effectiveStatus = getEffectiveStatus(s);
+            const statusCfg = STATUS_CONFIG[effectiveStatus] || STATUS_CONFIG.draft;
             return (
               <div
                 key={s.id}

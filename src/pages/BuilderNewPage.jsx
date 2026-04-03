@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useToast } from '../components/Toast';
-import TokenUsageMeter, { useBuilderUsage } from '../components/TokenUsageMeter';
+import TokenUsageMeter from '../components/TokenUsageMeter';
+import { useBuilderJobs } from '../contexts/BuilderContext';
 
 const APP_TYPES = [
   { value: 'game', icon: '🎮', label: 'Game' },
@@ -46,7 +47,7 @@ const TOTAL_STEPS = 4;
 export default function BuilderNewPage() {
   const navigate = useNavigate();
   const { showToast, ToastElement } = useToast();
-  const { usage } = useBuilderUsage();
+  const { usage } = useBuilderJobs();
 
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);

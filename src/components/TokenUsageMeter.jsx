@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { api } from '../utils/api';
-import { timeAgo } from '../utils/timeAgo';
+import { computePercentage } from '../contexts/BuilderContext';
 
 function formatTokens(n) {
+  if (n == null) return '0';
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
   return n.toLocaleString();
@@ -17,28 +16,6 @@ function timeUntil(dateString) {
   if (days > 0) return `in ${days} day${days > 1 ? 's' : ''}`;
   const hours = Math.floor(ms / 3_600_000);
   return `in ${hours} hour${hours > 1 ? 's' : ''}`;
-}
-
-export function useBuilderUsage() {
-  const [usage, setUsage] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  const refresh = useCallback(async () => {
-    try {
-      const data = await api.builderUsage();
-      setUsage(data);
-    } catch {
-      // non-critical
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { refresh(); }, [refresh]);
-
-  const isOverBudget = usage ? usage.percentage >= 100 && !usage.unlimited : false;
-
-  return { usage, loading, refresh, isOverBudget };
 }
 
 export default function TokenUsageMeter({ usage, compact = false }) {
@@ -58,25 +35,34 @@ export default function TokenUsageMeter({ usage, compact = false }) {
     );
   }
 
-  const pct = Math.min(usage.percentage, 100);
+  const pct = Math.min(computePercentage(usage), 100);
+  const hasLimit = usage.limit > 0;
   const color = pct >= 85 ? 'var(--danger)' : pct >= 60 ? 'var(--warning)' : 'var(--success)';
-  const isOver = usage.percentage >= 100;
+  const isOver = computePercentage(usage) >= 100;
 
   return (
     <div className={`token-meter ${compact ? 'token-meter-compact' : ''} ${isOver ? 'token-meter-over' : ''}`}>
       <div className="token-meter-header">
         <span className="token-meter-label">Token Usage</span>
         <span className="token-meter-value">
-          {formatTokens(usage.used)} / {formatTokens(usage.limit)}
-          <span className="token-meter-pct"> ({pct.toFixed(0)}%)</span>
+          {hasLimit ? (
+            <>
+              {formatTokens(usage.used)} / {formatTokens(usage.limit)}
+              <span className="token-meter-pct"> ({pct.toFixed(0)}%)</span>
+            </>
+          ) : (
+            <>{formatTokens(usage.used)} used</>
+          )}
         </span>
       </div>
-      <div className="token-meter-track">
-        <div
-          className="token-meter-fill"
-          style={{ width: `${pct}%`, background: color }}
-        />
-      </div>
+      {hasLimit && (
+        <div className="token-meter-track">
+          <div
+            className="token-meter-fill"
+            style={{ width: `${pct}%`, background: color }}
+          />
+        </div>
+      )}
       <div className="token-meter-footer">
         {isOver ? (
           <a href="/settings" className="token-meter-upgrade">

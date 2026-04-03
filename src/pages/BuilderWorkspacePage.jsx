@@ -2,8 +2,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useToast } from '../components/Toast';
-import TokenUsageMeter, { useBuilderUsage } from '../components/TokenUsageMeter';
+import TokenUsageMeter from '../components/TokenUsageMeter';
 import PublishModal from '../components/PublishModal';
+import { useBuilderJobs } from '../contexts/BuilderContext';
 
 const LOADING_MESSAGES = [
   'Building your app...',
@@ -18,131 +19,156 @@ const APP_TYPE_ICONS = {
   calculator: '🧮', landing: '🌐', other: '✨',
 };
 
-const POLL_TIMEOUT = 5 * 60 * 1000;
+const SESSION_POLL_INTERVAL = 5000;
 
 export default function BuilderWorkspacePage() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
   const { showToast, ToastElement } = useToast();
-  const { usage, refresh: refreshUsage, isOverBudget } = useBuilderUsage();
+  const { activeJobs, completions, startJob, dismissCompletion, usage, refreshUsage, isOverBudget } = useBuilderJobs();
 
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [generating, setGenerating] = useState(false);
   const [genMessage, setGenMessage] = useState('');
   const [genError, setGenError] = useState('');
 
   const [feedback, setFeedback] = useState('');
-  const [revising, setRevising] = useState(false);
   const [revisions, setRevisions] = useState([]);
 
   const [showPublish, setShowPublish] = useState(false);
   const [showReviewNotes, setShowReviewNotes] = useState(false);
 
   const iframeRef = useRef(null);
-  const pollRef = useRef(null);
-  const genStartRef = useRef(null);
+  const msgIntervalRef = useRef(null);
+  const sessionPollRef = useRef(null);
+
+  const activeJob = activeJobs[sessionId] || null;
+  const completion = completions[sessionId] || null;
+  const isWorking = !!activeJob;
+  const isGenerating = isWorking && activeJob?.type === 'generate';
+  const isRevising = isWorking && activeJob?.type === 'revise';
 
   useEffect(() => {
     loadSession();
-    return () => { if (pollRef.current) clearTimeout(pollRef.current); };
+    return () => {
+      if (msgIntervalRef.current) clearInterval(msgIntervalRef.current);
+      if (sessionPollRef.current) clearTimeout(sessionPollRef.current);
+    };
   }, [sessionId]);
+
+  // When we detect an active job on mount (navigated back), start cycling messages
+  useEffect(() => {
+    if (isWorking) {
+      startMessageCycle();
+    } else {
+      stopMessageCycle();
+    }
+    return () => stopMessageCycle();
+  }, [isWorking]);
+
+  // React to a job completing (possibly while we were away, or while watching)
+  useEffect(() => {
+    if (!completion) return;
+
+    stopMessageCycle();
+    dismissCompletion(sessionId);
+
+    if (completion.status === 'done') {
+      loadSession();
+      refreshUsage();
+    } else {
+      setGenError(completion.error || 'Generation failed');
+      // Update last revision if it was a revise job
+      if (completion.type === 'revise') {
+        setRevisions(prev =>
+          prev.map((r, i) => i === prev.length - 1 ? { ...r, status: 'failed' } : r)
+        );
+      }
+    }
+  }, [completion]);
+
+  // Fallback: if session says "generating" but we have no tracked job,
+  // poll the session endpoint directly until status changes.
+  useEffect(() => {
+    if (!session) return;
+    const needsFallbackPoll =
+      (session.status === 'generating' || session.status === 'revising') && !activeJob;
+
+    if (needsFallbackPoll) {
+      startSessionPoll();
+    }
+
+    return () => {
+      if (sessionPollRef.current) clearTimeout(sessionPollRef.current);
+    };
+  }, [session?.status, activeJob]);
 
   async function loadSession() {
     setLoading(true);
     setError(null);
     try {
       const data = await api.builderGetSession(sessionId);
-      setSession(data.session || data);
-      if (data.session?.revisions) setRevisions(data.session.revisions);
+      const s = data.session || data;
+      setSession(s);
+      if (s.revisions) setRevisions(s.revisions);
       else if (data.revisions) setRevisions(data.revisions);
     } catch (err) {
-      if (err.status === 404) {
-        setError('Session not found');
-      } else {
-        setError(err.message || 'Failed to load session');
-      }
+      setError(err.status === 404 ? 'Session not found' : (err.message || 'Failed to load session'));
     } finally {
       setLoading(false);
     }
   }
 
-  const pollJob = useCallback(async (jobId, onSuccess, onFail) => {
-    const elapsed = Date.now() - genStartRef.current;
-    if (elapsed > POLL_TIMEOUT) {
-      onFail('Generation timed out. Please try again.');
-      return;
+  function startSessionPoll() {
+    if (sessionPollRef.current) clearTimeout(sessionPollRef.current);
+
+    async function tick() {
+      try {
+        const data = await api.builderGetSession(sessionId);
+        const s = data.session || data;
+        if (s.status !== 'generating' && s.status !== 'revising') {
+          setSession(s);
+          if (s.revisions) setRevisions(s.revisions);
+          refreshUsage();
+          return;
+        }
+      } catch { /* ignore */ }
+      sessionPollRef.current = setTimeout(tick, SESSION_POLL_INTERVAL);
     }
 
-    try {
-      const data = await api.builderPollJob(sessionId, jobId);
-      if (data.status === 'done') {
-        onSuccess(data);
-        return;
-      }
-      if (data.status === 'failed') {
-        onFail(data.error || 'Generation failed');
-        return;
-      }
+    startMessageCycle();
+    sessionPollRef.current = setTimeout(tick, SESSION_POLL_INTERVAL);
+  }
 
-      let delay;
-      if (elapsed < 30_000) delay = 2000;
-      else if (elapsed < 90_000) delay = 4000;
-      else delay = 8000;
-
-      pollRef.current = setTimeout(() => pollJob(jobId, onSuccess, onFail), delay);
-    } catch (err) {
-      if (err.status === 409) {
-        pollRef.current = setTimeout(() => pollJob(jobId, onSuccess, onFail), 3000);
-      } else {
-        onFail(err.message || 'Polling failed');
-      }
-    }
-  }, [sessionId]);
-
-  function cycleLoadingMessage() {
+  function startMessageCycle() {
+    if (msgIntervalRef.current) return;
     let idx = 0;
     setGenMessage(LOADING_MESSAGES[0]);
-    const interval = setInterval(() => {
+    msgIntervalRef.current = setInterval(() => {
       idx = (idx + 1) % LOADING_MESSAGES.length;
       setGenMessage(LOADING_MESSAGES[idx]);
     }, 5000);
-    return interval;
+  }
+
+  function stopMessageCycle() {
+    if (msgIntervalRef.current) {
+      clearInterval(msgIntervalRef.current);
+      msgIntervalRef.current = null;
+    }
   }
 
   async function handleGenerate() {
-    setGenerating(true);
     setGenError('');
-    genStartRef.current = Date.now();
-    const msgInterval = cycleLoadingMessage();
-
     try {
       const data = await api.builderGenerate(sessionId);
-      pollJob(
-        data.jobId,
-        (result) => {
-          clearInterval(msgInterval);
-          setGenerating(false);
-          loadSession();
-          refreshUsage();
-          if (result.reviewNotes) setShowReviewNotes(true);
-        },
-        (errMsg) => {
-          clearInterval(msgInterval);
-          setGenerating(false);
-          setGenError(errMsg);
-        }
-      );
+      startJob(sessionId, data.jobId, 'generate', session?.name);
     } catch (err) {
-      clearInterval(msgInterval);
-      setGenerating(false);
       if (err.status === 429) {
         setGenError('Token budget exceeded. Upgrade for more builds.');
       } else if (err.status === 409) {
         showToast('Generation already in progress', 'info');
-        setGenerating(false);
       } else {
         setGenError(err.message || 'Failed to start generation');
       }
@@ -151,40 +177,19 @@ export default function BuilderWorkspacePage() {
 
   async function handleRevise() {
     if (!feedback.trim()) return;
-    setRevising(true);
     setGenError('');
-    genStartRef.current = Date.now();
-    const msgInterval = cycleLoadingMessage();
 
-    const revisionEntry = { feedback: feedback.trim(), status: 'processing' };
-    setRevisions(prev => [...prev, revisionEntry]);
+    const text = feedback.trim();
+    setRevisions(prev => [...prev, { feedback: text, status: 'processing' }]);
     setFeedback('');
 
     try {
-      const data = await api.builderRevise(sessionId, feedback.trim());
-      pollJob(
-        data.jobId,
-        () => {
-          clearInterval(msgInterval);
-          setRevising(false);
-          setRevisions(prev =>
-            prev.map((r, i) => i === prev.length - 1 ? { ...r, status: 'done' } : r)
-          );
-          loadSession();
-          refreshUsage();
-        },
-        (errMsg) => {
-          clearInterval(msgInterval);
-          setRevising(false);
-          setRevisions(prev =>
-            prev.map((r, i) => i === prev.length - 1 ? { ...r, status: 'failed' } : r)
-          );
-          setGenError(errMsg);
-        }
-      );
+      const data = await api.builderRevise(sessionId, text);
+      startJob(sessionId, data.jobId, 'revise', session?.name);
     } catch (err) {
-      clearInterval(msgInterval);
-      setRevising(false);
+      setRevisions(prev =>
+        prev.map((r, i) => i === prev.length - 1 ? { ...r, status: 'failed' } : r)
+      );
       if (err.status === 429) {
         setGenError('Token budget exceeded.');
       } else {
@@ -238,6 +243,7 @@ export default function BuilderWorkspacePage() {
   const hasHtml = !!session?.currentHtml;
   const totalTokens = session?.totalTokensUsed || 0;
   const revisionCount = session?.revisionCount || revisions.length;
+  const showWorkingState = isWorking || session?.status === 'generating' || session?.status === 'revising';
 
   return (
     <div className="builder-workspace">
@@ -260,11 +266,16 @@ export default function BuilderWorkspacePage() {
       <div className="builder-workspace-body">
         {/* Preview Panel */}
         <div className="builder-preview-panel">
-          {generating || revising ? (
+          {showWorkingState ? (
             <div className="builder-preview-loading">
               <div className="spinner" style={{ width: 40, height: 40, borderWidth: 3 }} />
               <p className="builder-loading-msg">{genMessage}</p>
               <p className="builder-loading-sub">This usually takes 30–60 seconds</p>
+              {activeJob && (
+                <p className="builder-loading-sub" style={{ marginTop: 4 }}>
+                  You can navigate away — we'll keep building in the background.
+                </p>
+              )}
             </div>
           ) : hasHtml ? (
             <div className="builder-preview-frame-wrap">
@@ -310,7 +321,7 @@ export default function BuilderWorkspacePage() {
 
         {/* Controls Panel */}
         <div className="builder-controls-panel">
-          {!hasHtml && !generating && (
+          {!hasHtml && !showWorkingState && (
             <>
               <div className="builder-session-summary card">
                 <h3>{session?.name}</h3>
@@ -338,7 +349,7 @@ export default function BuilderWorkspacePage() {
               <button
                 className="btn btn-primary btn-full builder-generate-btn"
                 onClick={handleGenerate}
-                disabled={generating || isOverBudget}
+                disabled={isWorking || isOverBudget}
               >
                 ✨ Generate My App
               </button>
@@ -351,7 +362,20 @@ export default function BuilderWorkspacePage() {
             </>
           )}
 
-          {hasHtml && !generating && (
+          {showWorkingState && (
+            <div className="builder-working-info card">
+              <div className="builder-working-header">
+                <span className="builder-working-dot" />
+                <strong>{isRevising ? 'Applying changes...' : 'Generating your app...'}</strong>
+              </div>
+              <p className="builder-working-hint">
+                Feel free to navigate away. Your build will continue in the background
+                and you'll be notified when it's done.
+              </p>
+            </div>
+          )}
+
+          {hasHtml && !showWorkingState && (
             <>
               {session?.reviewNotes && (
                 <div className="builder-review-notes">
@@ -380,16 +404,16 @@ export default function BuilderWorkspacePage() {
                   maxLength={2000}
                   rows={3}
                   placeholder="Describe the changes you want..."
-                  disabled={revising || isOverBudget}
+                  disabled={isWorking || isOverBudget}
                 />
                 <div className="builder-revision-input-footer">
                   <span className="builder-char-count">{feedback.length} / 2000</span>
                   <button
                     className="btn btn-primary btn-sm"
                     onClick={handleRevise}
-                    disabled={revising || !feedback.trim() || isOverBudget}
+                    disabled={isWorking || !feedback.trim() || isOverBudget}
                   >
-                    {revising ? <><span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Revising...</> : 'Send Feedback'}
+                    {isRevising ? <><span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Revising...</> : 'Send Feedback'}
                   </button>
                 </div>
               </div>

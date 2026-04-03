@@ -1,12 +1,14 @@
-import { useState } from 'react';
-import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Outlet, NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { usePlan } from '../hooks/usePlan';
+import { useBuilderJobs } from '../contexts/BuilderContext';
 import EasterEgg from './EasterEgg';
 import InviteModal from './InviteModal';
 import OnboardingOverlay from './OnboardingOverlay';
 import EUAModal, { hasAcceptedEUA } from './EUAModal';
+import { useToast } from './Toast';
 
 export default function Layout() {
   const { user, logout } = useAuth();
@@ -18,10 +20,35 @@ export default function Layout() {
   });
   const [showEUA, setShowEUA] = useState(() => !hasAcceptedEUA());
 
+  const { showToast, ToastElement } = useToast();
+  const location = useLocation();
+  const { hasActiveJobs, completions, dismissCompletion } = useBuilderJobs();
+  const prevCompletionsRef = useRef(completions);
+
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
+
+  // Show toasts for background build completions when NOT on a builder workspace page
+  useEffect(() => {
+    const prev = prevCompletionsRef.current;
+    const newIds = Object.keys(completions).filter(id => !prev[id]);
+    const onWorkspacePage = /^\/builder\/[^/]+$/.test(location.pathname) && !location.pathname.endsWith('/new') && !location.pathname.endsWith('/upgrade');
+
+    if (newIds.length > 0 && !onWorkspacePage) {
+      newIds.forEach(sid => {
+        const c = completions[sid];
+        if (c.status === 'done') {
+          showToast(`"${c.sessionName}" is ready! Click AI Builder to view it.`, 'success');
+        } else {
+          showToast(`Build "${c.sessionName}" failed: ${c.error || 'unknown error'}`, 'error');
+        }
+        dismissCompletion(sid);
+      });
+    }
+    prevCompletionsRef.current = completions;
+  }, [completions, location.pathname]);
 
   const { isPaid, hasAppBuilder } = usePlan();
 
@@ -67,6 +94,7 @@ export default function Layout() {
           >
             <span className="nav-builder-icon">{hasAppBuilder ? '✨' : '🔒'}</span>
             AI Builder
+            {hasActiveJobs && <span className="nav-builder-building" title="Build in progress" />}
           </NavLink>
           <NavLink to="/about" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             About
@@ -124,6 +152,7 @@ export default function Layout() {
           localStorage.setItem('apphub-onboarding-done', 'true');
         }} />
       )}
+      {ToastElement}
     </div>
   );
 }
