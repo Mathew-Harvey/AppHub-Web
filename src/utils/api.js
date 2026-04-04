@@ -49,6 +49,14 @@ export const api = {
   getApp: (id) => request(`/apps/${id}`),
   checkFile: (filename) => request('/apps/check', { method: 'POST', body: JSON.stringify({ filename }) }),
   uploadApp: (formData) => request('/apps/upload', { method: 'POST', body: formData }),
+  downloadSource: async (id) => {
+    const res = await fetch(`${API_BASE}/apps/${id}/source`, { credentials: 'include' });
+    if (!res.ok) throw new Error('Failed to download source');
+    const html = await res.text();
+    const disposition = res.headers.get('Content-Disposition') || '';
+    const match = disposition.match(/filename="(.+)"/);
+    return { html, filename: match ? match[1] : 'app.html' };
+  },
   updateApp: (id, body) => request(`/apps/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   updateAppFile: (id, formData) => request(`/apps/${id}/file`, { method: 'PUT', body: formData }),
   reorderApps: (appIds) => request('/apps/reorder', { method: 'PUT', body: JSON.stringify({ appIds }) }),

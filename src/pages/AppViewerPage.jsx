@@ -2,14 +2,17 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { api, SANDBOX_BASE } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
+import { usePlan } from '../hooks/usePlan';
 import { useToast } from '../components/Toast';
 import CodeErrorsModal from '../components/CodeErrorsModal';
+import EditAppModal from '../components/EditAppModal';
 
 export default function AppViewerPage() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { plan } = usePlan();
   const { showToast, ToastElement } = useToast();
   const iframeRef = useRef(null);
 
@@ -27,6 +30,7 @@ export default function AppViewerPage() {
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showEditApp, setShowEditApp] = useState(false);
 
   const [showCodeErrors, setShowCodeErrors] = useState(false);
   const [codeErrors, setCodeErrors] = useState([]);
@@ -138,7 +142,8 @@ export default function AppViewerPage() {
           <span className="app-viewer-builder">Built by {app.uploadedBy}</span>
           {canManage && (
             <>
-              <button className="btn btn-ghost btn-sm" onClick={openEdit}>Edit</button>
+              <button className="btn btn-ghost btn-sm" onClick={openEdit}>Edit Details</button>
+              <button className="btn btn-primary btn-sm" onClick={() => setShowEditApp(true)}>Edit App</button>
               <button className="btn btn-ghost btn-sm" onClick={() => setShowUpdate(true)}>Update File</button>
             </>
           )}
@@ -248,6 +253,21 @@ export default function AppViewerPage() {
           errors={codeErrors}
           message={codeErrorsMessage}
           onClose={() => setShowCodeErrors(false)}
+        />
+      )}
+
+      {showEditApp && (
+        <EditAppModal
+          app={app}
+          plan={plan}
+          onClose={() => setShowEditApp(false)}
+          onUpdated={(updatedApp) => {
+            setApp({ ...app, ...updatedApp });
+            setShowEditApp(false);
+            setIframeError(false);
+            if (iframeRef.current) iframeRef.current.src = iframeRef.current.src;
+            showToast('App updated', 'success');
+          }}
         />
       )}
 
