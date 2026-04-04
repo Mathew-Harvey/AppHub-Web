@@ -654,6 +654,15 @@ input, textarea, select {
   font-size: 12px;
 }
 
+.upload-guidelines-upgrade {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 500;
+}
+
 /* ─── Upload zone ────────────────────────────────────────────────────────── */
 
 .upload-zone {
