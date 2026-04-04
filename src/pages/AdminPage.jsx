@@ -44,7 +44,6 @@ export default function AdminPage() {
   const [upgradedPlan, setUpgradedPlan] = useState(null);
   const [upgradeMessage, setUpgradeMessage] = useState('');
   const [portalLoading, setPortalLoading] = useState(false);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -183,17 +182,6 @@ export default function AdminPage() {
     catch { showToast('Failed to copy', 'error'); }
   }
 
-  async function handleCheckout() {
-    setCheckoutLoading(true);
-    try {
-      const { url } = await api.createCheckout();
-      window.location.href = url;
-    } catch (err) {
-      showToast(err.error || 'Failed to start checkout', 'error');
-      setCheckoutLoading(false);
-    }
-  }
-
   async function handleManageSubscription() {
     setPortalLoading(true);
     try {
@@ -222,7 +210,7 @@ export default function AdminPage() {
       </div>
 
       {/* Subscription */}
-      {isPageAdmin && subscription && (
+      {subscription && (
         <div className="admin-section">
           <h3>Subscription</h3>
           <div className="card subscription-card">
@@ -292,14 +280,19 @@ export default function AdminPage() {
                 <p className="subscription-upgrade-text">
                   Unlock unlimited apps, unlimited members, and Smart AI uploads.
                 </p>
-                <button className="btn btn-primary" onClick={handleCheckout} disabled={checkoutLoading}>
-                  {checkoutLoading ? <span className="spinner" /> : 'Get Started'}
+                <button className="btn btn-primary" onClick={() => setShowUpgradeModal(true)}>
+                  Upgrade
                 </button>
               </div>
             ) : (
-              <button className="btn btn-secondary" onClick={handleManageSubscription} disabled={portalLoading} style={{ marginTop: 16 }}>
-                {portalLoading ? <span className="spinner" /> : 'Manage Subscription'}
-              </button>
+              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                <button className="btn btn-primary" onClick={() => setShowUpgradeModal(true)}>
+                  Change Plan
+                </button>
+                <button className="btn btn-secondary" onClick={handleManageSubscription} disabled={portalLoading}>
+                  {portalLoading ? <span className="spinner" /> : 'Manage Billing'}
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -526,6 +519,7 @@ export default function AdminPage() {
         <UpgradeModal
           onClose={() => setShowUpgradeModal(false)}
           limitMessage={upgradeMessage}
+          currentPlan={subscription?.plan}
         />
       )}
       {upgradedPlan && (

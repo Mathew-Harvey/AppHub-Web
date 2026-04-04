@@ -5,6 +5,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { usePlan } from '../hooks/usePlan';
 import { useBuilderJobs } from '../contexts/BuilderContext';
 import EasterEgg from './EasterEgg';
+import WorkspaceSwitcher from './WorkspaceSwitcher';
 import InviteModal from './InviteModal';
 import OnboardingOverlay from './OnboardingOverlay';
 import EUAModal, { hasAcceptedEUA } from './EUAModal';
@@ -50,7 +51,7 @@ export default function Layout() {
     prevCompletionsRef.current = completions;
   }, [completions, location.pathname]);
 
-  const { isPaid, hasAppBuilder, isInvitedMember, workspaceHasPaidPlan } = usePlan();
+  const { isPaid, hasAppBuilder } = usePlan();
 
   const style = {};
   const ws = user?.workspace;
@@ -76,9 +77,10 @@ export default function Layout() {
           <h2>{isPaid && ws?.name ? ws.name : 'AppHub'}</h2>
           {ws && (
             <span className={`plan-badge ${isPaid ? 'plan-badge-pro' : 'plan-badge-free'}`}>
-              {isInvitedMember ? 'MEMBER' : (isPaid ? 'PRO' : 'FREE')}
+              {(ws.planLimits?.planName || ws.plan || 'FREE').toUpperCase()}
             </span>
           )}
+          <WorkspaceSwitcher />
         </div>
 
         <nav className="topbar-nav">

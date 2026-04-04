@@ -39,6 +39,9 @@ export const api = {
   checkEmail: (email) => request('/auth/check-email', { method: 'POST', body: JSON.stringify({ email }) }),
   acceptInvite: (body) => request('/auth/accept-invite', { method: 'POST', body: JSON.stringify(body) }),
   changePassword: (body) => request('/auth/change-password', { method: 'POST', body: JSON.stringify(body) }),
+  listWorkspaces: () => request('/auth/workspaces'),
+  switchWorkspace: (workspaceId) => request('/auth/switch-workspace', { method: 'POST', body: JSON.stringify({ workspaceId }) }),
+  createWorkspace: (workspaceName) => request('/auth/create-workspace', { method: 'POST', body: JSON.stringify({ workspaceName }) }),
   requestReset: (email) => request('/auth/request-reset', { method: 'POST', body: JSON.stringify({ email }) }),
   resetPassword: (token, newPassword) => request('/auth/reset-password', { method: 'POST', body: JSON.stringify({ token, newPassword }) }),
   adminReset: (userId) => request('/auth/admin-reset', { method: 'POST', body: JSON.stringify({ userId }) }),
@@ -91,7 +94,7 @@ export const api = {
 
   // Subscription
   getSubscriptionStatus: () => request('/subscription/status'),
-  createCheckout: () => request('/subscription/checkout', { method: 'POST' }),
+  createCheckout: (planKey) => request('/subscription/checkout', { method: 'POST', body: JSON.stringify({ planKey }) }),
   createPortal: () => request('/subscription/portal', { method: 'POST' }),
   verifyStripeSession: (sessionId) => request(`/subscription/verify-session?session_id=${encodeURIComponent(sessionId)}`),
 
