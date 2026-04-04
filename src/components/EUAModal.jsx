@@ -72,7 +72,7 @@ export default function EUAModal({ onAccept }) {
 
           <section className="eua-modal-section">
             <h4>6. Subscription and Payment</h4>
-            <p>Access to the Platform is provided on a subscription basis. All fees are in Australian Dollars (AUD) and are exclusive of GST unless stated otherwise.</p>
+            <p>Access to the Platform is provided on a subscription basis. All fees are in United States Dollars (USD).</p>
           </section>
 
           <section className="eua-modal-section">

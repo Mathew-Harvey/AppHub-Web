@@ -23,7 +23,7 @@ const sections = [
   },
   {
     title: '6. Subscription and Payment',
-    body: 'Access to the Platform is provided on a subscription basis at the current published rate. Subscriptions are billed monthly or annually as selected at time of purchase. All fees are in Australian Dollars (AUD) and are exclusive of GST unless stated otherwise. Pricing may be updated with 30 days\u2019 written notice to existing subscribers.',
+    body: 'Access to the Platform is provided on a subscription basis at the current published rate. Subscriptions are billed monthly or annually as selected at time of purchase. All fees are in United States Dollars (USD). Pricing may be updated with 30 days\u2019 written notice to existing subscribers.',
   },
   {
     title: '7. Intellectual Property',
