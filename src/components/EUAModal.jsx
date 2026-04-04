@@ -57,7 +57,7 @@ export default function EUAModal({ onAccept }) {
 
           <section className="eua-modal-section">
             <h4>3. Permitted Use</h4>
-            <p>The Platform and its tools are intended for use by maritime, commercial diving, and related marine industry professionals. You agree to use the Platform only for lawful purposes and in accordance with this Agreement.</p>
+            <p>The Platform and its tools are intended for use by professionals and teams across all industries. You agree to use the Platform only for lawful purposes and in accordance with this Agreement.</p>
           </section>
 
           <section className="eua-modal-section">
