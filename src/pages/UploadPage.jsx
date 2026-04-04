@@ -168,6 +168,7 @@ export default function UploadPage() {
   const [codeErrorsMessage, setCodeErrorsMessage] = useState('');
 
   const [autoFixedErrors, setAutoFixedErrors] = useState(null);
+  const [rejectedFile, setRejectedFile] = useState(null);
 
   const [showPasteModal, setShowPasteModal] = useState(false);
   const [pasteCode, setPasteCode] = useState('');
@@ -195,6 +196,7 @@ export default function UploadPage() {
 
   async function processFile(f) {
     setConversionInfo(null);
+    setRejectedFile(null);
     setCopied(false);
     setRawFile(null);
 
@@ -205,6 +207,11 @@ export default function UploadPage() {
         setFile(f);
         const baseName = f.name.replace(/\.(html|htm)$/i, '').replace(/[-_]/g, ' ');
         if (!name) setName(baseName.charAt(0).toUpperCase() + baseName.slice(1));
+      } else if (check.rejected) {
+        // Truly incompatible file — cannot be converted
+        setFile(null);
+        setRawFile(null);
+        setRejectedFile({ name: f.name, detected: check.detected, message: check.message });
       } else {
         setFile(null);
         setRawFile(f);
@@ -402,15 +409,50 @@ export default function UploadPage() {
             <strong>App guidelines</strong>
             <button className="upload-guidelines-dismiss" onClick={() => setShowGuidelines(false)} title="Dismiss">&times;</button>
           </div>
-          <p className="upload-guidelines-intro">Your app must be a <strong>single, self-contained HTML file</strong>. Keep these rules in mind:</p>
-          <ul className="upload-guidelines-list">
-            <li><strong>No external data sources</strong> &mdash; API calls, fetch requests, and external databases won't work. All data must live inside the file.</li>
-            <li><strong>No external images or media</strong> &mdash; Linked images/videos will break. Use inline SVGs, CSS shapes, emoji, or Base64-encoded data URIs instead.</li>
-            <li><strong>No external stylesheets or fonts</strong> &mdash; Google Fonts, Bootstrap CDN, etc. won't load. Inline all CSS within a <code>&lt;style&gt;</code> tag.</li>
-            <li><strong>CDN scripts are OK</strong> &mdash; Libraries like React, Vue, or Chart.js loaded via <code>&lt;script&gt;</code> CDN links will work.</li>
-            <li><strong>Keep it under 5 MB</strong> &mdash; Larger files will be rejected. Optimise any Base64 assets.</li>
-            <li><strong>Valid JavaScript required</strong> &mdash; Syntax errors in <code>&lt;script&gt;</code> tags will block upload on the free plan.</li>
-          </ul>
+          {isPaid ? (
+            <>
+              <p className="upload-guidelines-intro">Drop any file &mdash; including <strong>.zip archives with multiple files</strong> &mdash; and our AI will convert it into a single self-contained HTML app.</p>
+              <ul className="upload-guidelines-list">
+                <li><strong>Any file type welcome</strong> &mdash; .jsx, .tsx, .vue, .py, .zip with folders &mdash; AI will refactor it into one HTML file for you.</li>
+                <li><strong>ZIP projects</strong> &mdash; Drop an entire project folder as a .zip. AI will read the structure, merge files, and produce a single working app.</li>
+                <li><strong>External APIs will be stubbed</strong> &mdash; Backend calls and database queries get replaced with sample data so the app still works standalone.</li>
+                <li><strong>Images are embedded</strong> &mdash; Small images in your zip are converted to Base64 data URIs automatically. For best results keep images under 50 KB each.</li>
+                <li><strong>CDN scripts are OK</strong> &mdash; Libraries like React, Vue, or Chart.js loaded via <code>&lt;script&gt;</code> CDN links will work in the final output.</li>
+                <li><strong>Keep it under 5 MB</strong> &mdash; The final HTML file must be under 5 MB.</li>
+              </ul>
+            </>
+          ) : (
+            <>
+              <p className="upload-guidelines-intro">Your app runs as a <strong>single, self-contained HTML file</strong>. Keep these rules in mind:</p>
+              <ul className="upload-guidelines-list">
+                <li><strong>No external data sources</strong> &mdash; API calls, fetch requests, and external databases won't work. All data must live inside the file.</li>
+                <li><strong>No external images or media</strong> &mdash; Linked images/videos will break. Use inline SVGs, CSS shapes, emoji, or Base64-encoded data URIs instead.</li>
+                <li><strong>No external stylesheets or fonts</strong> &mdash; Google Fonts, Bootstrap CDN, etc. won't load. Inline all CSS within a <code>&lt;style&gt;</code> tag.</li>
+                <li><strong>CDN scripts are OK</strong> &mdash; Libraries like React, Vue, or Chart.js loaded via <code>&lt;script&gt;</code> CDN links will work.</li>
+                <li><strong>Keep it under 5 MB</strong> &mdash; Larger files will be rejected. Optimise any Base64 assets.</li>
+                <li><strong>Valid JavaScript required</strong> &mdash; Syntax errors in <code>&lt;script&gt;</code> tags will block upload on the free plan.</li>
+              </ul>
+              <p className="upload-guidelines-upgrade">Upgrade to a paid plan to drop <strong>any file type</strong> including .zip archives &mdash; AI will convert them for you.</p>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Rejected file — incompatible type */}
+      {rejectedFile && (
+        <div className="upload-rejected">
+          <div className="upload-rejected-header">
+            <span className="upload-rejected-icon">&#x26A0;</span>
+            <strong>{rejectedFile.detected}</strong>
+          </div>
+          <p className="upload-rejected-filename">{rejectedFile.name}</p>
+          <p className="upload-rejected-message">{rejectedFile.message}</p>
+          <div className="upload-rejected-supported">
+            <strong>Supported file types:</strong> .html, .jsx, .tsx, .vue, .svelte, .js, .ts, .css, .py, .json, .md, .zip
+          </div>
+          <button className="btn btn-secondary btn-sm" onClick={() => setRejectedFile(null)} style={{ marginTop: 12 }}>
+            Try another file
+          </button>
         </div>
       )}
 
@@ -457,7 +499,7 @@ export default function UploadPage() {
       )}
 
       {/* Drop zone */}
-      {!file && !conversionInfo && (
+      {!file && !conversionInfo && !rejectedFile && (
         <>
           <div
             ref={dropzoneRef}
