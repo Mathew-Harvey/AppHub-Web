@@ -11,7 +11,7 @@ const sections = [
   },
   {
     title: '3. Permitted Use',
-    body: 'The Platform and its tools are intended for use by maritime, commercial diving, and related marine industry professionals. You agree to use the Platform only for lawful purposes and in accordance with this Agreement. You must not use the Platform in any way that could damage, disable, overburden, or impair it, or interfere with other users\u2019 access.',
+    body: 'The Platform and its tools are intended for use by professionals and teams across all industries. You agree to use the Platform only for lawful purposes and in accordance with this Agreement. You must not use the Platform in any way that could damage, disable, overburden, or impair it, or interfere with other users\u2019 access.',
   },
   {
     title: '4. Third-Party and User-Created Applications',
@@ -23,7 +23,7 @@ const sections = [
   },
   {
     title: '6. Subscription and Payment',
-    body: 'Access to the Platform is provided on a subscription basis at the current published rate. Subscriptions are billed monthly or annually as selected at time of purchase. All fees are in Australian Dollars (AUD) and are exclusive of GST unless stated otherwise. Pricing may be updated with 30 days\u2019 written notice to existing subscribers.',
+    body: 'Access to the Platform is provided on a subscription basis at the current published rate. Subscriptions are billed monthly or annually as selected at time of purchase. All fees are in United States Dollars (USD). Pricing may be updated with 30 days\u2019 written notice to existing subscribers.',
   },
   {
     title: '7. Intellectual Property',

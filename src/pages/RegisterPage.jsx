@@ -131,7 +131,7 @@ export default function RegisterPage() {
                 type="text"
                 value={workspaceName}
                 onChange={(e) => setWorkspaceName(e.target.value)}
-                placeholder="e.g. Franmarine"
+                placeholder="e.g. Acme Corp"
                 required
                 autoFocus
               />
