@@ -174,6 +174,8 @@ export default function UploadPage() {
   const [pasteFilename, setPasteFilename] = useState(DEFAULT_PASTE_FILENAME);
   const [filenameManuallyEdited, setFilenameManuallyEdited] = useState(false);
 
+  const [showGuidelines, setShowGuidelines] = useState(true);
+
   const { isPaid } = usePlan();
 
   useEffect(() => {
@@ -391,6 +393,26 @@ export default function UploadPage() {
       <div className="page-header">
         <h1>Upload App</h1>
       </div>
+
+      {/* App guidelines callout */}
+      {showGuidelines && !uploadSuccess && !converting && (
+        <div className="upload-guidelines">
+          <div className="upload-guidelines-header">
+            <span className="upload-guidelines-icon">&#x1F4CB;</span>
+            <strong>App guidelines</strong>
+            <button className="upload-guidelines-dismiss" onClick={() => setShowGuidelines(false)} title="Dismiss">&times;</button>
+          </div>
+          <p className="upload-guidelines-intro">Your app must be a <strong>single, self-contained HTML file</strong>. Keep these rules in mind:</p>
+          <ul className="upload-guidelines-list">
+            <li><strong>No external data sources</strong> &mdash; API calls, fetch requests, and external databases won't work. All data must live inside the file.</li>
+            <li><strong>No external images or media</strong> &mdash; Linked images/videos will break. Use inline SVGs, CSS shapes, emoji, or Base64-encoded data URIs instead.</li>
+            <li><strong>No external stylesheets or fonts</strong> &mdash; Google Fonts, Bootstrap CDN, etc. won't load. Inline all CSS within a <code>&lt;style&gt;</code> tag.</li>
+            <li><strong>CDN scripts are OK</strong> &mdash; Libraries like React, Vue, or Chart.js loaded via <code>&lt;script&gt;</code> CDN links will work.</li>
+            <li><strong>Keep it under 5 MB</strong> &mdash; Larger files will be rejected. Optimise any Base64 assets.</li>
+            <li><strong>Valid JavaScript required</strong> &mdash; Syntax errors in <code>&lt;script&gt;</code> tags will block upload on the free plan.</li>
+          </ul>
+        </div>
+      )}
 
       {/* Conversion prompt (shown for free users when file needs converting) */}
       {conversionInfo && (
