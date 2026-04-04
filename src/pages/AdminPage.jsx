@@ -44,7 +44,6 @@ export default function AdminPage() {
   const [upgradedPlan, setUpgradedPlan] = useState(null);
   const [upgradeMessage, setUpgradeMessage] = useState('');
   const [portalLoading, setPortalLoading] = useState(false);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -183,17 +182,6 @@ export default function AdminPage() {
     catch { showToast('Failed to copy', 'error'); }
   }
 
-  async function handleCheckout() {
-    setCheckoutLoading(true);
-    try {
-      const { url } = await api.createCheckout();
-      window.location.href = url;
-    } catch (err) {
-      showToast(err.error || 'Failed to start checkout', 'error');
-      setCheckoutLoading(false);
-    }
-  }
-
   async function handleManageSubscription() {
     setPortalLoading(true);
     try {
@@ -222,7 +210,7 @@ export default function AdminPage() {
       </div>
 
       {/* Subscription */}
-      {isPageAdmin && subscription && (
+      {subscription && (
         <div className="admin-section">
           <h3>Subscription</h3>
           <div className="card subscription-card">

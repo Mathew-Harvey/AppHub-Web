@@ -42,7 +42,6 @@ export default function UpgradeModal({ onClose, limitMessage, currentPlan }) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const isAdmin = user?.role === 'admin';
 
   async function handleUpgrade(planKey) {
     setLoading(true);
@@ -62,30 +61,22 @@ export default function UpgradeModal({ onClose, limitMessage, currentPlan }) {
         <button className="upgrade-modal-close" onClick={onClose}>&times;</button>
 
         <h2 className="upgrade-modal-title">
-          {activePlan === 'free' ? 'Upgrade your workspace' : 'Change your plan'}
+          {activePlan === 'free' ? 'Upgrade your subscription' : 'Change your plan'}
         </h2>
 
         {limitMessage && (
           <p className="upgrade-modal-limit">{limitMessage}</p>
         )}
 
-        {!isAdmin && (
-          <div className="upgrade-modal-non-admin" style={{ marginBottom: 16 }}>
-            <p style={{ fontWeight: 600, marginBottom: 6 }}>You're a member of this workspace</p>
-            <p>Subscription changes can only be made by the workspace admin.</p>
-          </div>
-        )}
-
         <div style={{ display: 'flex', gap: 12, margin: '16px 0' }}>
           {PLANS.map((p) => {
             const isCurrent = activePlan === p.key;
             const isSelected = selectedPlan === p.key;
-            const isDowngrade = getPlanRank(p.key) <= getPlanRank(activePlan) && activePlan !== 'free';
 
             return (
               <div
                 key={p.key}
-                onClick={() => isAdmin && !isCurrent && setSelectedPlan(p.key)}
+                onClick={() => !isCurrent && setSelectedPlan(p.key)}
                 style={{
                   flex: 1,
                   minWidth: 0,
@@ -96,7 +87,7 @@ export default function UpgradeModal({ onClose, limitMessage, currentPlan }) {
                     : isCurrent
                       ? '2px solid var(--success)'
                       : '1px solid var(--border)',
-                  cursor: isAdmin && !isCurrent ? 'pointer' : 'default',
+                  cursor: isCurrent ? 'default' : 'pointer',
                   opacity: isCurrent ? 0.7 : 1,
                   position: 'relative',
                   transition: 'border-color 0.15s, transform 0.15s',
@@ -136,22 +127,21 @@ export default function UpgradeModal({ onClose, limitMessage, currentPlan }) {
           })}
         </div>
 
-        {isAdmin && (
-          <button
-            className="btn btn-primary btn-full"
-            onClick={() => handleUpgrade(selectedPlan)}
-            disabled={loading || !selectedPlan}
-            style={{ marginTop: 8 }}
-          >
-            {loading ? <span className="spinner" /> : selectedPlan ? `Upgrade to ${PLANS.find(p => p.key === selectedPlan)?.name}` : 'Select a plan'}
-          </button>
+        <button
+          className="btn btn-primary btn-full"
+          onClick={() => handleUpgrade(selectedPlan)}
+          disabled={loading || !selectedPlan}
+          style={{ marginTop: 8 }}
+        >
+          {loading ? <span className="spinner" /> : selectedPlan ? `Subscribe to ${PLANS.find(p => p.key === selectedPlan)?.name}` : 'Select a plan'}
+        </button>
+
+        {activePlan !== 'free' && (
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', marginTop: 8 }}>
+            Your current subscription will be cancelled and replaced with the new plan.
+          </p>
         )}
       </div>
     </div>
   );
-}
-
-function getPlanRank(plan) {
-  const ranks = { free: 0, team: 1, business: 2, power: 3 };
-  return ranks[plan] || 0;
 }
