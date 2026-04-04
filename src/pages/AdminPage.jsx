@@ -6,6 +6,7 @@ import { copyToClipboard } from '../utils/clipboard';
 import { useToast } from '../components/Toast';
 import { usePlan, isPlanLimitError } from '../hooks/usePlan';
 import UpgradeModal from '../components/UpgradeModal';
+import UpgradeSplash from '../components/UpgradeSplash';
 import { timeAgo } from '../utils/timeAgo';
 
 export default function AdminPage() {
@@ -19,8 +20,10 @@ export default function AdminPage() {
   const { isPaid } = usePlan();
 
   useEffect(() => {
-    if (searchParams.get('upgraded') === 'true') {
-      showToast('Your workspace has been upgraded!', 'success');
+    const upgraded = searchParams.get('upgraded');
+    if (upgraded && upgraded !== 'false') {
+      const planMap = { power: 'power', business: 'business', team: 'team' };
+      setUpgradedPlan(planMap[upgraded] || 'team');
       refreshUser();
       setSearchParams({}, { replace: true });
     } else if (searchParams.get('cancelled') === 'true') {
@@ -38,6 +41,7 @@ export default function AdminPage() {
   const [lastResetLink, setLastResetLink] = useState('');
   const [loading, setLoading] = useState(true);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradedPlan, setUpgradedPlan] = useState(null);
   const [upgradeMessage, setUpgradeMessage] = useState('');
   const [portalLoading, setPortalLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -522,6 +526,12 @@ export default function AdminPage() {
         <UpgradeModal
           onClose={() => setShowUpgradeModal(false)}
           limitMessage={upgradeMessage}
+        />
+      )}
+      {upgradedPlan && (
+        <UpgradeSplash
+          planKey={upgradedPlan}
+          onClose={() => setUpgradedPlan(null)}
         />
       )}
       {ToastElement}
