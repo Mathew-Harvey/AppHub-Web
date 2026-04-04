@@ -292,14 +292,19 @@ export default function AdminPage() {
                 <p className="subscription-upgrade-text">
                   Unlock unlimited apps, unlimited members, and Smart AI uploads.
                 </p>
-                <button className="btn btn-primary" onClick={handleCheckout} disabled={checkoutLoading}>
-                  {checkoutLoading ? <span className="spinner" /> : 'Get Started'}
+                <button className="btn btn-primary" onClick={() => setShowUpgradeModal(true)}>
+                  Upgrade
                 </button>
               </div>
             ) : (
-              <button className="btn btn-secondary" onClick={handleManageSubscription} disabled={portalLoading} style={{ marginTop: 16 }}>
-                {portalLoading ? <span className="spinner" /> : 'Manage Subscription'}
-              </button>
+              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                <button className="btn btn-primary" onClick={() => setShowUpgradeModal(true)}>
+                  Change Plan
+                </button>
+                <button className="btn btn-secondary" onClick={handleManageSubscription} disabled={portalLoading}>
+                  {portalLoading ? <span className="spinner" /> : 'Manage Billing'}
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -526,6 +531,7 @@ export default function AdminPage() {
         <UpgradeModal
           onClose={() => setShowUpgradeModal(false)}
           limitMessage={upgradeMessage}
+          currentPlan={subscription?.plan}
         />
       )}
       {upgradedPlan && (

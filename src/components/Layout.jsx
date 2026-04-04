@@ -5,6 +5,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { usePlan } from '../hooks/usePlan';
 import { useBuilderJobs } from '../contexts/BuilderContext';
 import EasterEgg from './EasterEgg';
+import WorkspaceSwitcher from './WorkspaceSwitcher';
 import InviteModal from './InviteModal';
 import OnboardingOverlay from './OnboardingOverlay';
 import EUAModal, { hasAcceptedEUA } from './EUAModal';
@@ -79,6 +80,7 @@ export default function Layout() {
               {isInvitedMember ? 'MEMBER' : (isPaid ? 'PRO' : 'FREE')}
             </span>
           )}
+          <WorkspaceSwitcher />
         </div>
 
         <nav className="topbar-nav">
