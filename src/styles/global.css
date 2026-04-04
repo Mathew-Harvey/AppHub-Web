@@ -589,6 +589,71 @@ input, textarea, select {
   color: var(--text-muted);
 }
 
+/* ─── Upload guidelines ─────────────────────────────────────────────────── */
+
+.upload-guidelines {
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.upload-guidelines-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.upload-guidelines-icon {
+  font-size: 16px;
+}
+
+.upload-guidelines-dismiss {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+.upload-guidelines-dismiss:hover {
+  color: var(--text-primary);
+}
+
+.upload-guidelines-intro {
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+
+.upload-guidelines-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-secondary);
+}
+
+.upload-guidelines-list li {
+  margin-bottom: 6px;
+}
+
+.upload-guidelines-list li:last-child {
+  margin-bottom: 0;
+}
+
+.upload-guidelines-list code {
+  background: var(--surface);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
 /* ─── Upload zone ────────────────────────────────────────────────────────── */
 
 .upload-zone {

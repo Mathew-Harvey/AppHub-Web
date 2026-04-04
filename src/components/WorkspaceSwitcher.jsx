@@ -52,7 +52,11 @@ export default function WorkspaceSwitcher() {
       await api.createWorkspace(newName.trim());
       window.location.href = '/';
     } catch (err) {
-      setError(err.error || 'Failed to create workspace');
+      if (err.error === 'plan_limit') {
+        setError(err.message || 'Workspace limit reached. Upgrade your plan to create more.');
+      } else {
+        setError(err.error || 'Failed to create workspace');
+      }
       setLoading(false);
     }
   }
