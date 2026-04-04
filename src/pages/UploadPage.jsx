@@ -168,6 +168,7 @@ export default function UploadPage() {
   const [codeErrorsMessage, setCodeErrorsMessage] = useState('');
 
   const [autoFixedErrors, setAutoFixedErrors] = useState(null);
+  const [rejectedFile, setRejectedFile] = useState(null);
 
   const [showPasteModal, setShowPasteModal] = useState(false);
   const [pasteCode, setPasteCode] = useState('');
@@ -195,6 +196,7 @@ export default function UploadPage() {
 
   async function processFile(f) {
     setConversionInfo(null);
+    setRejectedFile(null);
     setCopied(false);
     setRawFile(null);
 
@@ -205,6 +207,11 @@ export default function UploadPage() {
         setFile(f);
         const baseName = f.name.replace(/\.(html|htm)$/i, '').replace(/[-_]/g, ' ');
         if (!name) setName(baseName.charAt(0).toUpperCase() + baseName.slice(1));
+      } else if (check.rejected) {
+        // Truly incompatible file — cannot be converted
+        setFile(null);
+        setRawFile(null);
+        setRejectedFile({ name: f.name, detected: check.detected, message: check.message });
       } else {
         setFile(null);
         setRawFile(f);
@@ -431,6 +438,24 @@ export default function UploadPage() {
         </div>
       )}
 
+      {/* Rejected file — incompatible type */}
+      {rejectedFile && (
+        <div className="upload-rejected">
+          <div className="upload-rejected-header">
+            <span className="upload-rejected-icon">&#x26A0;</span>
+            <strong>{rejectedFile.detected}</strong>
+          </div>
+          <p className="upload-rejected-filename">{rejectedFile.name}</p>
+          <p className="upload-rejected-message">{rejectedFile.message}</p>
+          <div className="upload-rejected-supported">
+            <strong>Supported file types:</strong> .html, .jsx, .tsx, .vue, .svelte, .js, .ts, .css, .py, .json, .md, .zip
+          </div>
+          <button className="btn btn-secondary btn-sm" onClick={() => setRejectedFile(null)} style={{ marginTop: 12 }}>
+            Try another file
+          </button>
+        </div>
+      )}
+
       {/* Conversion prompt (shown for free users when file needs converting) */}
       {conversionInfo && (
         <div className="conversion-prompt">
@@ -474,7 +499,7 @@ export default function UploadPage() {
       )}
 
       {/* Drop zone */}
-      {!file && !conversionInfo && (
+      {!file && !conversionInfo && !rejectedFile && (
         <>
           <div
             ref={dropzoneRef}
