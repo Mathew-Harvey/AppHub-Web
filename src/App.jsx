@@ -11,6 +11,7 @@ import UploadPage from './pages/UploadPage';
 import AppViewerPage from './pages/AppViewerPage';
 import AdminPage from './pages/AdminPage';
 import AboutPage from './pages/AboutPage';
+import HelpPage from './pages/HelpPage';
 import EUAPage from './pages/EUAPage';
 import BuilderSessionsPage from './pages/BuilderSessionsPage';
 import BuilderNewPage from './pages/BuilderNewPage';
@@ -84,6 +85,7 @@ export default function App() {
         <Route path="/" element={<DashboardPage />} />
         <Route path="/upload" element={<UploadPage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/help" element={<HelpPage />} />
         <Route path="/eua" element={<EUAPage />} />
         <Route path="/converter" element={<Navigate to="/upload" replace />} />
         <Route path="/builder" element={<BuilderSessionsPage />} />
