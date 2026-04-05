@@ -179,7 +179,7 @@ export default function UploadPage() {
   const [showGuidelines, setShowGuidelines] = useState(true);
   const [showPromptBuilder, setShowPromptBuilder] = useState(false);
 
-  const { isPaid } = usePlan();
+  const { isPaid, hasAppBuilder } = usePlan();
 
   useEffect(() => {
     api.getMembers().then(d => setMembers(d.members)).catch(() => {});
@@ -564,8 +564,14 @@ export default function UploadPage() {
       {showPromptBuilder && !file && (
         <PromptBuilder
           isPaid={isPaid}
+          hasAppBuilder={hasAppBuilder}
           onClose={() => setShowPromptBuilder(false)}
-          onAutoBuild={isPaid ? (prompt) => {
+          onUpgrade={() => {
+            setShowPromptBuilder(false);
+            setUpgradeMessage('AI App Builder requires a Creator or Pro subscription.');
+            setShowUpgradeModal(true);
+          }}
+          onAutoBuild={hasAppBuilder ? (prompt) => {
             const htmlFile = textToFile(prompt, 'prompt.txt');
             setShowPromptBuilder(false);
             doAiConvert(htmlFile);

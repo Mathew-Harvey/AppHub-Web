@@ -193,7 +193,7 @@ function getSteps(isPaid) {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export default function PromptBuilder({ isPaid, onClose, onAutoBuild }) {
+export default function PromptBuilder({ isPaid, hasAppBuilder, onClose, onAutoBuild, onUpgrade }) {
   const { showToast, ToastElement } = useToast();
   const [answers, setAnswers] = useState({
     category: '',
@@ -534,7 +534,7 @@ export default function PromptBuilder({ isPaid, onClose, onAutoBuild }) {
           <div className="prompt-builder-step">
             <label className="prompt-builder-question">Your prompt is ready</label>
             <p className="prompt-builder-hint">
-              {isPaid
+              {hasAppBuilder
                 ? 'Copy it to use with any AI tool, or let us build the app for you automatically.'
                 : 'Copy this prompt and paste it into ChatGPT, Claude, or any AI tool to generate your app.'}
             </p>
@@ -550,15 +550,20 @@ export default function PromptBuilder({ isPaid, onClose, onAutoBuild }) {
         )}
         <div style={{ flex: 1 }} />
         {isReview ? (
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button className="btn btn-secondary btn-sm" onClick={handleCopy}>
               {copied ? 'Copied!' : 'Copy prompt'}
             </button>
-            {isPaid && onAutoBuild && (
+            {hasAppBuilder && onAutoBuild ? (
               <button className="btn btn-primary btn-sm" onClick={handleAutoBuild}>
                 Build with AI
               </button>
-            )}
+            ) : isPaid && onUpgrade ? (
+              <button className="btn btn-ghost btn-sm" onClick={onUpgrade} title="Requires Creator or Pro plan">
+                <span className="plan-badge plan-badge-pro plan-badge-sm" style={{ marginRight: 6 }}>PRO</span>
+                Build with AI
+              </button>
+            ) : null}
           </div>
         ) : (
           <button
