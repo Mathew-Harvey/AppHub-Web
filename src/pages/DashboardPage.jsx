@@ -830,7 +830,7 @@ export default function DashboardPage() {
                 )}
                 {!inJiggle && newAppIds.has(app.id) && <span className="app-tile-new">New</span>}
                 {!inJiggle && app.visibility !== 'team' && (
-                  <span className="app-tile-badge">{app.visibility === 'private' ? '🔒' : '👥'}</span>
+                  <span className="app-tile-badge">{app.visibility === 'public' ? '🌐' : app.visibility === 'private' ? '🔒' : '👥'}</span>
                 )}
                 <div className="app-tile-icon">{app.icon}</div>
                 <span className="app-tile-name">{app.name}</span>
