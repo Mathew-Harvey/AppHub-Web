@@ -8,6 +8,7 @@ import { usePlan, isPlanLimitError } from '../hooks/usePlan';
 import IconPicker from '../components/IconPicker';
 import UpgradeModal from '../components/UpgradeModal';
 import CodeErrorsModal from '../components/CodeErrorsModal';
+import PromptBuilder from '../components/PromptBuilder';
 
 const PASTE_EXTENSIONS = ['.jsx', '.tsx', '.vue', '.svelte', '.html', '.css', '.js', '.ts'];
 const DEFAULT_PASTE_FILENAME = 'pasted-code.jsx';
@@ -176,6 +177,7 @@ export default function UploadPage() {
   const [filenameManuallyEdited, setFilenameManuallyEdited] = useState(false);
 
   const [showGuidelines, setShowGuidelines] = useState(true);
+  const [showPromptBuilder, setShowPromptBuilder] = useState(false);
 
   const { isPaid } = usePlan();
 
@@ -499,7 +501,7 @@ export default function UploadPage() {
       )}
 
       {/* Drop zone */}
-      {!file && !conversionInfo && !rejectedFile && (
+      {!file && !conversionInfo && !rejectedFile && !showPromptBuilder && (
         <>
           <div
             ref={dropzoneRef}
@@ -523,16 +525,23 @@ export default function UploadPage() {
             />
           </div>
 
-          <button
-            className="btn btn-ghost btn-full"
-            onClick={(e) => { e.stopPropagation(); setFilenameManuallyEdited(false); setShowPasteModal(true); }}
-            style={{ marginBottom: 8 }}
-          >
-            📋 Paste Code
-          </button>
+          <div className="upload-alt-actions">
+            <button
+              className="btn btn-ghost btn-full"
+              onClick={(e) => { e.stopPropagation(); setFilenameManuallyEdited(false); setShowPasteModal(true); }}
+            >
+              📋 Paste Code
+            </button>
+            <button
+              className="btn btn-ghost btn-full"
+              onClick={(e) => { e.stopPropagation(); setShowPromptBuilder(true); }}
+            >
+              ✨ Describe what you want
+            </button>
+          </div>
 
           <div className="inspiration">
-            <h4 className="inspiration-title">Not sure what to build?</h4>
+            <h4 className="inspiration-title">Quick start ideas</h4>
             <div className="inspiration-grid">
               {INSPIRATION.map((item) => (
                 <div key={item.name} className="inspiration-card">
@@ -549,6 +558,19 @@ export default function UploadPage() {
             </div>
           </div>
         </>
+      )}
+
+      {/* Prompt Builder */}
+      {showPromptBuilder && !file && (
+        <PromptBuilder
+          isPaid={isPaid}
+          onClose={() => setShowPromptBuilder(false)}
+          onAutoBuild={isPaid ? (prompt) => {
+            const htmlFile = textToFile(prompt, 'prompt.txt');
+            setShowPromptBuilder(false);
+            doAiConvert(htmlFile);
+          } : undefined}
+        />
       )}
 
       {/* Upload form */}
