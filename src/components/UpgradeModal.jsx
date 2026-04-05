@@ -11,7 +11,7 @@ const ALL_PLANS = [
       'Up to 50 hosted apps',
       'Up to 15 team members',
       '20 AI conversions / month',
-      'Smart AI uploads',
+      'Custom branding',
     ],
   },
   {
