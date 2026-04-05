@@ -6489,6 +6489,12 @@ input, textarea, select {
   margin-top: 1px;
 }
 
+.app-edit-vis-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 /* ── Marketplace responsive ───────────────────────────────────────────── */
 
 @media (max-width: 640px) {
