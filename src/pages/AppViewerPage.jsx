@@ -29,6 +29,10 @@ export default function AppViewerPage() {
   const [showEdit, setShowEdit] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
+  const [editVisibility, setEditVisibility] = useState('team');
+  const [editCategory, setEditCategory] = useState('');
+  const [editTags, setEditTags] = useState('');
+  const [categories, setCategories] = useState([]);
   const [saving, setSaving] = useState(false);
   const [showEditApp, setShowEditApp] = useState(false);
 
@@ -113,17 +117,28 @@ export default function AppViewerPage() {
   function openEdit() {
     setEditName(app.name);
     setEditDescription(app.description || '');
+    setEditVisibility(app.visibility || 'team');
+    setEditCategory(app.marketplaceCategory || '');
+    setEditTags((app.marketplaceTags || []).join(', '));
     setShowEdit(true);
+    if (categories.length === 0) {
+      api.getMarketplaceCategories().then(data => setCategories(data.categories)).catch(() => {});
+    }
   }
 
   async function handleSaveEdit() {
     if (!editName.trim()) return;
     setSaving(true);
     try {
-      const data = await api.updateApp(id, { name: editName.trim(), description: editDescription.trim() });
+      const body = { name: editName.trim(), description: editDescription.trim(), visibility: editVisibility };
+      if (editVisibility === 'public') {
+        body.marketplaceCategory = editCategory || null;
+        body.marketplaceTags = editTags ? editTags.split(',').map(t => t.trim()).filter(Boolean) : [];
+      }
+      const data = await api.updateApp(id, body);
       setApp({ ...app, ...data.app });
       setShowEdit(false);
-      showToast('App details updated', 'success');
+      showToast(editVisibility === 'public' ? 'App published to marketplace!' : 'App details updated', 'success');
     } catch (err) {
       showToast(err.error || 'Failed to update', 'error');
     } finally {
@@ -161,10 +176,50 @@ export default function AppViewerPage() {
               <label className="label">Description</label>
               <input className="input" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} placeholder="Optional" maxLength={500} />
             </div>
+            <div className="form-group">
+              <label className="label">Visibility</label>
+              <div className="app-edit-vis-row">
+                {[
+                  { value: 'team', label: 'Team' },
+                  { value: 'private', label: 'Private' },
+                  { value: 'public', label: 'Public (Marketplace)' },
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    className={`btn btn-sm ${editVisibility === opt.value ? 'btn-primary' : 'btn-secondary'}`}
+                    onClick={() => setEditVisibility(opt.value)}
+                  >
+                    {opt.value === 'public' ? '🌐 ' : opt.value === 'private' ? '🔒 ' : '👥 '}{opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {editVisibility === 'public' && (
+              <>
+                <div className="form-group">
+                  <label className="label">Category</label>
+                  <select className="input" value={editCategory} onChange={e => setEditCategory(e.target.value)}>
+                    <option value="">Select a category</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.name}>{cat.icon} {cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="label">Tags <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(comma-separated)</span></label>
+                  <input className="input" value={editTags} onChange={e => setEditTags(e.target.value)} placeholder="e.g. calculator, finance, tools" />
+                </div>
+                <div className="publish-public-notice">
+                  <span>🌐</span>
+                  <span>Your workspace name will be shown as the publisher. You can unpublish anytime by changing visibility back.</span>
+                </div>
+              </>
+            )}
           </div>
           <div className="app-edit-actions">
             <button className="btn btn-primary btn-sm" onClick={handleSaveEdit} disabled={saving || !editName.trim()}>
-              {saving ? <span className="spinner" /> : 'Save'}
+              {saving ? <span className="spinner" /> : editVisibility === 'public' && app.visibility !== 'public' ? 'Publish to Marketplace' : 'Save'}
             </button>
             <button className="btn btn-ghost btn-sm" onClick={() => setShowEdit(false)}>Cancel</button>
           </div>
