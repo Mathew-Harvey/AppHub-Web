@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../utils/api';
+import PasswordInput from '../components/PasswordInput';
 
 const apiHost = import.meta.env.VITE_API_URL || '';
 
@@ -193,10 +194,8 @@ export default function LoginPage() {
 
               <div className="form-group">
                 <label className="label">Password</label>
-                <input
+                <PasswordInput
                   ref={passwordRef}
-                  className="input"
-                  type="password"
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setError(''); }}
                   placeholder="••••••••"
@@ -305,9 +304,7 @@ export default function LoginPage() {
 
               <div className="form-group">
                 <label className="label">Password</label>
-                <input
-                  className="input"
-                  type="password"
+                <PasswordInput
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setError(''); }}
                   placeholder="Min 8 chars, one uppercase, one number"
@@ -318,9 +315,7 @@ export default function LoginPage() {
 
               <div className="form-group">
                 <label className="label">Confirm Password</label>
-                <input
-                  className="input"
-                  type="password"
+                <PasswordInput
                   value={confirmPassword}
                   onChange={(e) => { setConfirmPassword(e.target.value); setError(''); }}
                   placeholder="Type it again"
