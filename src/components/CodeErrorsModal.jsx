@@ -1,16 +1,23 @@
 import { useState } from 'react';
 import { api } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
+import { usePlan } from '../hooks/usePlan';
+
+const PLAN_ORDER = ['free', 'team', 'business', 'power'];
 
 export default function CodeErrorsModal({ errors, message, onClose }) {
   const { user } = useAuth();
+  const { isPaid, plan } = usePlan();
   const [loading, setLoading] = useState(false);
   const isAdmin = user?.role === 'admin';
 
   async function handleUpgrade() {
     setLoading(true);
     try {
-      const { url } = await api.createCheckout();
+      // Target the next plan above current
+      const currentIdx = PLAN_ORDER.indexOf(plan);
+      const targetPlan = PLAN_ORDER[Math.min(currentIdx + 1, PLAN_ORDER.length - 1)] || 'team';
+      const { url } = await api.createCheckout(targetPlan);
       window.location.href = url;
     } catch {
       setLoading(false);
@@ -42,29 +49,37 @@ export default function CodeErrorsModal({ errors, message, onClose }) {
           ))}
         </div>
 
-        <div className="code-errors-cta">
-          <div className="code-errors-cta-header">
-            <span className="plan-badge plan-badge-pro plan-badge-sm">PRO</span>
-            <span className="code-errors-cta-label">Auto-fix with AI</span>
-          </div>
-          <p className="code-errors-cta-text">
-            Upgrade and we'll automatically fix code errors with AI during upload.
-          </p>
-
-          {isAdmin ? (
-            <button
-              className="btn btn-primary btn-full"
-              onClick={handleUpgrade}
-              disabled={loading}
-            >
-              {loading ? <span className="spinner" /> : 'Get Started'}
-            </button>
-          ) : (
-            <p className="code-errors-cta-non-admin">
-              Ask your workspace admin to upgrade.
+        {isPaid ? (
+          <div className="code-errors-cta">
+            <p className="code-errors-cta-text">
+              AI auto-fix was unable to resolve these errors. Please fix them manually and re-upload, or try a different file.
             </p>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="code-errors-cta">
+            <div className="code-errors-cta-header">
+              <span className="plan-badge plan-badge-pro plan-badge-sm">PRO</span>
+              <span className="code-errors-cta-label">Auto-fix with AI</span>
+            </div>
+            <p className="code-errors-cta-text">
+              Upgrade and we'll automatically fix code errors with AI during upload.
+            </p>
+
+            {isAdmin ? (
+              <button
+                className="btn btn-primary btn-full"
+                onClick={handleUpgrade}
+                disabled={loading}
+              >
+                {loading ? <span className="spinner" /> : 'Upgrade'}
+              </button>
+            ) : (
+              <p className="code-errors-cta-non-admin">
+                Ask your workspace admin to upgrade.
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

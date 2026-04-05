@@ -18,7 +18,7 @@ export default function BuilderUpgradePage() {
   async function handleUpgrade() {
     setLoading(true);
     try {
-      const { url } = await api.createCheckout();
+      const { url } = await api.createCheckout('business');
       window.location.href = url;
     } catch {
       setLoading(false);
