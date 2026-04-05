@@ -179,7 +179,7 @@ export default function UploadPage() {
   const [showGuidelines, setShowGuidelines] = useState(true);
   const [showPromptBuilder, setShowPromptBuilder] = useState(false);
 
-  const { isPaid } = usePlan();
+  const { isPaid, hasAppBuilder } = usePlan();
 
   useEffect(() => {
     api.getMembers().then(d => setMembers(d.members)).catch(() => {});
@@ -533,10 +533,11 @@ export default function UploadPage() {
               📋 Paste Code
             </button>
             <button
-              className="btn btn-ghost btn-full"
+              className="btn btn-ghost btn-full upload-alt-prompt-btn"
               onClick={(e) => { e.stopPropagation(); setShowPromptBuilder(true); }}
             >
-              ✨ Describe what you want
+              <span>✨ AI Prompt Generator</span>
+              <span className="upload-alt-prompt-sub">Answer a few questions — we'll write the AI prompt for you</span>
             </button>
           </div>
 
@@ -564,8 +565,14 @@ export default function UploadPage() {
       {showPromptBuilder && !file && (
         <PromptBuilder
           isPaid={isPaid}
+          hasAppBuilder={hasAppBuilder}
           onClose={() => setShowPromptBuilder(false)}
-          onAutoBuild={isPaid ? (prompt) => {
+          onUpgrade={() => {
+            setShowPromptBuilder(false);
+            setUpgradeMessage('AI App Builder requires a Creator or Pro subscription.');
+            setShowUpgradeModal(true);
+          }}
+          onAutoBuild={hasAppBuilder ? (prompt) => {
             const htmlFile = textToFile(prompt, 'prompt.txt');
             setShowPromptBuilder(false);
             doAiConvert(htmlFile);
