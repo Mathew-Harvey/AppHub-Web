@@ -1535,6 +1535,19 @@ input, textarea, select {
   margin-bottom: 8px;
 }
 
+.upload-alt-prompt-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.upload-alt-prompt-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
 /* ─── Prompt Builder ─────────────────────────────────────────────────────── */
 
 .prompt-builder {

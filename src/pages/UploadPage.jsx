@@ -533,10 +533,11 @@ export default function UploadPage() {
               📋 Paste Code
             </button>
             <button
-              className="btn btn-ghost btn-full"
+              className="btn btn-ghost btn-full upload-alt-prompt-btn"
               onClick={(e) => { e.stopPropagation(); setShowPromptBuilder(true); }}
             >
-              ✨ Describe what you want
+              <span>✨ AI Prompt Generator</span>
+              <span className="upload-alt-prompt-sub">Answer a few questions — we'll write the AI prompt for you</span>
             </button>
           </div>
 
