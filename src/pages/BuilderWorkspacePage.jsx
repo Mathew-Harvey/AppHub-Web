@@ -297,7 +297,7 @@ export default function BuilderWorkspacePage() {
                 ref={iframeRef}
                 className="builder-preview-iframe"
                 srcDoc={session.currentHtml}
-                sandbox="allow-scripts allow-forms allow-modals"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-downloads"
                 title="App preview"
               />
             </div>

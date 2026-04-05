@@ -336,7 +336,7 @@ export default function ConverterPage() {
           <div className="converter-preview">
             <iframe
               src={result.blobUrl}
-              sandbox="allow-scripts allow-same-origin"
+              sandbox="allow-scripts allow-same-origin allow-downloads"
               title="Converted HTML Preview"
             />
           </div>
