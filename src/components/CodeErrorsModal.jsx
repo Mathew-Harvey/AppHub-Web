@@ -3,17 +3,20 @@ import { api } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlan } from '../hooks/usePlan';
 
+const PLAN_ORDER = ['free', 'team', 'business', 'power'];
+
 export default function CodeErrorsModal({ errors, message, onClose }) {
   const { user } = useAuth();
-  const { isPaid } = usePlan();
+  const { isPaid, plan } = usePlan();
   const [loading, setLoading] = useState(false);
   const isAdmin = user?.role === 'admin';
 
   async function handleUpgrade() {
     setLoading(true);
     try {
-      // Default to 'business' (Creator) for users who already have Team
-      const targetPlan = isPaid ? 'business' : 'team';
+      // Target the next plan above current
+      const currentIdx = PLAN_ORDER.indexOf(plan);
+      const targetPlan = PLAN_ORDER[Math.min(currentIdx + 1, PLAN_ORDER.length - 1)] || 'team';
       const { url } = await api.createCheckout(targetPlan);
       window.location.href = url;
     } catch {
