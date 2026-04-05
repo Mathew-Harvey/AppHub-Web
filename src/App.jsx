@@ -17,6 +17,8 @@ import BuilderSessionsPage from './pages/BuilderSessionsPage';
 import BuilderNewPage from './pages/BuilderNewPage';
 import BuilderWorkspacePage from './pages/BuilderWorkspacePage';
 import BuilderUpgradePage from './pages/BuilderUpgradePage';
+import MarketplacePage from './pages/MarketplacePage';
+import MarketplaceAppPage from './pages/MarketplaceAppPage';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -92,6 +94,8 @@ export default function App() {
         <Route path="/builder/new" element={<BuilderNewPage />} />
         <Route path="/builder/upgrade" element={<BuilderUpgradePage />} />
         <Route path="/builder/:sessionId" element={<BuilderWorkspacePage />} />
+        <Route path="/marketplace" element={<MarketplacePage />} />
+        <Route path="/marketplace/:id" element={<MarketplaceAppPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/settings" element={<AdminPage />} />
       </Route>

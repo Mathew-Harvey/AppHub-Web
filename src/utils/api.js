@@ -104,6 +104,13 @@ export const api = {
   // Sandbox
   getSandboxToken: () => request('/auth/sandbox-token'),
 
+  // Marketplace
+  listMarketplace: (params = {}) => request(`/marketplace?${new URLSearchParams(params)}`),
+  getMarketplaceApp: (id) => request(`/marketplace/${id}`),
+  installMarketplaceApp: (id) => request(`/marketplace/${id}/install`, { method: 'POST' }),
+  getMarketplaceCategories: () => request('/marketplace/categories'),
+  getMarketplaceFeatured: () => request('/marketplace/featured'),
+
   // AI Builder
   builderUsage: () => request('/builder/usage'),
   builderSessions: () => request('/builder/sessions'),

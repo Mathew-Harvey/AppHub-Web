@@ -6,6 +6,7 @@ const VISIBILITY_OPTIONS = [
   { value: 'team', label: 'Team', desc: 'Everyone in your workspace' },
   { value: 'private', label: 'Private', desc: 'Only you' },
   { value: 'specific', label: 'Specific people', desc: 'Choose who can see it' },
+  { value: 'public', label: 'Public', desc: 'Listed in the marketplace for all users' },
 ];
 
 export default function PublishModal({ session, onClose, onPublished }) {
@@ -19,6 +20,9 @@ export default function PublishModal({ session, onClose, onPublished }) {
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState('');
   const [membersLoaded, setMembersLoaded] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [marketplaceCategory, setMarketplaceCategory] = useState('');
+  const [marketplaceTags, setMarketplaceTags] = useState('');
 
   async function loadMembers() {
     if (membersLoaded) return;
@@ -32,6 +36,9 @@ export default function PublishModal({ session, onClose, onPublished }) {
   function handleVisChange(val) {
     setVisibility(val);
     if (val === 'specific' && !membersLoaded) loadMembers();
+    if (val === 'public' && categories.length === 0) {
+      api.getMarketplaceCategories().then(data => setCategories(data.categories)).catch(() => {});
+    }
   }
 
   function toggleMember(id) {
@@ -47,6 +54,10 @@ export default function PublishModal({ session, onClose, onPublished }) {
     try {
       const body = { name: name.trim(), description: description.trim(), icon, visibility };
       if (visibility === 'specific') body.sharedWith = sharedWith;
+      if (visibility === 'public') {
+        if (marketplaceCategory) body.marketplaceCategory = marketplaceCategory;
+        if (marketplaceTags.trim()) body.marketplaceTags = marketplaceTags.split(',').map(t => t.trim()).filter(Boolean);
+      }
       await api.builderPublish(session.id, body);
       onPublished();
     } catch (err) {
@@ -136,6 +147,41 @@ export default function PublishModal({ session, onClose, onPublished }) {
               ))}
             </div>
           </div>
+        )}
+
+        {visibility === 'public' && (
+          <>
+            <div className="form-group">
+              <label className="label">Category</label>
+              <select
+                className="input"
+                value={marketplaceCategory}
+                onChange={e => setMarketplaceCategory(e.target.value)}
+              >
+                <option value="">Select a category</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.name}>{cat.icon} {cat.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="label">Tags <span className="text-muted">(comma-separated)</span></label>
+              <input
+                className="input"
+                value={marketplaceTags}
+                onChange={e => setMarketplaceTags(e.target.value)}
+                placeholder="e.g. calculator, finance, tools"
+              />
+            </div>
+            <div className="publish-public-notice">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <circle cx="8" cy="8" r="7" />
+                <line x1="8" y1="7" x2="8" y2="11" />
+                <circle cx="8" cy="5" r="0.5" fill="currentColor" />
+              </svg>
+              <span>Your workspace name will be shown as the publisher. You can unpublish anytime by changing visibility.</span>
+            </div>
+          </>
         )}
 
         {error && <p className="error-text">{error}</p>}

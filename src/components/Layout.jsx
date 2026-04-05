@@ -106,6 +106,9 @@ export default function Layout() {
           <NavLink to="/upload" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} data-onboarding="nav-upload">
             Create
           </NavLink>
+          <NavLink to="/marketplace" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            Marketplace
+          </NavLink>
           {hasAppBuilder && (
             <NavLink
               to="/builder"
