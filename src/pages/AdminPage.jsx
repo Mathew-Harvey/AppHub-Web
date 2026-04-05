@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../utils/api';
 import { copyToClipboard } from '../utils/clipboard';
+import PasswordInput from '../components/PasswordInput';
 import { useToast } from '../components/Toast';
 import { usePlan, isPlanLimitError } from '../hooks/usePlan';
 import UpgradeModal from '../components/UpgradeModal';
@@ -332,15 +333,15 @@ export default function AdminPage() {
           <form onSubmit={handleChangePassword}>
             <div className="form-group">
               <label className="label">Current Password</label>
-              <input className="input" type="password" value={currentPassword} onChange={(e) => { setCurrentPassword(e.target.value); setPasswordError(''); setPasswordSuccess(false); }} required />
+              <PasswordInput value={currentPassword} onChange={(e) => { setCurrentPassword(e.target.value); setPasswordError(''); setPasswordSuccess(false); }} required />
             </div>
             <div className="form-group">
               <label className="label">New Password</label>
-              <input className="input" type="password" value={newPassword} onChange={(e) => { setNewPassword(e.target.value); setPasswordError(''); setPasswordSuccess(false); }} placeholder="Min 8 chars, one uppercase, one number" required />
+              <PasswordInput value={newPassword} onChange={(e) => { setNewPassword(e.target.value); setPasswordError(''); setPasswordSuccess(false); }} placeholder="Min 8 chars, one uppercase, one number" required />
             </div>
             <div className="form-group">
               <label className="label">Confirm New Password</label>
-              <input className="input" type="password" value={confirmNewPassword} onChange={(e) => { setConfirmNewPassword(e.target.value); setPasswordError(''); setPasswordSuccess(false); }} required />
+              <PasswordInput value={confirmNewPassword} onChange={(e) => { setConfirmNewPassword(e.target.value); setPasswordError(''); setPasswordSuccess(false); }} required />
             </div>
             {passwordError && <p className="error-text">{passwordError}</p>}
             {passwordSuccess && <p style={{ color: 'var(--success)', fontSize: 13, marginTop: 6 }}>Password changed successfully.</p>}

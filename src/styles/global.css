@@ -195,6 +195,31 @@ input, textarea, select {
 .input:focus { border-color: var(--accent); background: rgba(255,255,255,0.06); }
 .input::placeholder { color: var(--text-muted); }
 
+/* Password input with toggle */
+.password-input-wrapper {
+  position: relative;
+}
+.password-input-wrapper .input {
+  padding-right: 40px;
+}
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: color 0.15s ease;
+}
+.password-toggle:hover { color: var(--text-secondary); }
+
 .label {
   display: block;
   font-size: 13px;

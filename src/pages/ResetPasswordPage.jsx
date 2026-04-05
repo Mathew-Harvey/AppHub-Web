@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../utils/api';
+import PasswordInput from '../components/PasswordInput';
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
@@ -69,9 +70,7 @@ export default function ResetPasswordPage() {
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="label">New password</label>
-            <input
-              className="input"
-              type="password"
+            <PasswordInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Min 8 chars, one uppercase, one number"
@@ -83,9 +82,7 @@ export default function ResetPasswordPage() {
 
           <div className="form-group">
             <label className="label">Confirm password</label>
-            <input
-              className="input"
-              type="password"
+            <PasswordInput
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               placeholder="Repeat password"

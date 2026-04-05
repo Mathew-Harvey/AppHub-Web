@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../utils/api';
+import PasswordInput from '../components/PasswordInput';
 
 const PLAN_LABELS = { team: 'Team', business: 'Creator', power: 'Pro', pro: 'Pro' };
 
@@ -165,9 +166,7 @@ export default function RegisterPage() {
 
           <div className="form-group">
             <label className="label">Password</label>
-            <input
-              className="input"
-              type="password"
+            <PasswordInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Min 8 chars, one uppercase, one number"
