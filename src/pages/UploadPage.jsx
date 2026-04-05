@@ -176,7 +176,7 @@ export default function UploadPage() {
   const [pasteFilename, setPasteFilename] = useState(DEFAULT_PASTE_FILENAME);
   const [filenameManuallyEdited, setFilenameManuallyEdited] = useState(false);
 
-  const [showGuidelines, setShowGuidelines] = useState(true);
+  const [showGuidelines, setShowGuidelines] = useState(false);
   const [showPromptBuilder, setShowPromptBuilder] = useState(false);
 
   const { isPaid, hasAppBuilder } = usePlan();
@@ -400,17 +400,18 @@ export default function UploadPage() {
   return (
     <div>
       <div className="page-header">
-        <h1>Upload App</h1>
+        <h1>Create App</h1>
       </div>
 
-      {/* App guidelines callout */}
-      {showGuidelines && !uploadSuccess && !converting && (
-        <div className="upload-guidelines">
-          <div className="upload-guidelines-header">
-            <span className="upload-guidelines-icon">&#x1F4CB;</span>
-            <strong>App guidelines</strong>
-            <button className="upload-guidelines-dismiss" onClick={() => setShowGuidelines(false)} title="Dismiss">&times;</button>
-          </div>
+      {/* App guidelines — collapsed by default */}
+      {!uploadSuccess && !converting && (
+        <div className={`upload-guidelines ${showGuidelines ? 'expanded' : 'collapsed'}`}>
+          <button className="upload-guidelines-toggle" onClick={() => setShowGuidelines(!showGuidelines)}>
+            <span className="upload-guidelines-toggle-arrow">{showGuidelines ? '▾' : '▸'}</span>
+            <span>{isPaid ? 'Supported files & conversion info' : 'App requirements & limitations'}</span>
+          </button>
+          {showGuidelines && (
+            <div className="upload-guidelines-body">
           {isPaid ? (
             <>
               <p className="upload-guidelines-intro">Drop any file &mdash; including <strong>.zip archives with multiple files</strong> &mdash; and our AI will convert it into a single self-contained HTML app.</p>
@@ -436,6 +437,8 @@ export default function UploadPage() {
               </ul>
               <p className="upload-guidelines-upgrade">Upgrade to a paid plan to drop <strong>any file type</strong> including .zip archives &mdash; AI will convert them for you.</p>
             </>
+          )}
+          </div>
           )}
         </div>
       )}
