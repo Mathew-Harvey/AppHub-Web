@@ -1739,11 +1739,98 @@ input, textarea, select {
   border-top: 1px solid var(--border);
 }
 
+/* Compact choice grid (output type) */
+.prompt-builder-choices-compact {
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+}
+
+/* Stacked choices (data persistence) */
+.prompt-builder-choices-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.prompt-builder-choice-wide {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+.prompt-builder-choice-wide .prompt-builder-choice-icon {
+  font-size: 22px;
+  margin-bottom: 0;
+}
+.prompt-builder-choice-wide .prompt-builder-choice-label {
+  display: block;
+}
+.prompt-builder-choice-wide .prompt-builder-choice-hint {
+  display: block;
+}
+
+/* Educational callouts */
+.prompt-builder-callout {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  line-height: 1.6;
+  animation: pb-fade-in 0.2s ease;
+}
+.prompt-builder-callout strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.prompt-builder-callout ul {
+  margin: 0 0 8px 0;
+  padding-left: 18px;
+}
+.prompt-builder-callout li {
+  margin-bottom: 3px;
+}
+.prompt-builder-callout p {
+  margin: 0;
+}
+.prompt-builder-callout code {
+  background: rgba(255,255,255,0.08);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 11.5px;
+}
+
+.prompt-builder-callout-warn {
+  background: rgba(255, 159, 10, 0.08);
+  border: 1px solid rgba(255, 159, 10, 0.25);
+  color: var(--text-secondary);
+}
+.prompt-builder-callout-warn strong {
+  color: var(--warning);
+}
+
+.prompt-builder-callout-info {
+  background: rgba(52, 199, 89, 0.08);
+  border: 1px solid rgba(52, 199, 89, 0.25);
+  color: var(--text-secondary);
+}
+.prompt-builder-callout-info strong {
+  color: var(--success);
+}
+
+.prompt-builder-callout-muted {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.prompt-builder-callout-muted strong {
+  color: var(--text-secondary);
+}
+
 /* Light theme overrides */
 [data-theme="light"] .prompt-builder-choice { background: rgba(0,0,0,0.02); }
 [data-theme="light"] .prompt-builder-choice:hover { background: rgba(0,0,0,0.04); }
 [data-theme="light"] .prompt-builder-pill { background: rgba(0,0,0,0.03); }
 [data-theme="light"] .prompt-builder-pill:hover { background: rgba(0,0,0,0.05); }
+[data-theme="light"] .prompt-builder-callout code { background: rgba(0,0,0,0.06); }
 
 /* ─── Wobble / drag ──────────────────────────────────────────────────────── */
 

@@ -22,6 +22,21 @@ const AUDIENCE_OPTIONS = [
   { key: 'public', label: 'General public' },
 ];
 
+const OUTPUT_OPTIONS = [
+  { key: 'none', icon: '🖥️', label: 'On-screen only', desc: 'Results display in the app — no file output needed' },
+  { key: 'print', icon: '🖨️', label: 'Print / PDF', desc: 'User prints the page or saves as PDF from the browser' },
+  { key: 'csv', icon: '📊', label: 'Download CSV / Excel', desc: 'Export data as a .csv file that opens in Excel or Sheets' },
+  { key: 'json', icon: '💾', label: 'Save / Load data file', desc: 'Download a data file to the desktop, load it back later' },
+  { key: 'text', icon: '📄', label: 'Download text / document', desc: 'Generate a formatted text file, HTML doc, or report' },
+  { key: 'clipboard', icon: '📋', label: 'Copy to clipboard', desc: 'Copy results so the user can paste elsewhere' },
+];
+
+const DATA_PERSISTENCE_OPTIONS = [
+  { key: 'none', icon: '🔄', label: 'No — fresh every time', desc: 'App resets when the page is reloaded. Simplest option.' },
+  { key: 'localstorage', icon: '💾', label: 'Yes — remember between visits', desc: 'Save data in the browser so it\'s still there next time.' },
+  { key: 'file', icon: '📁', label: 'Yes — save/load files', desc: 'Let the user download a data file and load it back later.' },
+];
+
 const STYLE_OPTIONS = [
   { key: 'clean', label: 'Clean & minimal' },
   { key: 'professional', label: 'Professional & corporate' },
@@ -32,21 +47,18 @@ const STYLE_OPTIONS = [
 
 const EXTRAS_FREE = [
   { key: 'mobile', label: 'Mobile-friendly' },
-  { key: 'print', label: 'Print-friendly' },
-  { key: 'csv', label: 'Export to CSV' },
-  { key: 'charts', label: 'Charts / graphs' },
-  { key: 'localstorage', label: 'Remember data between visits' },
   { key: 'validation', label: 'Input validation & error messages' },
+  { key: 'charts', label: 'Charts / graphs' },
+  { key: 'animations', label: 'Smooth animations' },
 ];
 
 const EXTRAS_PAID = [
   ...EXTRAS_FREE,
-  { key: 'animations', label: 'Smooth animations & transitions' },
   { key: 'multipage', label: 'Multiple tabs / pages' },
   { key: 'search', label: 'Search & filter' },
   { key: 'darklight', label: 'Dark / light mode toggle' },
   { key: 'drag', label: 'Drag & drop' },
-  { key: 'pdf', label: 'Generate PDF' },
+  { key: 'undo', label: 'Undo / redo' },
 ];
 
 // ─── Paid-only deeper questions ──────────────────────────────────────────────
@@ -60,17 +72,6 @@ const DATA_INPUT_EXAMPLES = {
   reference: 'e.g. search terms, filter categories, sort options',
   game: 'e.g. player name, difficulty level, answer choices',
   other: 'e.g. describe what the user types, selects, or uploads',
-};
-
-const DATA_OUTPUT_EXAMPLES = {
-  calculator: 'e.g. totals, subtotals with tax, comparison results',
-  form: 'e.g. confirmation message, summary of entries, reference number',
-  dashboard: 'e.g. charts, KPI cards, progress bars, status indicators',
-  tracker: 'e.g. weekly summary table, totals, streaks, CSV export',
-  generator: 'e.g. formatted document, printable page, downloadable file',
-  reference: 'e.g. filtered list, detail cards, highlighted matches',
-  game: 'e.g. score, correct answers, leaderboard, results summary',
-  other: 'e.g. describe what the user should see or get back',
 };
 
 // ─── Prompt assembly (pure logic, no AI) ─────────────────────────────────────
@@ -104,9 +105,36 @@ function assemblePrompt(answers, isPaid) {
     lines.push(`## User inputs\n${answers.inputs}\n`);
   }
 
-  // Outputs (paid tier — detailed)
-  if (isPaid && answers.outputs) {
-    lines.push(`## Expected output\n${answers.outputs}\n`);
+  // Output type
+  if (answers.outputType && answers.outputType !== 'none') {
+    const out = OUTPUT_OPTIONS.find(o => o.key === answers.outputType);
+    if (out) {
+      lines.push(`## Output\n${out.label} — ${out.desc}\n`);
+    }
+
+    // Add specific output instructions
+    if (answers.outputType === 'csv') {
+      lines.push(`The app should have an "Export CSV" button that generates a properly formatted .csv file and triggers a download. Include headers in the first row.\n`);
+    } else if (answers.outputType === 'json') {
+      lines.push(`The app should have a "Save Data" button that downloads the current state as a .json file, and a "Load Data" button/drop zone that lets the user load a previously saved .json file to restore their data.\n`);
+    } else if (answers.outputType === 'print') {
+      lines.push(`Include a "Print" button that triggers window.print(). Add a @media print CSS block that hides buttons/controls and formats the output cleanly for paper.\n`);
+    } else if (answers.outputType === 'text') {
+      lines.push(`Include a "Download" button that generates the formatted output as a downloadable file.\n`);
+    } else if (answers.outputType === 'clipboard') {
+      lines.push(`Include a "Copy" button that uses navigator.clipboard.writeText() to copy the result. Show a brief "Copied!" confirmation.\n`);
+    }
+  }
+
+  // Data persistence
+  if (answers.dataPersistence && answers.dataPersistence !== 'none') {
+    if (answers.dataPersistence === 'localstorage') {
+      lines.push(`## Data persistence
+Save all user data to localStorage automatically so it persists between browser sessions. On page load, check for saved data and restore it. Include a "Clear Data" button that wipes localStorage for this app. Use a unique localStorage key prefix to avoid conflicts.\n`);
+    } else if (answers.dataPersistence === 'file') {
+      lines.push(`## Data persistence
+Add a "Save" button that downloads all current app data as a JSON file. Add a "Load" button or drag-and-drop zone that accepts a previously saved JSON file and restores all data. This is the primary way data is preserved — there is no database.\n`);
+    }
   }
 
   // Step-by-step (paid tier — the peanut butter sandwich bit)
@@ -158,9 +186,9 @@ function assemblePrompt(answers, isPaid) {
 
 function getSteps(isPaid) {
   if (isPaid) {
-    return ['category', 'purpose', 'audience', 'inputs', 'outputs', 'steps', 'style', 'extras', 'details', 'review'];
+    return ['category', 'purpose', 'audience', 'inputs', 'output', 'data', 'steps', 'style', 'extras', 'details', 'review'];
   }
-  return ['category', 'purpose', 'audience', 'style', 'extras', 'details', 'review'];
+  return ['category', 'purpose', 'audience', 'output', 'data', 'style', 'extras', 'details', 'review'];
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -173,7 +201,8 @@ export default function PromptBuilder({ isPaid, onClose, onAutoBuild }) {
     purpose: '',
     audience: '',
     inputs: '',
-    outputs: '',
+    outputType: '',
+    dataPersistence: '',
     steps: '',
     sampleData: '',
     style: '',
@@ -187,7 +216,6 @@ export default function PromptBuilder({ isPaid, onClose, onAutoBuild }) {
   const currentStep = steps[stepIndex];
   const isReview = currentStep === 'review';
   const isFirst = stepIndex === 0;
-  const isLast = stepIndex === steps.length - 1;
 
   function set(key, value) {
     setAnswers(prev => ({ ...prev, [key]: value }));
@@ -207,8 +235,9 @@ export default function PromptBuilder({ isPaid, onClose, onAutoBuild }) {
       case 'category': return !!answers.category;
       case 'purpose': return answers.purpose.trim().length >= 5;
       case 'audience': return !!answers.audience;
-      case 'inputs': return true; // optional but shown
-      case 'outputs': return true;
+      case 'inputs': return true;
+      case 'output': return !!answers.outputType;
+      case 'data': return !!answers.dataPersistence;
       case 'steps': return true;
       case 'style': return !!answers.style;
       case 'extras': return true;
@@ -339,20 +368,81 @@ export default function PromptBuilder({ isPaid, onClose, onAutoBuild }) {
           </div>
         )}
 
-        {/* ─── Step: Outputs (paid only) ───────────────────────────────── */}
-        {currentStep === 'outputs' && (
+        {/* ─── Step: Output ────────────────────────────────────────────── */}
+        {currentStep === 'output' && (
           <div className="prompt-builder-step">
-            <label className="prompt-builder-question">What should the user see or get back?</label>
-            <p className="prompt-builder-hint">Describe the result. A number? A table? A chart? A printable page? What exactly appears after they hit the button?</p>
-            <textarea
-              className="input"
-              value={answers.outputs}
-              onChange={e => set('outputs', e.target.value)}
-              placeholder={DATA_OUTPUT_EXAMPLES[answers.category] || DATA_OUTPUT_EXAMPLES.other}
-              rows={4}
-              autoFocus
-              style={{ resize: 'vertical' }}
-            />
+            <label className="prompt-builder-question">What does the app produce?</label>
+            <p className="prompt-builder-hint">How do people get results out of this app?</p>
+            <div className="prompt-builder-choices prompt-builder-choices-compact">
+              {OUTPUT_OPTIONS.map(o => (
+                <button
+                  key={o.key}
+                  className={`prompt-builder-choice ${answers.outputType === o.key ? 'selected' : ''}`}
+                  onClick={() => set('outputType', o.key)}
+                >
+                  <span className="prompt-builder-choice-icon">{o.icon}</span>
+                  <span className="prompt-builder-choice-label">{o.label}</span>
+                  <span className="prompt-builder-choice-hint">{o.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ─── Step: Data persistence ──────────────────────────────────── */}
+        {currentStep === 'data' && (
+          <div className="prompt-builder-step">
+            <label className="prompt-builder-question">Does it need to remember data?</label>
+            <p className="prompt-builder-hint">When the user closes the app and comes back later, should their data still be there?</p>
+            <div className="prompt-builder-choices prompt-builder-choices-stack">
+              {DATA_PERSISTENCE_OPTIONS.map(o => (
+                <button
+                  key={o.key}
+                  className={`prompt-builder-choice prompt-builder-choice-wide ${answers.dataPersistence === o.key ? 'selected' : ''}`}
+                  onClick={() => set('dataPersistence', o.key)}
+                >
+                  <span className="prompt-builder-choice-icon">{o.icon}</span>
+                  <div>
+                    <span className="prompt-builder-choice-label">{o.label}</span>
+                    <span className="prompt-builder-choice-hint">{o.desc}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Educational callout — shown after selection */}
+            {answers.dataPersistence === 'localstorage' && (
+              <div className="prompt-builder-callout prompt-builder-callout-warn">
+                <strong>Good to know about browser storage</strong>
+                <ul>
+                  <li>Data is saved <em>in this browser only</em> — it won't sync to other devices or browsers</li>
+                  <li>If the user clears their browser data or uses private/incognito mode, saved data is lost</li>
+                  <li>There's a ~5 MB limit per site — fine for most apps, not for large datasets</li>
+                  <li>Other people using the same app on the same computer will see different data</li>
+                </ul>
+                <p>This works well for personal tools, preferences, and small datasets. For anything critical, consider the save/load file option instead.</p>
+              </div>
+            )}
+
+            {answers.dataPersistence === 'file' && (
+              <div className="prompt-builder-callout prompt-builder-callout-info">
+                <strong>How save/load files work</strong>
+                <ul>
+                  <li>The app adds a "Save" button that downloads a <code>.json</code> file to the user's computer</li>
+                  <li>A "Load" button lets them pick that file to restore all their data</li>
+                  <li>The user controls where files are stored — desktop, cloud drive, USB, etc.</li>
+                  <li>Files can be shared with others, backed up, or moved between machines</li>
+                </ul>
+                <p>This is the most reliable way to persist data in a standalone HTML app. No database needed — the file IS the database.</p>
+              </div>
+            )}
+
+            {answers.dataPersistence === 'none' && (
+              <div className="prompt-builder-callout prompt-builder-callout-muted">
+                <strong>No persistence</strong>
+                <p>The app starts fresh every time. This is ideal for calculators, converters, one-off generators, and tools where you enter data, get a result, and you're done.</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -370,19 +460,17 @@ export default function PromptBuilder({ isPaid, onClose, onAutoBuild }) {
               autoFocus
               style={{ resize: 'vertical' }}
             />
-            {!answers.sampleData && (
-              <div style={{ marginTop: 12 }}>
-                <label className="prompt-builder-hint" style={{ fontWeight: 500 }}>Got example data? (optional)</label>
-                <textarea
-                  className="input"
-                  value={answers.sampleData}
-                  onChange={e => set('sampleData', e.target.value)}
-                  placeholder='e.g. "Client: Acme Corp, Hours: Mon 3h, Tue 5h, Wed 4h, Rate: $120/hr"'
-                  rows={2}
-                  style={{ resize: 'vertical', marginTop: 6 }}
-                />
-              </div>
-            )}
+            <div style={{ marginTop: 12 }}>
+              <label className="prompt-builder-hint" style={{ fontWeight: 500 }}>Got example data? (optional)</label>
+              <textarea
+                className="input"
+                value={answers.sampleData}
+                onChange={e => set('sampleData', e.target.value)}
+                placeholder='e.g. "Client: Acme Corp, Hours: Mon 3h, Tue 5h, Wed 4h, Rate: $120/hr"'
+                rows={2}
+                style={{ resize: 'vertical', marginTop: 6 }}
+              />
+            </div>
           </div>
         )}
 
