@@ -17,6 +17,7 @@ import BuilderSessionsPage from './pages/BuilderSessionsPage';
 import BuilderNewPage from './pages/BuilderNewPage';
 import BuilderWorkspacePage from './pages/BuilderWorkspacePage';
 import BuilderUpgradePage from './pages/BuilderUpgradePage';
+import SuperAdminPage from './pages/SuperAdminPage';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -80,6 +81,7 @@ export default function App() {
       <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
       <Route path="/forgot-password" element={<GuestRoute><ForgotPasswordPage /></GuestRoute>} />
       <Route path="/reset-password" element={<GuestRoute><ResetPasswordPage /></GuestRoute>} />
+      <Route path="/super-admin" element={<SuperAdminPage />} />
       <Route path="/app/:id" element={<ProtectedRoute><AppViewerPage /></ProtectedRoute>} />
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/" element={<DashboardPage />} />
