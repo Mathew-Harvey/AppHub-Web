@@ -8,10 +8,9 @@ const PLAN_INFO = {
       'Up to 50 hosted apps',
       'Up to 15 team members',
       '20 AI conversions per month',
+      'Custom branding',
       'Smart AI uploads',
-      'Branded workspace',
       'Drag-and-drop HTML uploads',
-      'Password-protected portal',
     ],
   },
   business: {
@@ -24,9 +23,7 @@ const PLAN_INFO = {
       'AI app building (500K tokens/mo)',
       'Custom branding',
       'Priority support',
-      'Branded workspace',
       'Drag-and-drop HTML uploads',
-      'Password-protected portal',
     ],
   },
   power: {
